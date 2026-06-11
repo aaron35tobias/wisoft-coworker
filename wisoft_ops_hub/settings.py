@@ -7,18 +7,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
 
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY',
-    'django-insecure-+=s2mff%c-4ly&84ncy$a9e$y-2hp6_3v9*+2+cge_oi#$740^',
-)
+SECRET_KEY = os.environ['SECRET_KEY']
 
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = os.environ['DEBUG'] == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
+ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
+CSRF_TRUSTED_ORIGINS = os.environ['CSRF_TRUSTED_ORIGINS'].split(',')
 
-SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000')
-SITE_TESTING_URL = os.getenv('SITE_TESTING_URL', '')
+SITE_URL = os.environ['SITE_URL']
+SITE_TESTING_URL = os.environ['SITE_TESTING_URL']
 
 
 INSTALLED_APPS = [
@@ -63,8 +60,8 @@ WSGI_APPLICATION = 'wisoft_ops_hub.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
-        'NAME': os.getenv('DB_NAME', BASE_DIR / 'db.sqlite3'),
+        'ENGINE': os.environ['DB_ENGINE'],
+        'NAME': os.environ['DB_NAME'],
     }
 }
 
@@ -74,10 +71,10 @@ if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
         DATABASES['default']['NAME'] = BASE_DIR / db_name
 else:
     DATABASES['default'].update({
-        'USER': os.getenv('DB_USER', ''),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', ''),
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
+        'HOST': os.environ['DB_HOST'],
+        'PORT': os.environ['DB_PORT'],
     })
 
 
