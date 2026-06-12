@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Login | Wisoft Ops Hub{% endblock %}
+
+{% block content %}
+<h1>Login</h1>
+
+{% if errors.login %}
+<p>{{ errors.login }}</p>
+{% endif %}
+
+<form id="login-form" method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+
+    <div>
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" value="{{ username }}" required>
+        {% if errors.username %}
+        <p>{{ errors.username }}</p>
+        {% endif %}
+    </div>
+
+    <div>
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+        {% if errors.password %}
+        <p>{{ errors.password }}</p>
+        {% endif %}
+    </div>
+
+    <button type="submit">Login</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.20.0/dist/jquery.validate.min.js"></script>
+<script>
+    $(function () {
+        $('#login-form').validate({
+            rules: {
+                username: 'required',
+                password: 'required'
+            }
+        });
+    });
+</script>
+{% endblock %}
