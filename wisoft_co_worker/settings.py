@@ -39,7 +39,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'wisoft_ops_hub.urls'
+ROOT_URLCONF = 'wisoft_co_worker.urls'
 
 TEMPLATES = [
     {
@@ -57,7 +57,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'wisoft_ops_hub.wsgi.application'
+WSGI_APPLICATION = 'wisoft_co_worker.wsgi.application'
 
 
 DATABASES = {
