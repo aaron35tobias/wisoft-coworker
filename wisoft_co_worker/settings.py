@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'general',
+    'page_speed_and_cwv',
 ]
 
 MIDDLEWARE = [
