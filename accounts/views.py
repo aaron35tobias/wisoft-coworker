@@ -5,9 +5,9 @@ from django.shortcuts import redirect, render
 User = get_user_model()
 
 
-def login_view(request):
+def sign_in_view(request):
     if request.method == 'GET':
-        return render(request, 'pages/login.html')
+        return render(request, 'accounts/sign-in.html')
 
     username = request.POST.get('username', '').strip()
     password = request.POST.get('password', '')
@@ -20,7 +20,7 @@ def login_view(request):
         errors['password'] = 'Password is required.'
 
     if errors:
-        return render(request, 'pages/login.html', {
+        return render(request, 'accounts/sign-in.html', {
             'errors': errors,
             'username': username,
         })
@@ -28,7 +28,7 @@ def login_view(request):
     user = authenticate(request, username=username, password=password)
 
     if user is None:
-        return render(request, 'pages/login.html', {
+        return render(request, 'accounts/sign-in.html', {
             'errors': {'login': 'Invalid username or password.'},
             'username': username,
         })
@@ -37,9 +37,9 @@ def login_view(request):
     return redirect('dashboard')
 
 
-def signup_view(request):
+def sign_up_view(request):
     if request.method == 'GET':
-        return render(request, 'pages/signup.html')
+        return render(request, 'accounts/sign-up.html')
 
     username = request.POST.get('username', '').strip()
     email = request.POST.get('email', '').strip()
@@ -69,7 +69,7 @@ def signup_view(request):
         errors['email'] = 'Email already exists.'
 
     if errors:
-        return render(request, 'pages/signup.html', {
+        return render(request, 'accounts/sign-up.html', {
             'errors': errors,
             'username': username,
             'email': email,
