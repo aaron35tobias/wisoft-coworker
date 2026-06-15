@@ -1,5 +1,125 @@
-<aside>
-    <ul>
-        <li><a href="/">Dashboard</a></li>
-    </ul>
-</aside>
+{% load static %}
+<!--begin::Aside-->
+<div id="kt_aside" class="aside py-9" data-kt-drawer="true" data-kt-drawer-name="aside" data-kt-drawer-activate="{default: true, lg: false}" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'200px', '300px': '250px'}" data-kt-drawer-direction="start" data-kt-drawer-toggle="#kt_aside_toggle">
+<!--begin::Brand-->
+<div class="aside-logo flex-column-auto px-9 mb-9" id="kt_aside_logo">
+<!--begin::Logo-->
+<a href="index.html">
+<img alt="Logo" src="{% static 'assets/media/logos/demo3.svg' %}" class="h-20px logo theme-light-show" />
+<img alt="Logo" src="{% static 'assets/media/logos/demo3-dark.svg' %}" class="h-20px logo theme-dark-show" />
+</a>
+<!--end::Logo-->
+</div>
+<!--end::Brand-->
+<!--begin::Aside menu-->
+<div class="aside-menu flex-column-fluid ps-5 pe-3 mb-9" id="kt_aside_menu">
+<!--begin::Aside Menu-->
+<div class="w-100 hover-scroll-overlay-y d-flex pe-3" id="kt_aside_menu_wrapper" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-height="auto" data-kt-scroll-dependencies="#kt_aside_logo, #kt_aside_footer" data-kt-scroll-wrappers="#kt_aside, #kt_aside_menu, #kt_aside_menu_wrapper" data-kt-scroll-offset="100">
+<!--begin::Menu-->
+<div class="menu menu-column menu-rounded menu-sub-indention menu-active-bg fw-semibold my-auto" id="#kt_aside_menu" data-kt-menu="true">
+<!--begin:Menu item-->
+<div class="menu-item here">
+<a class="menu-link active" href="{% url 'dashboard' %}">
+<span class="menu-icon">
+<i class="ki-duotone ki-black-right fs-2"></i>
+</span>
+<span class="menu-title">Dashboard</span>
+</a>
+</div>
+<!--end:Menu item-->
+{% include 'includes/sidebar_tools.html' %}
+</div>
+<!--end::Menu-->
+</div>
+<!--end::Aside Menu-->
+</div>
+<!--end::Aside menu-->
+<!--begin::Footer-->
+<div class="aside-footer flex-column-auto px-9" id="kt_aside_footer">
+<!--begin::User panel-->
+<div class="d-flex flex-stack">
+<!--begin::Wrapper-->
+<div class="d-flex align-items-center">
+<!--begin::Avatar-->
+<div class="symbol symbol-circle symbol-40px">
+<img src="{% static 'assets/media/avatars/300-1.jpg' %}" alt="photo" />
+</div>
+<!--end::Avatar-->
+<!--begin::User info-->
+<div class="ms-2 min-w-0" style="max-width: 135px;">
+<!--begin::Name-->
+<span class="text-gray-800 fs-6 fw-bold lh-1 d-block text-truncate" title="{{ request.user.username }}">{{ request.user.username }}</span>
+<!--end::Name-->
+<!--begin::Major-->
+<span class="text-muted fw-semibold d-block fs-7 lh-1 text-truncate" title="{{ request.user.email|default:'No email' }}">{{ request.user.email|default:"No email" }}</span>
+<!--end::Major-->
+</div>
+<!--end::User info-->
+</div>
+<!--end::Wrapper-->
+<!--begin::User menu-->
+<div class="ms-1">
+<div class="btn btn-sm btn-icon btn-active-color-primary position-relative me-n2" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-overflow="true" data-kt-menu-placement="top-end">
+<i class="ki-duotone ki-setting-2 fs-1">
+<span class="path1"></span>
+<span class="path2"></span>
+</i>
+</div>
+<!--begin::User account menu-->
+<div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px" data-kt-menu="true">
+<!--begin::Menu item-->
+<div class="menu-item px-3">
+<div class="menu-content d-flex align-items-center px-3">
+<!--begin::Avatar-->
+<div class="symbol symbol-50px me-5">
+<img alt="Logo" src="{% static 'assets/media/avatars/300-1.jpg' %}" />
+</div>
+<!--end::Avatar-->
+<!--begin::Username-->
+<div class="d-flex flex-column min-w-0 flex-grow-1 overflow-hidden" style="max-width: 145px;">
+<div class="fw-bold d-flex align-items-center fs-5 min-w-0">
+<span class="text-truncate" title="{{ request.user.username }}">{{ request.user.username }}</span>
+{% if request.user.is_superuser %}
+<span class="badge badge-light-success fw-bold fs-8 px-2 py-1 ms-2 flex-shrink-0">Admin</span>
+{% endif %}
+</div>
+<span class="fw-semibold text-muted fs-7 text-truncate d-block" title="{{ request.user.email|default:'No email' }}">{{ request.user.email|default:"No email" }}</span>
+</div>
+<!--end::Username-->
+</div>
+</div>
+<!--end::Menu item-->
+<!--begin::Menu separator-->
+<div class="separator my-2"></div>
+<!--end::Menu separator-->
+<!--begin::Menu item-->
+<div class="menu-item px-5">
+<a href="account/overview.html" class="menu-link px-5">My Profile</a>
+</div>
+<!--end::Menu item-->
+<!--begin::Menu item-->
+<div class="menu-item px-5 my-1">
+<a href="account/settings.html" class="menu-link px-5">Settings</a>
+</div>
+<!--end::Menu item-->
+<!--begin::Menu separator-->
+<div class="separator my-2"></div>
+<!--end::Menu separator-->
+<!--begin::Menu item-->
+<div class="menu-item px-5">
+<form method="post" action="{% url 'logout' %}">
+{% csrf_token %}
+<button type="submit" class="menu-link px-5 border-0 bg-transparent w-100 text-start">Sign out</button>
+</form>
+</div>
+<!--end::Menu item-->
+</div>
+<!--end::User account menu-->
+</div>
+<!--end::User menu-->
+</div>
+<!--end::User panel-->
+</div>
+<!--end::Footer-->
+</div>
+<!--end::Aside-->
