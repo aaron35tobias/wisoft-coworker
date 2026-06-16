@@ -33,6 +33,27 @@
 <!--begin::Wrapper-->
 <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper">
 {% block header %}{% endblock %}
+{% if messages %}
+<div class="container-xxl pt-4">
+{% for message in messages %}
+<!--begin::Notice-->
+<div class="notice d-flex bg-light-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}primary{% else %}{{ message.tags }}{% endif %} rounded border-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}primary{% else %}{{ message.tags }}{% endif %} border border-dashed rounded-3 p-3 mb-5" role="alert">
+<!--begin::Wrapper-->
+<div class="d-flex flex-stack flex-grow-1">
+<!--begin::Content-->
+<div class="fw-semibold">
+<h4 class="text-gray-900 fw-bold mb-1">{% if message.tags == 'error' %}Error{% else %}{{ message.tags|title }}{% endif %}</h4>
+<div class="fs-6 text-gray-700">{{ message }}</div>
+</div>
+<!--end::Content-->
+</div>
+<!--end::Wrapper-->
+</div>
+<!--end::Notice-->
+{% endfor %}
+</div>
+{% endif %}
+
 {% block content %}{% endblock %}
 <!--begin::Footer-->
 <div class="footer py-4 d-flex flex-lg-column" id="kt_footer">

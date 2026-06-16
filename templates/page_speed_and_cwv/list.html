@@ -1,16 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}Websites | Wisoft Co-Worker{% endblock %}
-
 {% block extra_css_scripts %}
 <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
 {% endblock %}
-
 {% block header %}
 {% include 'includes/header.html' with page_title='Websites' parent_title='Page Speed & CWV' %}
 {% endblock %}
-
 {% block content %}
 <!--begin::Content-->
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
@@ -28,7 +24,7 @@
 <span class="path1"></span>
 <span class="path2"></span>
 </i>
-<input type="text" data-kt-customer-table-filter="search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Websites" />
+<input type="text" id="kt_websites_table_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Websites" />
 </div>
 <!--end::Search-->
 </div>
@@ -36,19 +32,12 @@
 <!--begin::Card toolbar-->
 <div class="card-toolbar">
 <!--begin::Toolbar-->
-<div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+<div class="d-flex justify-content-end">
 <!--begin::Add website-->
-<button type="button" class="btn btn-primary">Add Website</button>
+<button type="button" class="btn btn-sm btn-primary" id="kt_add_website_toggle">Add Website</button>
 <!--end::Add website-->
 </div>
 <!--end::Toolbar-->
-<!--begin::Group actions-->
-<div class="d-flex justify-content-end align-items-center d-none" data-kt-customer-table-toolbar="selected">
-<div class="fw-bold me-5">
-<span class="me-2" data-kt-customer-table-select="selected_count"></span>Selected</div>
-<button type="button" class="btn btn-danger" data-kt-customer-table-select="delete_selected">Delete Selected</button>
-</div>
-<!--end::Group actions-->
 </div>
 <!--end::Card toolbar-->
 </div>
@@ -56,45 +45,38 @@
 <!--begin::Card body-->
 <div class="card-body pt-0">
 <!--begin::Table-->
-<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_customers_table">
+<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_websites_table">
 <thead>
 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
 <th class="w-50px">#</th>
 <th class="min-w-250px">Website URL</th>
 <th class="min-w-250px">Note</th>
-<th class="min-w-150px">Added By</th>
-<th class="min-w-175px">Date Added</th>
 <th class="min-w-175px">Date Modified</th>
-<th class="text-end min-w-70px">Actions</th>
+<th class="min-w-100px">Actions</th>
 </tr>
 </thead>
 <tbody class="fw-semibold text-gray-600">
 {% for website in websites %}
-<tr>
+<tr data-website-row="true">
 <td>{{ forloop.counter }}</td>
 <td>
 <a href="{{ website.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary mb-1">{{ website.website_url }}</a>
 </td>
 <td>{{ website.note|default:"-"|truncatechars:80 }}</td>
-<td>{{ website.added_by.username|default:"-" }}</td>
-<td>{{ website.date_added|date:"d M Y, g:i a" }}</td>
-<td>{{ website.date_modified|date:"d M Y, g:i a" }}</td>
-<td class="text-end">
-<a href="#" class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">Actions
-<i class="ki-duotone ki-down fs-5 ms-1"></i></a>
-<div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true">
-<div class="menu-item px-3">
-<a href="#" class="menu-link px-3">View</a>
-</div>
-<div class="menu-item px-3">
-<a href="#" class="menu-link px-3 text-danger">Delete</a>
-</div>
+<td>{{ website.date_modified|date:"d M Y, G:I A" }}</td>
+<td>
+<div class="d-flex">
+<a href="#" class="btn btn-sm btn-primary me-2 js-edit-website" data-website='{"id":{{ website.id }},"website_url":"{{ website.website_url|escapejs }}","note":"{{ website.note|escapejs }}"}'>Edit</a>
+<form method="post" action="{% url 'page_speed_and_cwv:website-delete' website.id %}" class="js-delete-website-form">
+{% csrf_token %}
+<button type="submit" class="btn btn-sm btn-danger">Delete</button>
+</form>
 </div>
 </td>
 </tr>
 {% empty %}
 <tr>
-<td colspan="7" class="text-center text-muted py-10">No websites added yet.</td>
+<td colspan="5" class="text-center text-muted py-10">No websites added yet.</td>
 </tr>
 {% endfor %}
 </tbody>
@@ -108,11 +90,232 @@
 <!--end::Container-->
 </div>
 <!--end::Content-->
+
+<!--begin::Add website drawer-->
+<div id="kt_add_website_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="add-website" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'300px', 'md': '500px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_add_website_toggle" data-kt-drawer-close="#kt_add_website_close">
+<div class="card shadow-none rounded-0 w-100">
+<!--begin::Header-->
+<div class="card-header" id="kt_add_website_header">
+<h3 class="card-title fw-bold text-gray-900" id="kt_add_website_title">Add Website</h3>
+<div class="card-toolbar">
+<button type="button" class="btn btn-sm btn-icon btn-active-light-primary" id="kt_add_website_close">
+<i class="ki-duotone ki-cross fs-1">
+<span class="path1"></span>
+<span class="path2"></span>
+</i>
+</button>
+</div>
+</div>
+<!--end::Header-->
+<!--begin::Body-->
+<div class="card-body position-relative">
+<form class="form" method="post" action="{% url 'page_speed_and_cwv:website-create' %}" id="kt_add_website_form" novalidate>
+{% csrf_token %}
+<div class="fv-row mb-8">
+<label class="required fs-6 fw-semibold mb-2">Website URL</label>
+<input type="url" name="website_url" class="form-control form-control-solid" placeholder="https://example.com" autocomplete="url" />
+</div>
+<div class="fv-row mb-8">
+<label class="fs-6 fw-semibold mb-2">Note</label>
+<textarea name="note" class="form-control form-control-solid" rows="5" placeholder="Optional note"></textarea>
+</div>
+<div class="d-flex justify-content-end">
+<button type="button" class="btn btn-sm btn-light me-3" id="kt_add_website_cancel">Discard</button>
+<button type="submit" class="btn btn-sm btn-primary" id="kt_add_website_submit">
+<span class="indicator-label">Submit</span>
+<span class="indicator-progress">Please wait...
+<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+</button>
+</div>
+</form>
+</div>
+<!--end::Body-->
+</div>
+</div>
+<!--end::Add website drawer-->
+
+<!--begin::Edit website drawer-->
+<div id="kt_edit_website_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="edit-website" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'300px', 'md': '500px'}" data-kt-drawer-direction="end" data-kt-drawer-close="#kt_edit_website_close">
+<div class="card shadow-none rounded-0 w-100">
+<!--begin::Header-->
+<div class="card-header" id="kt_edit_website_header">
+<h3 class="card-title fw-bold text-gray-900">Edit Website</h3>
+<div class="card-toolbar">
+<button type="button" class="btn btn-sm btn-icon btn-active-light-primary" id="kt_edit_website_close">
+<i class="ki-duotone ki-cross fs-1">
+<span class="path1"></span>
+<span class="path2"></span>
+</i>
+</button>
+</div>
+</div>
+<!--end::Header-->
+<!--begin::Body-->
+<div class="card-body position-relative">
+<form class="form" method="post" action="{% url 'page_speed_and_cwv:website-update' %}" id="kt_edit_website_form" novalidate>
+{% csrf_token %}
+<input type="hidden" name="website_id" />
+<div class="fv-row mb-8">
+<label class="required fs-6 fw-semibold mb-2">Website URL</label>
+<input type="url" name="website_url" class="form-control form-control-solid" placeholder="https://example.com" autocomplete="url" />
+</div>
+<div class="fv-row mb-8">
+<label class="fs-6 fw-semibold mb-2">Note</label>
+<textarea name="note" class="form-control form-control-solid" rows="5" placeholder="Optional note"></textarea>
+</div>
+<div class="d-flex justify-content-end">
+<button type="button" class="btn btn-sm btn-light me-3" id="kt_edit_website_cancel">Discard</button>
+<button type="submit" class="btn btn-sm btn-primary" id="kt_edit_website_submit">
+<span class="indicator-label">Update</span>
+<span class="indicator-progress">Please wait...
+<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+</button>
+</div>
+</form>
+</div>
+<!--end::Body-->
+</div>
+</div>
+<!--end::Edit website drawer-->
 {% endblock %}
 
 {% block extra_js_scripts %}
 <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
-<script src="{% static 'assets/js/custom/apps/ecommerce/customers/listing/listing.js' %}"></script>
 <script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
 <script src="{% static 'assets/js/custom/widgets.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-validation/dist/jquery.validate.min.js"></script>
+<script>
+jQuery(function () {
+var addDrawerElement = document.querySelector("#kt_add_website_drawer");
+var addFormElement = document.querySelector("#kt_add_website_form");
+var editDrawerElement = document.querySelector("#kt_edit_website_drawer");
+var editFormElement = document.querySelector("#kt_edit_website_form");
+var addValidator = jQuery("#kt_add_website_form").validate({
+rules: {
+website_url: {
+required: true,
+url: true
+},
+note: {
+maxlength: 1000
+}
+},
+messages: {
+website_url: {
+required: "Website URL is required.",
+url: "Enter a valid website URL."
+},
+note: {
+maxlength: "Note must be 1000 characters or less."
+}
+},
+errorClass: "text-danger mt-2",
+errorElement: "div"
+});
+
+var editValidator = jQuery("#kt_edit_website_form").validate({
+rules: {
+website_url: {
+required: true,
+url: true
+},
+note: {
+maxlength: 1000
+}
+},
+messages: {
+website_url: {
+required: "Website URL is required.",
+url: "Enter a valid website URL."
+},
+note: {
+maxlength: "Note must be 1000 characters or less."
+}
+},
+errorClass: "text-danger mt-2",
+errorElement: "div"
+});
+
+function resetAddWebsiteDrawer() {
+if (!addFormElement) {
+return;
+}
+
+addFormElement.reset();
+addValidator.resetForm();
+}
+
+jQuery("#kt_add_website_toggle").on("click", function () {
+resetAddWebsiteDrawer();
+});
+
+jQuery(document).on("click", ".js-edit-website", function (event) {
+event.preventDefault();
+
+var website = JSON.parse(this.dataset.website);
+jQuery("#kt_edit_website_form [name='website_id']").val(website.id);
+jQuery("#kt_edit_website_form [name='website_url']").val(website.website_url);
+jQuery("#kt_edit_website_form [name='note']").val(website.note);
+editValidator.resetForm();
+
+var drawer = editDrawerElement ? KTDrawer.getInstance(editDrawerElement) || new KTDrawer(editDrawerElement) : null;
+if (drawer) {
+drawer.show();
+}
+});
+
+jQuery("#kt_add_website_cancel").on("click", function () {
+resetAddWebsiteDrawer();
+var drawer = addDrawerElement ? KTDrawer.getInstance(addDrawerElement) || new KTDrawer(addDrawerElement) : null;
+if (drawer) {
+drawer.hide();
+}
+});
+
+jQuery("#kt_edit_website_cancel").on("click", function () {
+if (editFormElement) {
+editFormElement.reset();
+editValidator.resetForm();
+}
+
+var drawer = editDrawerElement ? KTDrawer.getInstance(editDrawerElement) || new KTDrawer(editDrawerElement) : null;
+if (drawer) {
+drawer.hide();
+}
+});
+
+jQuery("#kt_add_website_form, #kt_edit_website_form").on("submit", function () {
+if (!jQuery(this).valid()) {
+return false;
+}
+
+var submitButton = this.querySelector("button[type='submit']");
+if (submitButton) {
+submitButton.setAttribute("data-kt-indicator", "on");
+submitButton.disabled = true;
+}
+});
+
+jQuery(document).on("submit", ".js-delete-website-form", function (event) {
+if (!window.confirm("Are you sure you want to delete this website?")) {
+event.preventDefault();
+}
+});
+
+var websitesTableElement = document.querySelector("#kt_websites_table");
+if (websitesTableElement && websitesTableElement.querySelector("[data-website-row='true']")) {
+var websitesTable = jQuery(websitesTableElement).DataTable({
+info: false,
+order: [],
+columnDefs: [
+{ orderable: false, targets: 4 }
+]
+});
+
+jQuery("#kt_websites_table_search").on("keyup", function () {
+websitesTable.search(this.value).draw();
+});
+}
+});
+</script>
 {% endblock %}
