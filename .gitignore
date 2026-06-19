@@ -37,6 +37,9 @@ ENV/
 .env
 .env.*
 !.env.example
+google-ads.yaml
+google-search-console-service-account.json
+google-search-console-token.json
 
 # Testing and coverage
 .coverage

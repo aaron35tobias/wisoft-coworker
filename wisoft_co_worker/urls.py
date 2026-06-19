@@ -7,6 +7,10 @@ urlpatterns = [
     path('', include('general.urls')),
     path('accounts/', include('accounts.urls')),
     path('page-speed-and-cwv/', include('page_speed_and_cwv.urls')),
+    path('technical-seo-audits/', include('technical_seo.urls')),
+    path('content-gaps/', include('content_gap.urls')),
+    path('pricing-pr-monitor/', include('pricing_pr_monitor.urls')),
+    path('keyword-research/', include('keyword_research.urls')),
     path('admin/', admin.site.urls),
 ]
 

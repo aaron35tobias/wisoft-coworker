@@ -16,6 +16,135 @@
 <link href="{% static 'assets/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
 <link href="{% static 'assets/css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
 <!--end::Global Stylesheets Bundle-->
+<style>
+#kt_aside {
+display: flex;
+flex-direction: row;
+overflow: hidden;
+padding: 0 !important;
+}
+.app-sidebar-rail {
+align-items: center;
+background: var(--bs-gray-100);
+border-right: 1px solid var(--bs-gray-200);
+display: flex;
+flex-direction: column;
+gap: 0.45rem;
+padding: 1.25rem 0.55rem;
+width: 64px;
+}
+.app-sidebar-rail-separator {
+background: var(--bs-gray-300);
+border-radius: 999px;
+height: 2px;
+margin: 0.55rem 0;
+width: 22px;
+}
+.app-rail-link {
+align-items: center;
+border-radius: 0.475rem;
+color: var(--bs-gray-600);
+display: inline-flex;
+height: 42px;
+justify-content: center;
+width: 42px;
+}
+.app-rail-link:hover,
+.app-rail-link.active {
+background: var(--bs-primary-light);
+color: var(--bs-primary);
+}
+.app-sidebar-main {
+display: flex;
+flex: 1;
+flex-direction: column;
+min-width: 0;
+padding-bottom: 2.25rem;
+padding-top: 2.25rem;
+}
+.app-sidebar-section-title {
+color: var(--bs-gray-900);
+font-size: 1.15rem;
+font-weight: 800;
+letter-spacing: 0;
+padding: 0 1.75rem 1rem;
+}
+.app-sidebar-main .menu > .menu-item > .menu-link > .menu-icon,
+.app-sidebar-main .menu-bullet {
+display: none !important;
+}
+.app-sidebar-main .menu > .menu-item > .menu-link {
+padding-left: 1.75rem;
+padding-right: 1.75rem;
+}
+.app-sidebar-main .menu-sub .menu-link {
+padding-left: 2.25rem !important;
+}
+.app-sidebar-main .menu-link.active {
+background: var(--bs-gray-200);
+}
+body.app-sidebar-hidden #kt_aside {
+box-shadow: 0 1rem 3rem rgba(15, 23, 42, 0.18);
+display: flex !important;
+margin-right: calc(14px - var(--app-sidebar-width, 360px));
+transform: translateX(calc(-100% + 14px));
+transition: transform 0.22s ease, margin-right 0.22s ease, box-shadow 0.22s ease;
+z-index: 10;
+}
+body.app-sidebar-hidden #kt_wrapper {
+padding-left: 0 !important;
+}
+body.app-sidebar-hidden #kt_aside:hover,
+body.app-sidebar-hidden.app-sidebar-peek #kt_aside {
+transform: translateX(0);
+}
+.app-sidebar-toggle {
+align-items: center;
+backdrop-filter: blur(8px);
+background: var(--bs-body-bg);
+border: 1px solid var(--bs-gray-200);
+border-radius: 999px;
+box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.12);
+color: var(--bs-gray-700);
+display: inline-flex;
+gap: 0.45rem;
+height: 36px;
+justify-content: center;
+transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+.app-sidebar-toggle:hover {
+background: var(--bs-primary-light);
+border-color: var(--bs-primary);
+box-shadow: 0 0.75rem 1.75rem rgba(62, 151, 255, 0.2);
+color: var(--bs-primary);
+transform: translateX(1px);
+}
+.app-sidebar-edge-toggle {
+flex-shrink: 0;
+height: 34px;
+margin-left: 0.75rem;
+padding: 0;
+width: 34px;
+z-index: 10;
+}
+.app-sidebar-edge-toggle:hover {
+transform: translateX(1px);
+}
+.app-sidebar-pin-icon {
+display: none;
+}
+body.app-sidebar-hidden .app-sidebar-tuck-icon {
+display: none;
+}
+body.app-sidebar-hidden .app-sidebar-pin-icon {
+display: inline-flex;
+}
+@media (max-width: 991.98px) {
+.app-sidebar-edge-toggle {
+display: none;
+}
+}
+</style>
 <script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
 </head>
 <!--end::Head-->
@@ -90,6 +219,50 @@
 <script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
 <script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
 <!--end::Global Javascript Bundle-->
+<script>
+(function () {
+var storageKey = "wisoft.sidebar.hidden";
+var body = document.body;
+var hideButton = document.getElementById("kt_sidebar_hide_toggle");
+var aside = document.getElementById("kt_aside");
+
+function syncSidebarWidth() {
+if (!aside || window.innerWidth < 992) {
+return;
+}
+var width = Math.ceil(aside.getBoundingClientRect().width || aside.offsetWidth || 360);
+document.documentElement.style.setProperty("--app-sidebar-width", width + "px");
+}
+
+function setSidebarHidden(hidden) {
+body.classList.toggle("app-sidebar-hidden", hidden);
+try {
+localStorage.setItem(storageKey, hidden ? "1" : "0");
+} catch (error) {}
+}
+
+syncSidebarWidth();
+window.addEventListener("resize", syncSidebarWidth);
+
+try {
+if (localStorage.getItem(storageKey) === "1") {
+body.classList.add("app-sidebar-hidden");
+}
+} catch (error) {}
+
+if (hideButton) {
+hideButton.addEventListener("click", function () {
+setSidebarHidden(!body.classList.contains("app-sidebar-hidden"));
+body.classList.remove("app-sidebar-peek");
+});
+}
+if (aside) {
+aside.addEventListener("mouseleave", function () {
+body.classList.remove("app-sidebar-peek");
+});
+}
+})();
+</script>
 {% block extra_js_scripts %}{% endblock %}
 <!--end::Javascript-->
 </body>

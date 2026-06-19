@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Content Gap Detail | Wisoft Co-Worker{% endblock %}
+
+{% block extra_css_scripts %}
+<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+<style>
+.cg-url-cell {
+max-width: 360px;
+white-space: normal;
+word-break: break-word;
+}
+.cg-copy {
+white-space: pre-line;
+}
+</style>
+{% endblock %}
+
+{% block header %}
+{% include 'includes/header.html' with page_title='Content Gap Detail' parent_title='Content Gaps' action_url=back_to_history_url action_label='History' %}
+{% endblock %}
+
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+<div class="container-xxl" id="kt_content_container">
+
+<div class="card mb-5">
+<div class="card-body p-8">
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-4">
+<div class="min-w-0">
+<div class="d-flex align-items-center gap-3 mb-3">
+{% if analysis.status == 'completed' %}
+<span class="badge badge-light-success">Completed</span>
+{% elif analysis.status == 'failed' %}
+<span class="badge badge-light-danger">Failed</span>
+{% else %}
+<span class="badge badge-light-primary">Running</span>
+{% endif %}
+<span class="text-muted">{{ analysis.started_at|date:"d M Y, g:i A" }}</span>
+</div>
+<h2 class="fw-bold text-gray-900 mb-2 text-break">{{ analysis.own_url }}</h2>
+<div class="text-muted">
+{{ analysis.project.target_topic|default:"No target topic" }}{% if analysis.project.target_market %} · {{ analysis.project.target_market }}{% endif %}
+</div>
+</div>
+<form method="post" action="{% url 'content_gap:analysis-delete' analysis.id %}" class="js-delete-analysis-form">
+{% csrf_token %}
+<input type="hidden" name="next" value="{% url 'content_gap:history' %}" />
+<button type="submit" class="btn btn-sm btn-light-danger">Delete</button>
+</form>
+</div>
+</div>
+</div>
+
+{% if analysis.status == 'failed' %}
+<div class="alert alert-danger d-flex align-items-center p-5 mb-5">
+<div class="d-flex flex-column">
+<h4 class="mb-1 text-danger">Analysis failed</h4>
+<span>{{ analysis.error_message|default:"The analysis could not be completed." }}</span>
+</div>
+</div>
+{% endif %}
+
+{% if analysis.display_ai_error %}
+<div class="alert alert-warning d-flex align-items-center p-5 mb-5">
+<div class="d-flex flex-column">
+<h4 class="mb-1 text-warning">AI note</h4>
+<span>{{ analysis.display_ai_error }}</span>
+</div>
+</div>
+{% endif %}
+
+<div class="row g-5 mb-5">
+<div class="col-md-3">
+<div class="card card-flush h-100">
+<div class="card-body">
+<div class="text-muted fs-7 text-uppercase fw-bold mb-2">Competitors</div>
+<div class="fs-2 fw-bold text-gray-900">{{ analysis.competitor_count }}</div>
+</div>
+</div>
+</div>
+<div class="col-md-3">
+<div class="card card-flush h-100">
+<div class="card-body">
+<div class="text-muted fs-7 text-uppercase fw-bold mb-2">Content Gaps</div>
+<div class="fs-2 fw-bold text-gray-900">{{ analysis.content_gaps|length }}</div>
+</div>
+</div>
+</div>
+<div class="col-md-3">
+<div class="card card-flush h-100">
+<div class="card-body">
+<div class="text-muted fs-7 text-uppercase fw-bold mb-2">Keywords</div>
+<div class="fs-2 fw-bold text-gray-900">{{ analysis.keyword_opportunities|length }}</div>
+</div>
+</div>
+</div>
+<div class="col-md-3">
+<div class="card card-flush h-100">
+<div class="card-body">
+<div class="text-muted fs-7 text-uppercase fw-bold mb-2">Own Word Count</div>
+<div class="fs-2 fw-bold text-gray-900">{{ analysis.own_page_snapshot.word_count|default:"0" }}</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card mb-5">
+<div class="card-header">
+<h3 class="card-title fw-bold text-gray-900">AI Summary</h3>
+</div>
+<div class="card-body">
+<div class="cg-copy text-gray-700 fs-6">{{ analysis.display_ai_summary }}</div>
+</div>
+</div>
+
+<div class="card mb-5">
+<div class="card-header border-0 pt-6">
+<div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+<h3 class="fw-bold m-0">Content Gaps</h3>
+<div class="d-flex align-items-center position-relative my-1">
+<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+<input type="text" id="kt_content_gaps_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Gaps" />
+</div>
+</div>
+</div>
+<div class="card-body pt-0">
+<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_content_gaps_table">
+<thead>
+<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<th>Priority</th>
+<th>Topic</th>
+<th>Why It Matters</th>
+<th>Competitors</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody class="fw-semibold text-gray-600">
+{% for gap in analysis.content_gaps %}
+<tr data-gap-row="true">
+<td><span class="badge badge-light-{% if gap.priority == 'High' %}danger{% elif gap.priority == 'Medium' %}warning{% else %}primary{% endif %}">{{ gap.priority|default:"Medium" }}</span></td>
+<td class="text-gray-900">{{ gap.topic|default:"-" }}</td>
+<td>{{ gap.why_it_matters|default:"-" }}</td>
+<td>{{ gap.competitors_covering|default:"-" }}</td>
+<td>{{ gap.recommendation|default:"-" }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="5" class="text-center text-muted py-10">No content gaps were saved for this analysis.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="row g-5 mb-5">
+<div class="col-xl-6">
+<div class="card h-100">
+<div class="card-header border-0 pt-6">
+<h3 class="card-title fw-bold text-gray-900">Keyword Opportunities</h3>
+</div>
+<div class="card-body pt-0">
+<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_keyword_opportunities_table">
+<thead>
+<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<th>Keyword</th>
+<th>Intent</th>
+<th>Opportunity</th>
+</tr>
+</thead>
+<tbody class="fw-semibold text-gray-600">
+{% for keyword in analysis.keyword_opportunities %}
+<tr data-keyword-row="true">
+<td class="text-gray-900">{{ keyword.keyword|default:"-" }}</td>
+<td><span class="badge badge-light-info">{{ keyword.intent|default:"-" }}</span></td>
+<td>{{ keyword.opportunity|default:"-" }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="3" class="text-center text-muted py-10">No keyword opportunities were saved.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="col-xl-6">
+<div class="card h-100">
+<div class="card-header border-0 pt-6">
+<h3 class="card-title fw-bold text-gray-900">Execution Plan</h3>
+</div>
+<div class="card-body pt-0">
+<div class="timeline-label">
+{% for step in analysis.execution_plan %}
+<div class="timeline-item">
+<div class="timeline-label fw-bold text-gray-800 fs-6">{{ forloop.counter }}</div>
+<div class="timeline-badge"><i class="fa fa-genderless text-primary fs-1"></i></div>
+<div class="timeline-content fw-semibold text-gray-700 ps-3">{{ step }}</div>
+</div>
+{% empty %}
+<div class="text-muted py-10 text-center">No execution plan was saved.</div>
+{% endfor %}
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="row g-5 mb-5">
+<div class="col-xl-6">
+<div class="card h-100">
+<div class="card-header">
+<h3 class="card-title fw-bold text-gray-900">Recommended Sections</h3>
+</div>
+<div class="card-body">
+{% for section in analysis.recommended_sections %}
+<div class="d-flex justify-content-between border-bottom border-gray-200 pb-4 mb-4">
+<div class="pe-4">
+<div class="fw-bold text-gray-900">{{ section.section|default:"-" }}</div>
+<div class="text-muted fs-7">{{ section.purpose|default:"-" }}</div>
+<div class="text-muted fs-8 mt-2">{{ section.source_competitors|default:"Derived from competitor comparison" }}</div>
+</div>
+<span class="badge badge-light-{% if section.priority == 'High' %}danger{% elif section.priority == 'Medium' %}warning{% else %}primary{% endif %} h-25px">{{ section.priority|default:"Medium" }}</span>
+</div>
+{% empty %}
+<div class="text-muted text-center py-10">No recommended sections were saved.</div>
+{% endfor %}
+</div>
+</div>
+</div>
+
+<div class="col-xl-6">
+<div class="card h-100">
+<div class="card-header">
+<h3 class="card-title fw-bold text-gray-900">{{ analysis.wireframe.title|default:"Page Wireframe" }}</h3>
+</div>
+<div class="card-body">
+{% for section in analysis.wireframe.sections %}
+<div class="mb-6">
+<div class="fw-bold text-gray-900 mb-1">{{ forloop.counter }}. {{ section.name|default:"Section" }}</div>
+<div class="text-muted fs-7 mb-2">{{ section.goal|default:"-" }}</div>
+{% if section.elements %}
+<div class="d-flex flex-wrap gap-2">
+{% for element in section.elements %}
+<span class="badge badge-light">{{ element }}</span>
+{% endfor %}
+</div>
+{% endif %}
+</div>
+{% empty %}
+<div class="text-muted text-center py-10">No wireframe was saved.</div>
+{% endfor %}
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h3 class="card-title fw-bold text-gray-900">Page Snapshots</h3>
+</div>
+<div class="card-body">
+<div class="table-responsive">
+<table class="table align-middle table-row-dashed fs-6 gy-5">
+<thead>
+<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<th>Type</th>
+<th>URL</th>
+<th>Status</th>
+<th>Title</th>
+<th>H1</th>
+<th>Words</th>
+</tr>
+</thead>
+<tbody class="fw-semibold text-gray-600">
+<tr>
+<td><span class="badge badge-light-primary">Own</span></td>
+<td class="cg-url-cell"><a href="{{ analysis.own_page_snapshot.url }}" target="_blank" rel="noopener">{{ analysis.own_page_snapshot.url }}</a></td>
+<td>{{ analysis.own_page_snapshot.status_code|default:"-" }}</td>
+<td>{{ analysis.own_page_snapshot.title|default:"-"|truncatechars:80 }}</td>
+<td>{{ analysis.own_page_snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
+<td>{{ analysis.own_page_snapshot.word_count|default:"0" }}</td>
+</tr>
+{% for snapshot in analysis.competitor_snapshots %}
+<tr>
+<td><span class="badge badge-light">Competitor</span></td>
+<td class="cg-url-cell"><a href="{{ snapshot.url }}" target="_blank" rel="noopener">{{ snapshot.url }}</a></td>
+<td>{{ snapshot.status_code|default:"-" }}</td>
+<td>{{ snapshot.title|default:"-"|truncatechars:80 }}</td>
+<td>{{ snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
+<td>{{ snapshot.word_count|default:"0" }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js_scripts %}
+<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<script>
+jQuery(function () {
+var gapsTableElement = document.querySelector("#kt_content_gaps_table");
+if (gapsTableElement && gapsTableElement.querySelector("[data-gap-row='true']")) {
+var gapsTable = jQuery(gapsTableElement).DataTable({
+pageLength: 5,
+lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>",
+order: [[0, "asc"]]
+});
+        
+jQuery("#kt_content_gaps_search").on("keyup", function () {
+gapsTable.search(this.value).draw();
+});
+}
+
+var keywordTableElement = document.querySelector("#kt_keyword_opportunities_table");
+if (keywordTableElement && keywordTableElement.querySelector("[data-keyword-row='true']")) {
+jQuery(keywordTableElement).DataTable({
+pageLength: 5,
+lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>"
+});
+}
+
+jQuery(document).on("submit", ".js-delete-analysis-form", function (event) {
+if (!window.confirm("Delete this content gap analysis? This removes the saved recommendations and wireframe.")) {
+event.preventDefault();
+}
+});
+});
+</script>
+{% endblock %}

@@ -51,6 +51,8 @@
 <th class="w-50px">#</th>
 <th class="min-w-250px">Website URL</th>
 <th class="min-w-250px">Note</th>
+<th class="min-w-125px">Status</th>
+<th class="min-w-175px">Last Scan</th>
 <th class="min-w-175px">Date Modified</th>
 <th class="min-w-100px">Actions</th>
 </tr>
@@ -63,10 +65,25 @@
 <a href="{{ website.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary mb-1">{{ website.website_url }}</a>
 </td>
 <td>{{ website.note|default:"-"|truncatechars:80 }}</td>
+<td>
+{% if website.is_active %}
+<span class="badge badge-light-primary">Active</span>
+{% else %}
+<span class="badge badge-light-danger">Inactive</span>
+{% endif %}
+</td>
+<td>
+{% if website.latest_report %}
+{{ website.latest_report.scanned_at|date:"d M Y, G:I A" }}
+{% else %}
+<span class="text-muted">Not scanned</span>
+{% endif %}
+</td>
 <td>{{ website.date_modified|date:"d M Y, G:I A" }}</td>
 <td>
 <div class="d-flex">
-<a href="#" class="btn btn-sm btn-primary me-2 js-edit-website" data-website='{"id":{{ website.id }},"website_url":"{{ website.website_url|escapejs }}","note":"{{ website.note|escapejs }}"}'>Edit</a>
+<a href="{% url 'page_speed_and_cwv:website-reports' website.id %}" class="btn btn-sm btn-info me-2">Reports</a>
+<a href="#" class="btn btn-sm btn-primary me-2 js-edit-website" data-website='{"id":{{ website.id }},"website_url":"{{ website.website_url|escapejs }}","note":"{{ website.note|escapejs }}","is_active":{{ website.is_active|yesno:"true,false" }}}'>Edit</a>
 <form method="post" action="{% url 'page_speed_and_cwv:website-delete' website.id %}" class="js-delete-website-form">
 {% csrf_token %}
 <button type="submit" class="btn btn-sm btn-danger">Delete</button>
@@ -76,7 +93,7 @@
 </tr>
 {% empty %}
 <tr>
-<td colspan="5" class="text-center text-muted py-10">No websites added yet.</td>
+<td colspan="7" class="text-center text-muted py-10">No websites added yet.</td>
 </tr>
 {% endfor %}
 </tbody>
@@ -118,6 +135,12 @@
 <div class="fv-row mb-8">
 <label class="fs-6 fw-semibold mb-2">Note</label>
 <textarea name="note" class="form-control form-control-solid" rows="5" placeholder="Optional note"></textarea>
+</div>
+<div class="fv-row mb-8">
+<label class="form-check form-switch form-check-custom form-check-solid">
+<input class="form-check-input" type="checkbox" name="is_active" value="1" checked />
+<span class="form-check-label fw-semibold text-gray-700">Active</span>
+</label>
 </div>
 <div class="d-flex justify-content-end">
 <button type="button" class="btn btn-sm btn-light me-3" id="kt_add_website_cancel">Discard</button>
@@ -162,6 +185,12 @@
 <div class="fv-row mb-8">
 <label class="fs-6 fw-semibold mb-2">Note</label>
 <textarea name="note" class="form-control form-control-solid" rows="5" placeholder="Optional note"></textarea>
+</div>
+<div class="fv-row mb-8">
+<label class="form-check form-switch form-check-custom form-check-solid">
+<input class="form-check-input" type="checkbox" name="is_active" value="1" />
+<span class="form-check-label fw-semibold text-gray-700">Active</span>
+</label>
 </div>
 <div class="d-flex justify-content-end">
 <button type="button" class="btn btn-sm btn-light me-3" id="kt_edit_website_cancel">Discard</button>
@@ -256,6 +285,7 @@ var website = JSON.parse(this.dataset.website);
 jQuery("#kt_edit_website_form [name='website_id']").val(website.id);
 jQuery("#kt_edit_website_form [name='website_url']").val(website.website_url);
 jQuery("#kt_edit_website_form [name='note']").val(website.note);
+jQuery("#kt_edit_website_form [name='is_active']").prop("checked", website.is_active);
 editValidator.resetForm();
 
 var drawer = editDrawerElement ? KTDrawer.getInstance(editDrawerElement) || new KTDrawer(editDrawerElement) : null;
@@ -308,7 +338,7 @@ var websitesTable = jQuery(websitesTableElement).DataTable({
 info: false,
 order: [],
 columnDefs: [
-{ orderable: false, targets: 4 }
+{ orderable: false, targets: 6 }
 ]
 });
 

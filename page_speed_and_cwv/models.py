@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.db import models
 
-
 class Website(models.Model):
     website_url = models.URLField(max_length=500)
     note = models.TextField(blank=True)
@@ -10,6 +9,7 @@ class Website(models.Model):
         on_delete=models.CASCADE,
         related_name='page_speed_websites',
     )
+    is_active = models.BooleanField(default=True)
     date_added = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 
@@ -18,3 +18,111 @@ class Website(models.Model):
 
     def __str__(self):
         return self.website_url
+    
+class WebsiteSpeedReportAiIndex(models.Model):
+    website = models.ForeignKey(
+        Website,
+        on_delete=models.CASCADE,
+        related_name='speed_report_ai_indexes',
+    )
+    scanned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-scanned_at']
+        indexes = [
+            models.Index(fields=['website', '-scanned_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.website} - {self.scanned_at:%Y-%m-%d %H:%M}'
+
+
+class WebsiteSpeedReport(models.Model):
+    DEVICE_MOBILE = 'mobile'
+    DEVICE_DESKTOP = 'desktop'
+
+    DEVICE_TYPE_CHOICES = [
+        (DEVICE_MOBILE, 'Mobile'),
+        (DEVICE_DESKTOP, 'Desktop'),
+    ]
+
+    website = models.ForeignKey(
+        Website,
+        on_delete=models.CASCADE,
+        related_name='speed_reports',
+    )
+    report_ai_index = models.ForeignKey(
+        WebsiteSpeedReportAiIndex,
+        on_delete=models.CASCADE,
+        related_name='reports',
+        null=True,
+        blank=True,
+    )
+    device_type = models.CharField(
+        max_length=20,
+        choices=DEVICE_TYPE_CHOICES,
+    )
+    performance_score = models.PositiveSmallIntegerField(null=True, blank=True)
+    accessibility_score = models.PositiveSmallIntegerField(null=True, blank=True)
+    best_practices_score = models.PositiveSmallIntegerField(null=True, blank=True)
+    seo_score = models.PositiveSmallIntegerField(null=True, blank=True)
+    first_contentful_paint = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Seconds',
+    )
+    largest_contentful_paint = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Seconds',
+    )
+    interaction_to_next_paint = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Milliseconds',
+    )
+    cumulative_layout_shift = models.DecimalField(
+        max_digits=8,
+        decimal_places=4,
+        null=True,
+        blank=True,
+    )
+    total_blocking_time = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Milliseconds',
+    )
+    speed_index = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Seconds',
+    )
+    time_to_first_byte = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Seconds',
+    )
+    raw_response_json = models.JSONField(blank=True, default=dict)
+    scanned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-scanned_at']
+        indexes = [
+            models.Index(fields=['website', 'device_type', '-scanned_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.website} - {self.device_type} - {self.scanned_at:%Y-%m-%d %H:%M}'
+

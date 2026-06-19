@@ -28,6 +28,10 @@ INSTALLED_APPS = [
     'accounts',
     'general',
     'page_speed_and_cwv',
+    'technical_seo',
+    'content_gap',
+    'pricing_pr_monitor',
+    'keyword_research',
 ]
 
 MIDDLEWARE = [
