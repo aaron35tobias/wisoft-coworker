@@ -1,0 +1,14 @@
+from django.urls import path
+
+from . import views
+
+
+app_name = 'keyword_research'
+
+urlpatterns = [
+    path('', views.research_view, name='research'),
+    path('run/', views.run_research_view, name='run'),
+    path('history/', views.history_view, name='history'),
+    path('<int:run_id>/', views.detail_view, name='detail'),
+    path('<int:run_id>/delete/', views.delete_run_view, name='delete'),
+]

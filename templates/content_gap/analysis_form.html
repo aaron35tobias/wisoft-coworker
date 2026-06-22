@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Content Gap Analysis | Wisoft Co-Worker{% endblock %}
+
+{% block extra_css_scripts %}
+<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+<style>
+.content-gap-loading-overlay {
+align-items: center;
+background: rgba(255, 255, 255, 0.82);
+bottom: 0;
+display: none;
+justify-content: center;
+left: 0;
+position: fixed;
+right: 0;
+top: 0;
+z-index: 1090;
+}
+[data-bs-theme="dark"] .content-gap-loading-overlay {
+background: rgba(18, 18, 23, 0.82);
+}
+.content-gap-loading-panel {
+max-width: 440px;
+width: calc(100% - 32px);
+}
+</style>
+{% endblock %}
+
+{% block header %}
+{% url 'content_gap:history' as analysis_history_url %}
+{% include 'includes/header.html' with page_title='Content Gap Analysis' parent_title='SEO Co-Worker' action_url=analysis_history_url action_label='Analysis History' %}
+{% endblock %}
+
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+<div class="container-xxl" id="kt_content_container">
+
+<div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+<div class="col-xl-5">
+<div class="card card-flush h-100">
+<div class="card-header">
+<h3 class="card-title fw-bold text-gray-900">Run Analysis</h3>
+</div>
+<div class="card-body">
+<form method="post" action="{% url 'content_gap:analysis-run' %}" id="kt_content_gap_form">
+{% csrf_token %}
+<div class="fv-row mb-6">
+<label class="required fs-6 fw-semibold mb-2">Your Page URL</label>
+<input type="url" name="own_url" class="form-control form-control-solid" placeholder="https://example.com/service-page" required />
+</div>
+<div class="row g-4 mb-6">
+<div class="col-md-6">
+<label class="fs-6 fw-semibold mb-2">Target Topic</label>
+<input type="text" name="target_topic" class="form-control form-control-solid" placeholder="SEO services" />
+</div>
+<div class="col-md-6">
+<label class="fs-6 fw-semibold mb-2">Target Market</label>
+<input type="text" name="target_market" class="form-control form-control-solid" placeholder="Dubai, UAE" />
+</div>
+</div>
+<div class="fv-row mb-4">
+<label class="required fs-6 fw-semibold mb-2">Competitor URL 1</label>
+<input type="url" name="competitor_url_1" class="form-control form-control-solid" placeholder="https://competitor.com/page" required />
+</div>
+<div class="fv-row mb-4">
+<label class="fs-6 fw-semibold mb-2">Competitor URL 2</label>
+<input type="url" name="competitor_url_2" class="form-control form-control-solid" placeholder="https://competitor.com/another-page" />
+</div>
+<div class="fv-row mb-6">
+<label class="fs-6 fw-semibold mb-2">Competitor URL 3</label>
+<input type="url" name="competitor_url_3" class="form-control form-control-solid" placeholder="https://competitor.com/comparison-page" />
+</div>
+<div class="fv-row mb-6">
+<label class="fs-6 fw-semibold mb-2">Notes</label>
+<textarea name="notes" class="form-control form-control-solid" rows="3" placeholder="Business context, audience, offer, or content constraints"></textarea>
+</div>
+<button type="submit" class="btn btn-sm btn-primary w-100" id="kt_content_gap_submit">
+<span class="indicator-label">Start Content Gap Analysis</span>
+<span class="indicator-progress">Analyzing...
+<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+</button>
+</form>
+</div>
+</div>
+</div>
+
+<div class="col-xl-7">
+<div class="card card-flush h-100">
+<div class="card-header">
+<h3 class="card-title fw-bold text-gray-900">Analysis Output</h3>
+</div>
+<div class="card-body">
+<div class="row g-5">
+<div class="col-md-6">
+<div class="d-flex align-items-center mb-5">
+<i class="ki-duotone ki-magnifier fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+<div>
+<div class="fw-bold text-gray-900">Content Gaps</div>
+<div class="text-muted fs-7">Missing topics and sections competitors cover</div>
+</div>
+</div>
+</div>
+<div class="col-md-6">
+<div class="d-flex align-items-center mb-5">
+<i class="ki-duotone ki-chart-line fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+<div>
+<div class="fw-bold text-gray-900">Untapped Keywords</div>
+<div class="text-muted fs-7">Keyword and phrase opportunities from competitors</div>
+</div>
+</div>
+</div>
+<div class="col-md-6">
+<div class="d-flex align-items-center">
+<i class="ki-duotone ki-row-horizontal fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+<div>
+<div class="fw-bold text-gray-900">Page Wireframe</div>
+<div class="text-muted fs-7">Suggested page structure and section goals</div>
+</div>
+</div>
+</div>
+<div class="col-md-6">
+<div class="d-flex align-items-center">
+<i class="ki-duotone ki-abstract-26 fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+<div>
+<div class="fw-bold text-gray-900">Execution Plan</div>
+<div class="text-muted fs-7">Prioritized actions to improve the page</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card mt-5">
+<div class="card-header border-0 pt-6">
+<div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+<h3 class="fw-bold m-0">Content Gap Projects</h3>
+<div class="d-flex align-items-center position-relative my-1">
+<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+<input type="text" id="kt_content_gap_projects_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Projects" />
+</div>
+</div>
+</div>
+<div class="card-body pt-0">
+<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_content_gap_projects_table">
+<thead>
+<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<th>Website</th>
+<th>Topic</th>
+<th>Market</th>
+<th>Analyses</th>
+<th>Latest Gaps</th>
+<th>Last Analysis</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody class="fw-semibold text-gray-600">
+{% for project in projects %}
+<tr data-project-row="true">
+<td><a href="{{ project.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ project.website_url }}</a></td>
+<td>{{ project.target_topic|default:"-" }}</td>
+<td>{{ project.target_market|default:"-" }}</td>
+<td>{{ project.analysis_count }}</td>
+<td>
+{% if project.latest_analysis %}
+<span class="badge badge-light-warning">{{ project.latest_gap_count }}</span>
+<span class="text-muted fs-8 ms-1">{{ project.latest_keyword_count }} keywords</span>
+{% else %}
+<span class="text-muted">-</span>
+{% endif %}
+</td>
+<td>
+{% if project.latest_analysis %}
+{{ project.latest_analysis.started_at|date:"d M Y, g:i A" }}
+{% else %}
+<span class="text-muted">-</span>
+{% endif %}
+</td>
+<td>
+{% if project.latest_analysis %}
+<a href="{% url 'content_gap:analysis-detail' project.latest_analysis.id %}" class="btn btn-sm btn-light-primary">View Latest</a>
+{% else %}
+<span class="text-muted">-</span>
+{% endif %}
+</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="7" class="text-center text-muted py-10">No content gap projects yet. Run your first analysis above.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="content-gap-loading-overlay" id="kt_content_gap_loading_overlay" aria-live="polite" aria-busy="true">
+<div class="card shadow-sm content-gap-loading-panel">
+<div class="card-body p-8 text-center">
+<div class="spinner-border text-primary mb-5" role="status"></div>
+<h3 class="fw-bold text-gray-900 mb-3">Running Content Gap Analysis</h3>
+<div class="text-muted fs-6 mb-5">Fetching pages, comparing competitor coverage, and preparing AI recommendations.</div>
+<div class="progress h-8px bg-light-primary">
+<div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+</div>
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js_scripts %}
+<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<script>
+jQuery(function () {
+var form = document.querySelector("#kt_content_gap_form");
+var submit = document.querySelector("#kt_content_gap_submit");
+var loadingOverlay = document.querySelector("#kt_content_gap_loading_overlay");
+
+if (form) {
+form.addEventListener("submit", function () {
+if (submit) {
+submit.setAttribute("data-kt-indicator", "on");
+submit.disabled = true;
+}
+if (loadingOverlay) {
+loadingOverlay.style.display = "flex";
+}
+});
+}
+
+var projectsTableElement = document.querySelector("#kt_content_gap_projects_table");
+if (projectsTableElement && projectsTableElement.querySelector("[data-project-row='true']")) {
+var projectsTable = jQuery(projectsTableElement).DataTable({
+pageLength: 5,
+lengthMenu: [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "All"]],
+dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>",
+order: [[5, "desc"]],
+columnDefs: [
+{ orderable: false, targets: 6 }
+]
+});
+
+jQuery("#kt_content_gap_projects_search").on("keyup", function () {
+projectsTable.search(this.value).draw();
+});
+}
+});
+</script>
+{% endblock %}

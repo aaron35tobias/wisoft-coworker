@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pricing & PR Run Detail | Wisoft Co-Worker{% endblock %}
+
+{% block extra_css_scripts %}
+<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+<style>
+.pp-url-cell{max-width:360px;white-space:normal;word-break:break-word}
+.pp-copy{white-space:pre-line}
+.pp-insight-text{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pp-insight-icon{align-items:center;display:flex;height:44px;justify-content:center;width:44px}
+</style>
+{% endblock %}
+
+{% block header %}
+{% url 'pricing_pr_monitor:history' as history_url %}
+{% include 'includes/header.html' with page_title='Pricing & PR Run Detail' parent_title='Pricing & PR Monitor' action_url=history_url action_label='History' %}
+{% endblock %}
+
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content"><div class="container-xxl" id="kt_content_container">
+<div class="card mb-5"><div class="card-body p-8">
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-4">
+<div><div class="d-flex align-items-center gap-3 mb-3">{% if run.status == 'completed' %}<span class="badge badge-light-success">Completed</span>{% elif run.status == 'failed' %}<span class="badge badge-light-danger">Failed</span>{% else %}<span class="badge badge-light-primary">Running</span>{% endif %}<span class="text-muted">{{ run.started_at|date:"d M Y, g:i A" }}</span></div><h2 class="fw-bold text-gray-900 mb-2">{{ run.monitor.competitor_name }}</h2><a href="{{ run.monitor.competitor_website }}" target="_blank" rel="noopener">{{ run.monitor.competitor_website }}</a></div>
+<form method="post" action="{% url 'pricing_pr_monitor:run-delete' run.id %}" class="js-delete-run-form">{% csrf_token %}<input type="hidden" name="next" value="{% url 'pricing_pr_monitor:history' %}" /><button type="submit" class="btn btn-sm btn-light-danger">Delete</button></form>
+</div></div></div>
+
+{% if run.status == 'failed' %}<div class="alert alert-danger p-5 mb-5"><h4 class="mb-1 text-danger">Run failed</h4><span>{{ run.error_message|default:"The monitor run could not be completed." }}</span></div>{% endif %}
+{% if run.ai_error %}<div class="alert alert-warning p-5 mb-5"><h4 class="mb-1 text-warning">AI note</h4><span>{{ run.ai_error }}</span></div>{% endif %}
+
+<div class="row g-5 mb-5">
+<div class="col-md-4"><div class="card card-flush h-100"><div class="card-body"><div class="text-muted fs-7 text-uppercase fw-bold mb-2">Pages Checked</div><div class="fs-2 fw-bold text-gray-900">{{ run.pages_checked }}</div></div></div></div>
+<div class="col-md-4"><div class="card card-flush h-100"><div class="card-body"><div class="text-muted fs-7 text-uppercase fw-bold mb-2">Website Changes</div><div class="fs-2 fw-bold text-gray-900">{{ run.changes_found }}</div></div></div></div>
+<div class="col-md-4"><div class="card card-flush h-100"><div class="card-body"><div class="text-muted fs-7 text-uppercase fw-bold mb-2">Press Releases</div><div class="fs-2 fw-bold text-gray-900">{{ display_news_mentions_count }}</div></div></div></div>
+</div>
+
+<div class="card mb-5">
+<div class="card-body p-7">
+<div class="d-flex align-items-start gap-5">
+<div class="pp-insight-icon rounded bg-light-primary flex-shrink-0">
+<i class="ki-duotone ki-chart-line fs-2x text-primary"><span class="path1"></span><span class="path2"></span></i>
+</div>
+<div class="flex-grow-1 min-w-0">
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
+<div>
+<div class="text-muted fs-8 text-uppercase fw-bold mb-1">AI Insight</div>
+<h3 class="fw-bold text-gray-900 mb-0">Competitive Signal Summary</h3>
+</div>
+<div class="d-flex flex-wrap gap-2">
+{% if run.changes_found %}
+<span class="badge badge-light-warning">{{ run.changes_found }} website change{{ run.changes_found|pluralize }}</span>
+{% endif %}
+{% if display_news_mentions_count %}
+<span class="badge badge-light-info">{{ display_news_mentions_count }} validated PR signal{{ display_news_mentions_count|pluralize }}</span>
+{% endif %}
+{% if not run.changes_found and not display_news_mentions_count %}
+<span class="badge badge-light-success">No new signal</span>
+{% endif %}
+</div>
+</div>
+<div class="pp-insight-text text-gray-700 fs-6 mb-4">{{ run.ai_summary|default:"No summary available." }}</div>
+<button type="button" class="btn btn-sm btn-light-primary" data-bs-toggle="modal" data-bs-target="#kt_pricing_pr_insight_modal">View Full Insight</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal fade" id="kt_pricing_pr_insight_modal" tabindex="-1" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal-content">
+<div class="modal-header">
+<div>
+<div class="text-muted fs-8 text-uppercase fw-bold mb-1">AI Insight</div>
+<h3 class="modal-title fw-bold text-gray-900">Competitive Signal Summary</h3>
+</div>
+<button type="button" class="btn btn-sm btn-icon btn-active-light-primary" data-bs-dismiss="modal" aria-label="Close">
+<i class="ki-duotone ki-cross fs-2"><span class="path1"></span><span class="path2"></span></i>
+</button>
+</div>
+<div class="modal-body">
+<div class="pp-copy text-gray-700 fs-6">{{ run.ai_summary|default:"No summary available." }}</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card mb-5"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">Detected Changes</h3></div><div class="card-body">
+<table class="table align-middle table-row-dashed fs-6 gy-5"><thead><tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0"><th>Severity</th><th>Type</th><th>URL</th><th>Evidence</th><th>Recommendation</th></tr></thead><tbody class="fw-semibold text-gray-600">
+{% for change in changes %}
+<tr><td><span class="badge badge-light-{% if change.severity == 'high' %}danger{% elif change.severity == 'medium' %}warning{% else %}primary{% endif %}">{{ change.get_severity_display }}</span></td><td>{{ change.change_type|title }}</td><td class="pp-url-cell"><a href="{{ change.current_snapshot.url }}" target="_blank" rel="noopener">{{ change.current_snapshot.url }}</a></td><td>{{ change.evidence }}</td><td>{{ change.recommendation }}</td></tr>
+{% empty %}
+<tr><td colspan="5" class="text-center text-muted py-10">
+{% if snapshots %}
+No website changes detected against the previous snapshot. If this is the first run, it is the baseline for future comparisons.
+{% else %}
+No website snapshots were available for change detection.
+{% endif %}
+</td></tr>
+{% endfor %}
+</tbody></table>
+</div></div>
+
+<div class="card mb-5"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">Google News / Press Releases</h3></div><div class="card-body">
+<table class="table align-middle table-row-dashed fs-6 gy-5"><thead><tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0"><th>Keyword</th><th>Title</th><th>Type</th><th>Source</th><th>AI Relevance</th><th>Published</th></tr></thead><tbody class="fw-semibold text-gray-600">
+{% for mention in news_mentions %}
+<tr><td>{{ mention.keyword }}</td><td class="pp-url-cell"><a href="{{ mention.url }}" target="_blank" rel="noopener">{{ mention.title }}</a></td><td><span class="badge badge-light-info">{{ mention.mention_type|default:"Competitor News"|title }}</span></td><td>{{ mention.source|default:"Google News" }}</td><td>{{ mention.relevance_reason|default:"Validated against competitor identity." }}</td><td>{% if mention.published_at %}{{ mention.published_at|date:"d M Y, g:i A" }}{% else %}-{% endif %}</td></tr>
+{% empty %}
+<tr><td colspan="6" class="text-center text-muted py-10">No validated Google News press releases or announcements found.</td></tr>
+{% endfor %}
+</tbody></table>
+</div></div>
+
+<div class="card"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">Page Snapshots</h3></div><div class="card-body">
+<table class="table align-middle table-row-dashed fs-6 gy-5"><thead><tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0"><th>URL</th><th>Status</th><th>Title</th><th>Pricing Terms</th><th>Checked</th></tr></thead><tbody class="fw-semibold text-gray-600">
+{% for snapshot in snapshots %}
+<tr><td class="pp-url-cell"><a href="{{ snapshot.url }}" target="_blank" rel="noopener">{{ snapshot.url }}</a></td><td>{{ snapshot.status_code|default:"-" }}</td><td>{{ snapshot.title|default:"-"|truncatechars:90 }}</td><td>{{ snapshot.pricing_terms|join:", "|default:"-"|truncatechars:90 }}</td><td>{{ snapshot.checked_at|date:"d M Y, g:i A" }}</td></tr>
+{% empty %}
+<tr><td colspan="5" class="text-center text-muted py-10">No snapshots were saved.</td></tr>
+{% endfor %}
+</tbody></table>
+</div></div>
+</div></div>
+{% endblock %}
+
+{% block extra_js_scripts %}
+<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<script>
+jQuery(function () {
+jQuery(document).on("submit", ".js-delete-run-form", function (event) {
+if (!window.confirm("Delete this monitor run and its saved snapshots, changes, and news mentions?")) { event.preventDefault(); }
+});
+});
+</script>
+{% endblock %}
