@@ -32,6 +32,49 @@ def history_view(request):
     return render(request, 'keyword_research/history.html', {'runs': runs})
 
 
+def decorate_planner_metric(metric):
+    searches = metric.avg_monthly_searches or 0
+    if searches >= 1000:
+        metric.search_badge_class = 'success'
+    elif searches >= 100:
+        metric.search_badge_class = 'warning'
+    elif searches:
+        metric.search_badge_class = 'primary'
+    else:
+        metric.search_badge_class = 'secondary'
+
+    competition = (metric.competition or '').upper()
+    if competition == 'HIGH':
+        metric.competition_badge_class = 'danger'
+    elif competition == 'MEDIUM':
+        metric.competition_badge_class = 'warning'
+    elif competition == 'LOW':
+        metric.competition_badge_class = 'success'
+    else:
+        metric.competition_badge_class = 'secondary'
+
+    index = metric.competition_index
+    if index is None:
+        metric.index_badge_class = 'secondary'
+    elif index >= 67:
+        metric.index_badge_class = 'danger'
+    elif index >= 34:
+        metric.index_badge_class = 'warning'
+    else:
+        metric.index_badge_class = 'success'
+
+    bid = metric.high_top_of_page_bid or metric.low_top_of_page_bid
+    if bid is None:
+        metric.bid_badge_class = 'secondary'
+    elif bid >= 20:
+        metric.bid_badge_class = 'danger'
+    elif bid >= 5:
+        metric.bid_badge_class = 'warning'
+    else:
+        metric.bid_badge_class = 'info'
+    return metric
+
+
 @login_required(login_url='sign-in')
 def run_research_view(request):
     if request.method != 'POST':
@@ -91,11 +134,12 @@ def detail_view(request, run_id):
         id=run_id,
         project__added_by=request.user,
     )
+    planner_metrics = [decorate_planner_metric(metric) for metric in run.planner_metrics.all()]
     return render(request, 'keyword_research/detail.html', {
         'run': run,
         'keyword_ideas': run.keyword_ideas.all(),
         'clusters': run.clusters.all(),
-        'planner_metrics': run.planner_metrics.all(),
+        'planner_metrics': planner_metrics,
         'pages': run.pages.all(),
     })
 

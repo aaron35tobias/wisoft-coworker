@@ -367,14 +367,14 @@ View Full AI Response
 <td>{% if item.error_message %}<span class="text-danger audit-clamped-text" title="{{ item.error_message }}">{{ item.error_message }}</span>{% elif item.last_crawl_time %}{{ item.last_crawl_time|date:"d M Y, g:i A" }}{% else %}-{% endif %}</td>
 <td class="text-end">
 <button type="button" class="btn btn-sm btn-icon btn-light js-toggle-gsc-inspection-detail"
-data-url="{{ item.inspection_url|escapejs }}"
+data-url="{{ item.inspection_url }}"
 data-verdict="{{ item.verdict|escapejs }}"
-data-coverage="{{ item.coverage_state|escapejs }}"
+data-coverage="{{ item.coverage_state }}"
 data-indexing="{{ item.indexing_state|escapejs }}"
 data-robots="{{ item.robots_txt_state|escapejs }}"
 data-fetch="{{ item.page_fetch_state|escapejs }}"
-data-google-canonical="{{ item.google_canonical|escapejs }}"
-data-user-canonical="{{ item.user_canonical|escapejs }}"
+data-google-canonical="{{ item.google_canonical }}"
+data-user-canonical="{{ item.user_canonical }}"
 data-mobile="{{ item.mobile_usability_verdict|escapejs }}"
 data-rich="{{ item.rich_results_verdict|escapejs }}"
 data-error="{{ item.error_message|escapejs }}">

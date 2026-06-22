@@ -18,7 +18,7 @@ from .models import KeywordCluster, KeywordIdea, KeywordPlannerMetric, KeywordRe
 USER_AGENT = 'WisoftCoWorkerKeywordResearch/1.0'
 DEFAULT_HTML_READ_LIMIT_BYTES = 2 * 1024 * 1024
 DEFAULT_ANTHROPIC_TIMEOUT_SECONDS = 90
-DEFAULT_ANTHROPIC_MAX_TOKENS = 1800
+DEFAULT_ANTHROPIC_MAX_TOKENS = 3200
 KEYWORD_RESEARCH_TOOL_NAME = 'keyword_research_output'
 HTML_CONTENT_TYPES = ('text/html', 'application/xhtml+xml')
 STOPWORDS = {
@@ -252,6 +252,15 @@ def build_fallback_ai_result(run):
         for item in page.top_terms:
             if item.get('term'):
                 terms[item['term']] += item.get('count', 1)
+        for value in [page.title, page.meta_description, ' '.join(page.h1), ' '.join(page.h2[:4])]:
+            for term in extract_terms(value, limit=8):
+                terms[term['term']] += term.get('count', 1)
+    if run.project.seed_topic:
+        terms[run.project.seed_topic.lower()] += 5
+    parsed_host = urlparse(run.project.website_url).netloc.replace('www.', '')
+    for host_part in re.split(r'[\W_]+', parsed_host):
+        if host_part and host_part not in STOPWORDS and len(host_part) > 2:
+            terms[host_part] += 2
     keywords = []
     location = run.project.target_location
     for term, _count in terms.most_common(12):
@@ -265,6 +274,19 @@ def build_fallback_ai_result(run):
             'content_angle': f'Build a location-aware page or section around {base}.',
             'reason': 'Derived from recurring website terms and target location.',
         })
+    if not keywords:
+        default_topic = run.project.seed_topic or 'digital marketing'
+        for modifier in ['services', 'agency', 'company', 'consultant', 'solutions']:
+            base = f'{default_topic} {modifier}'.strip()
+            keywords.append({
+                'keyword': f'{base} {location}'.strip(),
+                'intent': 'Commercial',
+                'funnel_stage': 'Middle',
+                'priority': 'Medium',
+                'suggested_page': run.project.website_url,
+                'content_angle': f'Create or strengthen content around {base}.',
+                'reason': 'Generated from the submitted topic and target location because crawl terms were limited.',
+            })
     return {
         'summary': 'Keyword ideas were generated from the crawled website terms and target location. Use these as a starting point, then validate search volume with Keyword Planner when configured.',
         'keyword_ideas': keywords[:12],
@@ -283,7 +305,7 @@ def build_fallback_ai_result(run):
 def build_keyword_tool():
     return {
         'name': KEYWORD_RESEARCH_TOOL_NAME,
-        'description': 'Return keyword research ideas and clusters based on website crawl data.',
+        'description': 'Return non-empty keyword research ideas and clusters based on website crawl data.',
         'input_schema': {
             'type': 'object',
             'additionalProperties': False,
@@ -342,7 +364,11 @@ def build_ai_prompt(run):
         'You are an expert SEO keyword strategist. Based only on this crawled website data and user input, '
         'generate keyword ideas, intent details, funnel stage, priority, suggested page mapping, content angle, '
         'and reason. Include local modifiers where the target location matters. Return structured tool output only. '
-        'Avoid inventing services that are not supported by the crawl data.\n\n'
+        'The keyword_ideas array is mandatory and must contain 20 to 30 useful keyword rows. Never return an empty '
+        'keyword_ideas array. If crawl data is thin, derive keywords from the seed topic, page titles, headings, '
+        'top terms, website category, and target location. Keep keywords commercially realistic and avoid inventing '
+        'services that are clearly unsupported by the crawl data. Create 3 to 6 clusters using keywords that also '
+        'appear in keyword_ideas.\n\n'
         f'{json.dumps(payload, ensure_ascii=True)[:16000]}'
     )
 
@@ -414,6 +440,31 @@ def save_ai_results(run, result):
             recommended_page_type=cluster.get('recommended_page_type', '')[:255],
             recommended_action=cluster.get('recommended_action', ''),
         )
+
+
+def merge_keyword_fallback(ai_result, fallback):
+    if not ai_result:
+        return fallback
+
+    ideas = ai_result.get('keyword_ideas') or []
+    if len(ideas) >= 12:
+        return ai_result
+
+    seen = {normalize_text((item.get('keyword') or '').lower()) for item in ideas}
+    for item in fallback.get('keyword_ideas', []):
+        keyword = normalize_text((item.get('keyword') or '').lower())
+        if keyword and keyword not in seen:
+            ideas.append(item)
+            seen.add(keyword)
+        if len(ideas) >= 12:
+            break
+
+    ai_result['keyword_ideas'] = ideas
+    if not ai_result.get('clusters'):
+        ai_result['clusters'] = fallback.get('clusters', [])
+    if not ai_result.get('summary'):
+        ai_result['summary'] = fallback.get('summary', '')
+    return ai_result
 
 
 def get_google_ads_yaml_path():
@@ -501,7 +552,8 @@ def run_google_keyword_planner(run):
             request.geo_target_constants.append(googleads_service.geo_target_constant_path(location_id))
         request.include_adult_keywords = False
         request.keyword_plan_network = client.enums.KeywordPlanNetworkEnum.GOOGLE_SEARCH_AND_PARTNERS
-        request.keyword_seed.keywords.extend(keywords)
+        request.keyword_and_url_seed.url = run.project.website_url
+        request.keyword_and_url_seed.keywords.extend(keywords)
         response = keyword_plan_idea_service.generate_keyword_ideas(request=request)
     except Exception as exc:
         run.planner_status = 'failed'
@@ -526,6 +578,7 @@ def run_google_keyword_planner(run):
             source='google_keyword_planner',
             raw_data={
                 'source_keywords': keywords,
+                'website_url': run.project.website_url,
                 'location_id': location_id,
                 'language_id': language_id,
             },
@@ -535,24 +588,16 @@ def run_google_keyword_planner(run):
     run.save(update_fields=['planner_status', 'planner_error'])
 
 
-def save_placeholder_planner_rows(run):
-    if run.planner_metrics.exists():
-        return
-    for idea in run.keyword_ideas.all()[:30]:
-        KeywordPlannerMetric.objects.create(
-            run=run,
-            keyword=idea.keyword,
-            source='google_keyword_planner',
-            raw_data={'status': run.planner_status, 'message': run.planner_error},
-        )
-
-
 def run_keyword_research(run):
     try:
         crawl_site(run)
         fallback = build_fallback_ai_result(run)
         ai_result, model, ai_error, usage = call_anthropic_keyword_research(run)
-        result = ai_result or fallback
+        result = merge_keyword_fallback(ai_result, fallback)
+        if not ai_result or not ai_result.get('keyword_ideas'):
+            result = fallback
+            if not ai_error:
+                ai_error = 'AI returned no keyword ideas, so fallback ideas were generated from crawl and project inputs.'
         save_ai_results(run, result)
         run.ai_model = model
         run.ai_error = ai_error
@@ -562,7 +607,6 @@ def run_keyword_research(run):
         run.ai_total_tokens = run.ai_input_tokens + run.ai_output_tokens
         run.save(update_fields=['ai_model', 'ai_error', 'ai_prompt_chars', 'ai_input_tokens', 'ai_output_tokens', 'ai_total_tokens'])
         run_google_keyword_planner(run)
-        save_placeholder_planner_rows(run)
         run.status = KeywordResearchRun.STATUS_COMPLETED
         run.completed_at = timezone.now()
         run.save(update_fields=['status', 'completed_at'])
