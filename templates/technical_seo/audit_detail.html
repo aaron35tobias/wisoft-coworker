@@ -19,9 +19,6 @@ max-height: 420px;
 overflow: auto;
 white-space: pre-line;
 }
-.audit-detail-table-wrap {
-overflow-x: auto;
-}
 .audit-detail-table {
 table-layout: fixed;
 }
@@ -42,16 +39,8 @@ max-width: 320px;
 .audit-clamped-text {
 max-width: 280px;
 }
-.audit-expanded-row {
-background: var(--bs-gray-100);
-}
 .audit-expanded-body {
 white-space: pre-line;
-}
-.audit-child-panel {
-background: var(--bs-gray-100);
-border-radius: 0.475rem;
-padding: 1rem;
 }
 </style>
 {% endblock %}
@@ -244,7 +233,7 @@ View Full AI Response
 </div>
 </div>
 <div class="card-body pt-0">
-<div class="audit-detail-table-wrap">
+<div class="table-responsive">
 <table class="table align-middle table-row-dashed fs-7 gy-3 audit-detail-table" id="kt_gsc_inspection_table">
 <thead>
 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
@@ -317,7 +306,7 @@ data-error="{{ item.error_message }}">
 </div>
 </div>
 <div class="card-body pt-0">
-<div class="audit-detail-table-wrap">
+<div class="table-responsive">
 <table class="table align-middle table-row-dashed fs-7 gy-3 audit-detail-table" id="kt_seo_issues_table">
 <thead>
 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
@@ -380,7 +369,7 @@ data-error="{{ item.error_message }}">
 </div>
 </div>
 <div class="card-body pt-0">
-<div class="audit-detail-table-wrap">
+<div class="table-responsive">
 <table class="table align-middle table-row-dashed fs-7 gy-3 audit-detail-table" id="kt_seo_pages_table">
 <thead>
 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
@@ -458,7 +447,7 @@ var page = this.dataset.page || "-";
 var evidence = this.dataset.evidence || "-";
 var recommendation = this.dataset.recommendation || "-";
 row.child(
-'<div class="audit-child-panel">' +
+'<div class="bg-light rounded p-5">' +
 '<div class="mb-4"><div class="text-muted fs-8 text-uppercase fw-bold mb-1">Page</div><div class="js-issue-detail-page"></div></div>' +
 '<div class="row g-5">' +
 '<div class="col-md-6"><div class="text-muted fs-8 text-uppercase fw-bold mb-1">Evidence</div><div class="text-gray-800 audit-expanded-body"></div></div>' +
@@ -536,7 +525,7 @@ var detailsHtml = fields.map(function (field) {
 return '<div class="col-md-6 mb-4"><div class="text-muted fs-8 text-uppercase fw-bold mb-1">' + field[0] + '</div><div class="text-gray-800 audit-expanded-body js-gsc-detail-field"></div></div>';
 }).join("");
 row.child(
-'<div class="audit-child-panel">' +
+'<div class="bg-light rounded p-5">' +
 '<div class="row g-5">' + detailsHtml + '</div>' +
 '</div>'
 ).show();

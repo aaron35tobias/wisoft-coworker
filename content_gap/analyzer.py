@@ -67,6 +67,8 @@ class ContentSnapshotParser(HTMLParser):
         self.video_count = 0
         self.internal_links_count = 0
         self.external_links_count = 0
+        self.internal_links = []
+        self.external_links = []
         self._seen_links = set()
         self._active_tag = None
         self._buffer = []
@@ -105,8 +107,10 @@ class ContentSnapshotParser(HTMLParser):
                         self._seen_links.add(normalized_link)
                         if parsed_link.netloc.lower() == self.base_netloc:
                             self.internal_links_count += 1
+                            self.internal_links.append(normalized_link)
                         else:
                             self.external_links_count += 1
+                            self.external_links.append(normalized_link)
 
         if tag in {'title', 'h1', 'h2', 'h3'}:
             self._active_tag = tag
@@ -242,6 +246,8 @@ def build_snapshot(url):
         'video_count': 0,
         'internal_links_count': 0,
         'external_links_count': 0,
+        'internal_links': [],
+        'external_links': [],
         'top_terms': [],
         'body_excerpt': '',
     }
@@ -264,6 +270,8 @@ def build_snapshot(url):
         'video_count': parser.video_count,
         'internal_links_count': parser.internal_links_count,
         'external_links_count': parser.external_links_count,
+        'internal_links': parser.internal_links[:100],
+        'external_links': parser.external_links[:100],
         'top_terms': extract_terms(body_text),
         'body_excerpt': body_text[:3500],
     })

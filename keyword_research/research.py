@@ -59,14 +59,18 @@ class KeywordPageParser(HTMLParser):
     def __init__(self, base_url):
         super().__init__(convert_charrefs=True)
         self.base_url = base_url
+        self.base_netloc = urlparse(base_url).netloc.lower()
         self.title = ''
         self.meta_description = ''
         self.headings = {'h1': [], 'h2': [], 'h3': []}
         self.links = []
+        self.internal_links = []
+        self.external_links = []
         self.body_parts = []
         self._active_tag = None
         self._buffer = []
         self._ignored_depth = 0
+        self._seen_links = set()
 
     def handle_starttag(self, tag, attrs):
         tag = tag.lower()
@@ -85,7 +89,16 @@ class KeywordPageParser(HTMLParser):
         if tag == 'a':
             href = attrs_dict.get('href', '').strip()
             if href and not href.lower().startswith(('mailto:', 'tel:', 'javascript:')):
-                self.links.append(normalize_url(urljoin(self.base_url, href)))
+                link = normalize_url(urljoin(self.base_url, href))
+                if link in self._seen_links:
+                    return
+                self._seen_links.add(link)
+                self.links.append(link)
+                parsed_link = urlparse(link)
+                if parsed_link.netloc.lower() == self.base_netloc:
+                    self.internal_links.append(link)
+                else:
+                    self.external_links.append(link)
 
     def handle_data(self, data):
         if self._ignored_depth:
@@ -270,6 +283,10 @@ def save_crawled_keyword_page(run, url, result, parser, text):
             'content_type': result['content_type'],
             'load_time_ms': result['load_time_ms'],
             'truncated': result['truncated'],
+            'internal_links': parser.internal_links[:100] if parser else [],
+            'external_links': parser.external_links[:100] if parser else [],
+            'internal_links_count': len(parser.internal_links) if parser else 0,
+            'external_links_count': len(parser.external_links) if parser else 0,
         },
     )
 
