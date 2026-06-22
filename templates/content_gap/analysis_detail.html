@@ -270,6 +270,9 @@ white-space: pre-line;
 <th>Title</th>
 <th>H1</th>
 <th>Words</th>
+<th>Images</th>
+<th>Videos</th>
+<th>Internal Links</th>
 </tr>
 </thead>
 <tbody class="fw-semibold text-gray-600">
@@ -280,6 +283,9 @@ white-space: pre-line;
 <td>{{ analysis.own_page_snapshot.title|default:"-"|truncatechars:80 }}</td>
 <td>{{ analysis.own_page_snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
 <td>{{ analysis.own_page_snapshot.word_count|default:"0" }}</td>
+<td><span class="badge badge-light-info">{{ analysis.own_page_snapshot.image_count|default:"0" }}</span></td>
+<td><span class="badge badge-light-primary">{{ analysis.own_page_snapshot.video_count|default:"0" }}</span></td>
+<td><span class="badge badge-light-success">{{ analysis.own_page_snapshot.internal_links_count|default:"0" }}</span></td>
 </tr>
 {% for snapshot in analysis.competitor_snapshots %}
 <tr>
@@ -289,6 +295,9 @@ white-space: pre-line;
 <td>{{ snapshot.title|default:"-"|truncatechars:80 }}</td>
 <td>{{ snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
 <td>{{ snapshot.word_count|default:"0" }}</td>
+<td><span class="badge badge-light-info">{{ snapshot.image_count|default:"0" }}</span></td>
+<td><span class="badge badge-light-primary">{{ snapshot.video_count|default:"0" }}</span></td>
+<td><span class="badge badge-light-success">{{ snapshot.internal_links_count|default:"0" }}</span></td>
 </tr>
 {% endfor %}
 </tbody>

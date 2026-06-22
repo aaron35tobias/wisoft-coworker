@@ -5,7 +5,7 @@ import time
 from collections import Counter
 from html.parser import HTMLParser
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
 from django.utils import timezone
@@ -55,12 +55,19 @@ def get_anthropic_max_tokens():
 
 
 class ContentSnapshotParser(HTMLParser):
-    def __init__(self):
+    def __init__(self, base_url):
         super().__init__(convert_charrefs=True)
+        self.base_url = base_url
+        self.base_netloc = urlparse(base_url).netloc.lower()
         self.title = ''
         self.meta_description = ''
         self.headings = {'h1': [], 'h2': [], 'h3': []}
         self.body_parts = []
+        self.image_count = 0
+        self.video_count = 0
+        self.internal_links_count = 0
+        self.external_links_count = 0
+        self._seen_links = set()
         self._active_tag = None
         self._buffer = []
         self._ignored_depth = 0
@@ -72,6 +79,34 @@ class ContentSnapshotParser(HTMLParser):
         if tag in {'script', 'style', 'noscript', 'svg'}:
             self._ignored_depth += 1
             return
+
+        if tag == 'img':
+            self.image_count += 1
+
+        if tag == 'video':
+            self.video_count += 1
+
+        if tag == 'iframe':
+            src = attrs_dict.get('src', '').lower()
+            if any(provider in src for provider in ('youtube.com', 'youtu.be', 'vimeo.com', 'wistia.com')):
+                self.video_count += 1
+
+        if tag == 'a':
+            href = attrs_dict.get('href', '').strip()
+            if href and not href.lower().startswith(('mailto:', 'tel:', 'javascript:')):
+                href_without_fragment = href.split('#', 1)[0].strip()
+                if not href_without_fragment:
+                    return
+                link = urljoin(self.base_url, href_without_fragment)
+                parsed_link = urlparse(link)
+                if parsed_link.scheme in {'http', 'https'} and parsed_link.netloc:
+                    normalized_link = parsed_link._replace(fragment='').geturl()
+                    if normalized_link not in self._seen_links:
+                        self._seen_links.add(normalized_link)
+                        if parsed_link.netloc.lower() == self.base_netloc:
+                            self.internal_links_count += 1
+                        else:
+                            self.external_links_count += 1
 
         if tag in {'title', 'h1', 'h2', 'h3'}:
             self._active_tag = tag
@@ -203,13 +238,17 @@ def build_snapshot(url):
         'h2': [],
         'h3': [],
         'word_count': 0,
+        'image_count': 0,
+        'video_count': 0,
+        'internal_links_count': 0,
+        'external_links_count': 0,
         'top_terms': [],
         'body_excerpt': '',
     }
     if fetched['error_message'] or not any(content_type.startswith(valid) for valid in HTML_CONTENT_TYPES):
         return snapshot
 
-    parser = ContentSnapshotParser()
+    parser = ContentSnapshotParser(fetched['final_url'] or url)
     html = decode_body(fetched['body'])
     parser.feed(html)
     body_text = normalize_text(' '.join(parser.body_parts))
@@ -221,6 +260,10 @@ def build_snapshot(url):
         'h2': parser.headings['h2'][:30],
         'h3': parser.headings['h3'][:40],
         'word_count': len(body_text.split()),
+        'image_count': parser.image_count,
+        'video_count': parser.video_count,
+        'internal_links_count': parser.internal_links_count,
+        'external_links_count': parser.external_links_count,
         'top_terms': extract_terms(body_text),
         'body_excerpt': body_text[:3500],
     })
@@ -360,6 +403,9 @@ def compact_snapshot_for_ai(snapshot):
         'h2': snapshot.get('h2', [])[:12],
         'h3': snapshot.get('h3', [])[:12],
         'word_count': snapshot.get('word_count', 0),
+        'image_count': snapshot.get('image_count', 0),
+        'video_count': snapshot.get('video_count', 0),
+        'internal_links_count': snapshot.get('internal_links_count', 0),
         'top_terms': snapshot.get('top_terms', [])[:15],
         'body_excerpt': snapshot.get('body_excerpt', '')[:500],
         'error_message': snapshot.get('error_message', ''),

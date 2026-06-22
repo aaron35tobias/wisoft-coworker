@@ -3,7 +3,8 @@ from django.db import models
 
 
 class KeywordResearchProject(models.Model):
-    website_url = models.URLField(max_length=500)
+    website_url = models.URLField(max_length=500, blank=True)
+    seed_keywords = models.TextField(blank=True)
     target_location = models.CharField(max_length=255)
     language = models.CharField(max_length=100, blank=True)
     seed_topic = models.CharField(max_length=255, blank=True)
@@ -23,7 +24,8 @@ class KeywordResearchProject(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.website_url} - {self.target_location}'
+        subject = self.website_url or self.seed_keywords
+        return f'{subject} - {self.target_location}'
 
 
 class KeywordResearchRun(models.Model):
@@ -72,7 +74,8 @@ class KeywordResearchRun(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.project.website_url} - Keyword Research - {self.started_at:%Y-%m-%d %H:%M}'
+        subject = self.project.website_url or self.project.seed_keywords
+        return f'{subject} - Keyword Research - {self.started_at:%Y-%m-%d %H:%M}'
 
 
 class KeywordResearchPage(models.Model):

@@ -2,7 +2,7 @@ import json
 import os
 import re
 import time
-from collections import Counter, deque
+from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -141,6 +141,72 @@ def extract_terms(text, limit=25):
     return [{'term': term, 'count': count} for term, count in counts.most_common(limit)]
 
 
+def split_seed_keywords(value, limit=20):
+    keywords = []
+    seen = set()
+    for item in re.split(r'[\n,;]+', value or ''):
+        keyword = normalize_text(item)
+        key = keyword.lower()
+        if keyword and key not in seen:
+            keywords.append(keyword)
+            seen.add(key)
+        if len(keywords) >= limit:
+            break
+    return keywords
+
+
+def build_keyword_variants(seed_keyword, location):
+    base = normalize_text(seed_keyword)
+    base_lower = base.lower()
+    service_terms = []
+    for modifier in ['services', 'company', 'agency', 'consultant']:
+        service_terms.append(base if modifier in base_lower else f'{base} {modifier}')
+    variants = [
+        base,
+        f'{base} {location}',
+        f'best {base}',
+        f'top {base}',
+        f'local {base}',
+        *service_terms,
+        f'{base} cost',
+        f'{base} pricing',
+        f'{base} packages',
+        f'{base} near me',
+        f'{base} for small business',
+        f'professional {base}',
+        f'affordable {base}',
+        f'{base} strategy',
+        f'how to choose {base}',
+        f'{base} vs alternatives',
+        f'{base} audit',
+        f'{base} provider',
+        f'{base} experts',
+    ]
+    cleaned = []
+    seen = set()
+    for variant in variants:
+        text = normalize_text(variant)
+        key = text.lower()
+        if text and key not in seen:
+            cleaned.append(text)
+            seen.add(key)
+    return cleaned
+
+
+def add_location_if_missing(keyword, location):
+    if not location:
+        return keyword
+    keyword_lower = keyword.lower()
+    location_parts = [
+        part.strip().lower()
+        for part in re.split(r'[,/|]+', location)
+        if part.strip()
+    ]
+    if any(part and part in keyword_lower for part in location_parts):
+        return keyword
+    return f'{keyword} {location}'.strip()
+
+
 def fetch_url(url):
     started = time.monotonic()
     request = Request(url, headers={'User-Agent': USER_AGENT})
@@ -185,49 +251,44 @@ def fetch_url(url):
         }
 
 
+def save_crawled_keyword_page(run, url, result, parser, text):
+    KeywordResearchPage.objects.create(
+        run=run,
+        url=url,
+        title=parser.title[:500] if parser else '',
+        meta_description=parser.meta_description if parser else '',
+        h1=parser.headings['h1'][:8] if parser else [],
+        h2=parser.headings['h2'][:20] if parser else [],
+        h3=parser.headings['h3'][:20] if parser else [],
+        word_count=len(text.split()),
+        top_terms=extract_terms(text),
+        content_excerpt=text[:2500],
+        error_message=result['error_message'],
+        raw_data={
+            'status_code': result['status_code'],
+            'final_url': result['final_url'],
+            'content_type': result['content_type'],
+            'load_time_ms': result['load_time_ms'],
+            'truncated': result['truncated'],
+        },
+    )
+
+
 def crawl_site(run):
+    if not run.project.website_url:
+        run.pages_crawled = 0
+        run.save(update_fields=['pages_crawled'])
+        return
+
     root_url = normalize_url(run.project.website_url)
-    root_netloc = urlparse(root_url).netloc.lower()
-    queue = deque([root_url])
-    seen = set()
-
-    while queue and len(seen) < run.max_pages:
-        url = normalize_url(queue.popleft())
-        if url in seen or not same_site(url, root_netloc):
-            continue
-        seen.add(url)
-        result = fetch_url(url)
-        parser = None
-        text = ''
-        if not result['error_message'] and result['content_type'].lower().startswith(HTML_CONTENT_TYPES):
-            parser = KeywordPageParser(result['final_url'])
-            parser.feed(result['body'].decode('utf-8', errors='replace'))
-            text = normalize_text(' '.join(parser.body_parts))
-            for link in parser.links:
-                if same_site(link, root_netloc) and link not in seen and len(seen) + len(queue) < run.max_pages:
-                    queue.append(link)
-
-        KeywordResearchPage.objects.create(
-            run=run,
-            url=url,
-            title=parser.title[:500] if parser else '',
-            meta_description=parser.meta_description if parser else '',
-            h1=parser.headings['h1'][:8] if parser else [],
-            h2=parser.headings['h2'][:20] if parser else [],
-            h3=parser.headings['h3'][:20] if parser else [],
-            word_count=len(text.split()),
-            top_terms=extract_terms(text),
-            content_excerpt=text[:2500],
-            error_message=result['error_message'],
-            raw_data={
-                'status_code': result['status_code'],
-                'final_url': result['final_url'],
-                'content_type': result['content_type'],
-                'load_time_ms': result['load_time_ms'],
-                'truncated': result['truncated'],
-            },
-        )
-
+    result = fetch_url(root_url)
+    parser = None
+    text = ''
+    if not result['error_message'] and result['content_type'].lower().startswith(HTML_CONTENT_TYPES):
+        parser = KeywordPageParser(result['final_url'])
+        parser.feed(result['body'].decode('utf-8', errors='replace'))
+        text = normalize_text(' '.join(parser.body_parts))
+    save_crawled_keyword_page(run, root_url, result, parser, text)
     run.pages_crawled = run.pages.count()
     run.save(update_fields=['pages_crawled'])
 
@@ -257,23 +318,32 @@ def build_fallback_ai_result(run):
                 terms[term['term']] += term.get('count', 1)
     if run.project.seed_topic:
         terms[run.project.seed_topic.lower()] += 5
-    parsed_host = urlparse(run.project.website_url).netloc.replace('www.', '')
-    for host_part in re.split(r'[\W_]+', parsed_host):
-        if host_part and host_part not in STOPWORDS and len(host_part) > 2:
-            terms[host_part] += 2
+    for keyword in split_seed_keywords(run.project.seed_keywords):
+        terms[keyword.lower()] += 5
+    if run.project.website_url:
+        parsed_host = urlparse(run.project.website_url).netloc.replace('www.', '')
+        for host_part in re.split(r'[\W_]+', parsed_host):
+            if host_part and host_part not in STOPWORDS and len(host_part) > 2:
+                terms[host_part] += 2
     keywords = []
     location = run.project.target_location
-    for term, _count in terms.most_common(12):
-        base = term.replace('-', ' ')
+    seed_variants = []
+    for seed_keyword in split_seed_keywords(run.project.seed_keywords):
+        seed_variants.extend(build_keyword_variants(seed_keyword, location))
+    fallback_terms = seed_variants or [term.replace('-', ' ') for term, _count in terms.most_common(20)]
+    for base in fallback_terms:
+        keyword = add_location_if_missing(base, location)
         keywords.append({
-            'keyword': f'{base} {location}'.strip(),
-            'intent': 'Commercial',
-            'funnel_stage': 'Middle',
-            'priority': 'Medium',
-            'suggested_page': run.project.website_url,
+            'keyword': keyword,
+            'intent': 'Informational' if base.lower().startswith(('how ', 'what ', 'why ')) else 'Commercial',
+            'funnel_stage': 'Top' if base.lower().startswith(('how ', 'what ', 'why ')) else 'Middle',
+            'priority': 'High' if len(keywords) < 5 else 'Medium',
+            'suggested_page': run.project.website_url or 'New landing page',
             'content_angle': f'Build a location-aware page or section around {base}.',
-            'reason': 'Derived from recurring website terms and target location.',
+            'reason': 'Expanded from the submitted keyword input, website terms, and target location.',
         })
+        if len(keywords) >= 20:
+            break
     if not keywords:
         default_topic = run.project.seed_topic or 'digital marketing'
         for modifier in ['services', 'agency', 'company', 'consultant', 'solutions']:
@@ -283,13 +353,13 @@ def build_fallback_ai_result(run):
                 'intent': 'Commercial',
                 'funnel_stage': 'Middle',
                 'priority': 'Medium',
-                'suggested_page': run.project.website_url,
+                'suggested_page': run.project.website_url or 'New landing page',
                 'content_angle': f'Create or strengthen content around {base}.',
                 'reason': 'Generated from the submitted topic and target location because crawl terms were limited.',
             })
     return {
-        'summary': 'Keyword ideas were generated from the crawled website terms and target location. Use these as a starting point, then validate search volume with Keyword Planner when configured.',
-        'keyword_ideas': keywords[:12],
+        'summary': 'Keyword ideas were generated from the submitted page or keyword inputs and target location. Use these as a starting point, then validate search volume with Keyword Planner when configured.',
+        'keyword_ideas': keywords[:20],
         'clusters': [
             {
                 'cluster_name': 'Core Service Keywords',
@@ -354,6 +424,7 @@ def build_keyword_tool():
 def build_ai_prompt(run):
     payload = {
         'website_url': run.project.website_url,
+        'seed_keywords': split_seed_keywords(run.project.seed_keywords),
         'target_location': run.project.target_location,
         'language': run.project.language,
         'seed_topic': run.project.seed_topic,
@@ -361,14 +432,17 @@ def build_ai_prompt(run):
         'pages': [compact_page(page) for page in run.pages.all()[:30]],
     }
     return (
-        'You are an expert SEO keyword strategist. Based only on this crawled website data and user input, '
+        'You are an expert SEO keyword strategist. Based only on the submitted page data, seed keywords, and user input, '
         'generate keyword ideas, intent details, funnel stage, priority, suggested page mapping, content angle, '
         'and reason. Include local modifiers where the target location matters. Return structured tool output only. '
         'The keyword_ideas array is mandatory and must contain 20 to 30 useful keyword rows. Never return an empty '
-        'keyword_ideas array. If crawl data is thin, derive keywords from the seed topic, page titles, headings, '
-        'top terms, website category, and target location. Keep keywords commercially realistic and avoid inventing '
-        'services that are clearly unsupported by the crawl data. Create 3 to 6 clusters using keywords that also '
-        'appear in keyword_ideas.\n\n'
+        'keyword_ideas array. If there is no page URL or crawl data is thin, derive keywords from the submitted '
+        'seed keywords, seed topic, notes, language, and target location. Treat each submitted keyword as a seed '
+        'to expand into related terms, long-tail variants, local variants, service modifiers, question keywords, '
+        'pricing/cost terms, comparison terms, and buyer-intent alternatives. Do not return only the exact seed '
+        'keyword. Keep keywords commercially realistic. '
+        'When no URL is provided, use "New landing page" or another clear page type in suggested_page instead '
+        'of inventing a URL. Create 3 to 6 clusters using keywords that also appear in keyword_ideas.\n\n'
         f'{json.dumps(payload, ensure_ascii=True)[:16000]}'
     )
 
@@ -533,6 +607,10 @@ def run_google_keyword_planner(run):
     keywords = list(
         run.keyword_ideas.exclude(keyword='').values_list('keyword', flat=True).distinct()[:20]
     )
+    for seed_keyword in split_seed_keywords(run.project.seed_keywords):
+        if seed_keyword not in keywords:
+            keywords.insert(0, seed_keyword)
+    keywords = keywords[:20]
     if not keywords:
         run.planner_status = 'skipped'
         run.planner_error = 'No AI keyword ideas were available to validate in Keyword Planner.'
@@ -552,8 +630,11 @@ def run_google_keyword_planner(run):
             request.geo_target_constants.append(googleads_service.geo_target_constant_path(location_id))
         request.include_adult_keywords = False
         request.keyword_plan_network = client.enums.KeywordPlanNetworkEnum.GOOGLE_SEARCH_AND_PARTNERS
-        request.keyword_and_url_seed.url = run.project.website_url
-        request.keyword_and_url_seed.keywords.extend(keywords)
+        if run.project.website_url:
+            request.keyword_and_url_seed.url = run.project.website_url
+            request.keyword_and_url_seed.keywords.extend(keywords)
+        else:
+            request.keyword_seed.keywords.extend(keywords)
         response = keyword_plan_idea_service.generate_keyword_ideas(request=request)
     except Exception as exc:
         run.planner_status = 'failed'
@@ -579,6 +660,7 @@ def run_google_keyword_planner(run):
             raw_data={
                 'source_keywords': keywords,
                 'website_url': run.project.website_url,
+                'seed_keywords': split_seed_keywords(run.project.seed_keywords),
                 'location_id': location_id,
                 'language_id': language_id,
             },

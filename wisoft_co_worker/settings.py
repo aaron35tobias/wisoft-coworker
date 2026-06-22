@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'content_gap',
     'pricing_pr_monitor',
     'keyword_research',
+    'serp_analysis',
 ]
 
 MIDDLEWARE = [
