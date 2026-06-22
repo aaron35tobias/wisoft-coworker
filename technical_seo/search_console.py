@@ -203,7 +203,7 @@ def run_search_console_collection(audit):
     TechnicalSEOURLInspection.objects.filter(audit=audit).delete()
 
     try:
-        rows_count = fetch_search_analytics(audit, service, audit.gsc_site_url, start_date, end_date)
+        rows_count = 0
         inspection_count = fetch_url_inspections(audit, service, audit.gsc_site_url)
     except Exception as exc:
         audit.gsc_status = 'failed'

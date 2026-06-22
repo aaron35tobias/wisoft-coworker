@@ -118,10 +118,11 @@
             background: rgba(255, 255, 255, 0.04);
             border: 0;
             border-radius: 0.65rem;
-            color: rgba(232, 240, 255, 0.72);
+            color: #ffffff;
             display: inline-flex;
             height: 44px;
             justify-content: center;
+            opacity: 1;
             padding: 0;
             transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
             width: 44px;
@@ -135,12 +136,41 @@
         }
 
         .seo-rail-link.active {
-            box-shadow: inset 3px 0 0 #95c93d, 0 0.7rem 1.6rem rgba(0, 0, 0, 0.18);
+            box-shadow: inset 3px 0 0 #e9166b, 0 0.7rem 1.6rem rgba(0, 0, 0, 0.18);
         }
 
         .seo-rail-link .la {
+            color: #ffffff !important;
             font-size: 1.45rem;
             line-height: 1;
+            opacity: 1 !important;
+        }
+
+        .seo-rail-link i,
+        .seo-rail-link i::before,
+        .seo-rail-link i::after,
+        .seo-rail-link .path1,
+        .seo-rail-link .path2,
+        .seo-rail-link .path3,
+        .seo-rail-link .path4,
+        .seo-rail-link .path5,
+        .seo-rail-link .path6,
+        .seo-rail-link .path7,
+        .seo-rail-link .path8,
+        .seo-rail-link .path9,
+        .seo-rail-link .path10,
+        .seo-rail-link .path1::before,
+        .seo-rail-link .path2::before,
+        .seo-rail-link .path3::before,
+        .seo-rail-link .path4::before,
+        .seo-rail-link .path5::before,
+        .seo-rail-link .path6::before,
+        .seo-rail-link .path7::before,
+        .seo-rail-link .path8::before,
+        .seo-rail-link .path9::before,
+        .seo-rail-link .path10::before {
+            color: #ffffff !important;
+            opacity: 1 !important;
         }
 
         .seo-rail-separator {
@@ -194,12 +224,14 @@
         }
 
         .seo-rail-user:hover img {
-            border-color: #95c93d;
+            border-color: #e9166b;
         }
 
         .seo-sidebar-panel {
             align-self: stretch;
-            background: var(--bs-body-bg);
+            background:
+                linear-gradient(180deg, white),
+                var(--bs-body-bg);
             display: flex;
             flex: 0 0 268px;
             flex-direction: column;
@@ -212,7 +244,7 @@
         }
 
         .seo-sidebar-heading {
-            color: var(--bs-gray-900);
+            color: #071a3d;
             font-size: 1.15rem;
             font-weight: 800;
             letter-spacing: 0;
@@ -261,6 +293,91 @@
         #kt_aside .menu.my-auto {
             margin-bottom: 0 !important;
             margin-top: 0 !important;
+        }
+
+        #kt_aside .aside-menu .menu .menu-item .menu-link {
+            border-radius: 0.75rem;
+            color: #4b5b7c;
+            margin-bottom: 0.15rem;
+            transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        #kt_aside .aside-menu .menu .menu-item .menu-link .menu-title {
+            color: #4b5b7c;
+        }
+
+        #kt_aside .aside-menu .menu .menu-item .menu-link .menu-icon,
+        #kt_aside .aside-menu .menu .menu-item .menu-link .menu-icon i {
+            color: #000000;
+        }
+
+        [data-bs-theme="dark"] #kt_aside .aside-menu .menu .menu-item .menu-link .menu-icon,
+        [data-bs-theme="dark"] #kt_aside .aside-menu .menu .menu-item .menu-link .menu-icon i {
+            color: #ffffff;
+        }
+
+        #kt_aside .aside-menu .menu .menu-item .menu-link .menu-arrow:after {
+            color: #000000;
+        }
+
+        #kt_aside .aside-menu .menu .menu-item .menu-link:hover,
+        #kt_aside .aside-menu .menu .menu-item.hover:not(.here)>.menu-link:not(.disabled):not(.active):not(.here) {
+            background: rgba(11, 47, 91, 0.08);
+            color: #0b2f5b;
+        }
+
+        #kt_aside .aside-menu .menu .menu-item .menu-link:hover .menu-title,
+        #kt_aside .aside-menu .menu .menu-item.hover:not(.here)>.menu-link:not(.disabled):not(.active):not(.here) .menu-title {
+            color: #0b2f5b;
+        }
+
+        #kt_aside .aside-menu .menu .menu-item.here>.menu-link,
+        #kt_aside .aside-menu .menu .menu-item.show>.menu-link,
+        #kt_aside .aside-menu .menu .menu-item .menu-link.active {
+            background: linear-gradient(90deg, rgba(233, 22, 107, 0.14), rgba(11, 47, 91, 0.08));
+            box-shadow: inset 3px 0 0 #e9166b;
+            color: #071a3d;
+        }
+
+        #kt_aside .aside-menu .menu .menu-item.here>.menu-link .menu-title,
+        #kt_aside .aside-menu .menu .menu-item.show>.menu-link .menu-title,
+        #kt_aside .aside-menu .menu .menu-item .menu-link.active .menu-title {
+            color: #071a3d;
+        }
+
+        #kt_aside .aside-menu .menu .menu-item.here>.menu-link .menu-icon,
+        #kt_aside .aside-menu .menu .menu-item.here>.menu-link .menu-icon i,
+        #kt_aside .aside-menu .menu .menu-item.show>.menu-link .menu-icon,
+        #kt_aside .aside-menu .menu .menu-item.show>.menu-link .menu-icon i,
+        #kt_aside .aside-menu .menu .menu-item .menu-link.active .menu-icon,
+        #kt_aside .aside-menu .menu .menu-item .menu-link.active .menu-icon i {
+            color: #e9166b;
+        }
+
+        #kt_aside .aside-menu .menu .menu-item .menu-link.active .menu-bullet .bullet {
+            background-color: #e9166b;
+        }
+
+        [data-bs-theme="dark"] .seo-sidebar-panel {
+            background:
+                linear-gradient(180deg, rgba(7, 26, 61, 0.72) 0%, rgba(14, 61, 101, 0.36) 100%),
+                var(--bs-body-bg);
+        }
+
+        [data-bs-theme="dark"] .seo-sidebar-heading,
+        [data-bs-theme="dark"] #kt_aside .aside-menu .menu .menu-item.here>.menu-link .menu-title,
+        [data-bs-theme="dark"] #kt_aside .aside-menu .menu .menu-item.show>.menu-link .menu-title,
+        [data-bs-theme="dark"] #kt_aside .aside-menu .menu .menu-item .menu-link.active .menu-title {
+            color: #f4f8ff;
+        }
+
+        [data-bs-theme="dark"] #kt_aside .aside-menu .menu .menu-item .menu-link .menu-title {
+            color: #c6d2ea;
+        }
+
+        [data-bs-theme="dark"] #kt_aside .aside-menu .menu .menu-item .menu-link:hover,
+        [data-bs-theme="dark"] #kt_aside .aside-menu .menu .menu-item.hover:not(.here)>.menu-link:not(.disabled):not(.active):not(.here) {
+            background: rgba(255, 255, 255, 0.08);
         }
 
         body.seo-sidebar-collapsed #kt_aside {

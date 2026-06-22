@@ -220,114 +220,19 @@ View Full AI Response
 
 <div class="card mb-5 mb-xl-10">
 <div class="card-header border-0 pt-6">
-<div class="card-title d-flex flex-column align-items-start gap-2">
-<h3 class="fw-bold m-0">Google Search Console Performance</h3>
-<div class="text-muted fs-7">
-{% if audit.gsc_site_url %}Property: {{ audit.gsc_site_url }}{% endif %}
-{% if audit.gsc_start_date and audit.gsc_end_date %} | {{ audit.gsc_start_date|date:"d M Y" }} - {{ audit.gsc_end_date|date:"d M Y" }}{% endif %}
-</div>
-</div>
-<div class="card-toolbar">
-{% if audit.gsc_status == 'completed' %}
-<span class="badge badge-light-success">Connected</span>
-{% elif audit.gsc_status == 'failed' %}
-<span class="badge badge-light-danger">Failed</span>
-{% elif audit.gsc_status == 'not_configured' %}
-<span class="badge badge-light-warning">Not Configured</span>
-{% elif audit.gsc_status %}
-<span class="badge badge-light-primary">{{ audit.gsc_status|title }}</span>
-{% else %}
-<span class="badge badge-light-warning">Not Configured</span>
-{% endif %}
-</div>
-</div>
-<div class="card-body pt-0">
-{% if audit.gsc_error %}
-<div class="alert alert-info p-5 mb-6">
-<div class="fw-bold mb-1">Search Console is not configured.</div>
-<div>{{ audit.gsc_error }}</div>
-</div>
-{% endif %}
-<form method="get" class="row g-4 align-items-end mb-6">
-{% if severity_filter %}<input type="hidden" name="severity" value="{{ severity_filter }}" />{% endif %}
-<div class="col-md-3">
-<label class="fs-7 fw-semibold mb-2">Country</label>
-<select name="gsc_country" class="form-select form-select-solid">
-<option value="">All Countries</option>
-{% for country in gsc_countries %}
-<option value="{{ country }}" {% if gsc_filters.country == country %}selected{% endif %}>{{ country }}</option>
-{% endfor %}
-</select>
-</div>
-<div class="col-md-3">
-<label class="fs-7 fw-semibold mb-2">Device</label>
-<select name="gsc_device" class="form-select form-select-solid">
-<option value="">All Devices</option>
-{% for device in gsc_devices %}
-<option value="{{ device }}" {% if gsc_filters.device == device %}selected{% endif %}>{{ device|title }}</option>
-{% endfor %}
-</select>
-</div>
-<div class="col-md-3">
-<label class="fs-7 fw-semibold mb-2">Query</label>
-<input type="text" name="gsc_query" class="form-control form-control-solid" value="{{ gsc_filters.query }}" placeholder="Contains keyword" />
-</div>
-<div class="col-md-3">
-<label class="fs-7 fw-semibold mb-2">Page</label>
-<input type="text" name="gsc_page" class="form-control form-control-solid" value="{{ gsc_filters.page }}" placeholder="Contains URL" />
-</div>
-<div class="col-md-12 d-flex gap-2">
-<button type="submit" class="btn btn-sm btn-primary">Apply Filters</button>
-<a href="{% url 'technical_seo:audit-detail' audit.id %}" class="btn btn-sm btn-light">Clear</a>
-</div>
-</form>
-<div class="audit-detail-table-wrap">
-<table class="table align-middle table-row-dashed fs-7 gy-3 audit-detail-table" id="kt_gsc_performance_table">
-<thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-<th class="min-w-280px">Page</th>
-<th class="min-w-220px">Query</th>
-<th class="w-100px">Device</th>
-<th class="w-90px">Country</th>
-<th class="w-90px">Clicks</th>
-<th class="w-110px">Impressions</th>
-<th class="w-90px">CTR</th>
-<th class="w-110px">Avg Pos.</th>
-</tr>
-</thead>
-<tbody class="fw-semibold text-gray-600">
-{% for row in gsc_rows %}
-<tr data-gsc-row="true">
-<td><a href="{{ row.page_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary audit-url-text" title="{{ row.page_url }}">{{ row.page_url }}</a></td>
-<td><span class="audit-clamped-text" title="{{ row.query }}">{{ row.query|default:"-" }}</span></td>
-<td>{{ row.device|title|default:"-" }}</td>
-<td>{{ row.country|default:"-" }}</td>
-<td>{{ row.clicks|floatformat:0 }}</td>
-<td>{{ row.impressions|floatformat:0 }}</td>
-<td>{{ row.ctr|floatformat:3 }}</td>
-<td>{{ row.position|floatformat:1 }}</td>
-</tr>
-{% empty %}
-<tr>
-<td colspan="8" class="text-center text-muted py-10">No Search Console performance rows are available for this audit.</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-</div>
-</div>
-
-<div class="card mb-5 mb-xl-10">
-<div class="card-header border-0 pt-6">
 <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+<div class="d-flex align-items-center gap-4 flex-wrap">
 <h3 class="fw-bold m-0">Google URL Inspection</h3>
+<div class="d-flex align-items-center position-relative my-1">
+<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
+<span class="path1"></span>
+<span class="path2"></span>
+</i>
+<input type="text" id="kt_gsc_inspection_table_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search URL Inspection" />
+</div>
+</div>
 <form method="get" class="d-flex gap-2 align-items-center">
 {% if severity_filter %}<input type="hidden" name="severity" value="{{ severity_filter }}" />{% endif %}
-{% if gsc_filters.country %}<input type="hidden" name="gsc_country" value="{{ gsc_filters.country }}" />{% endif %}
-{% if gsc_filters.device %}<input type="hidden" name="gsc_device" value="{{ gsc_filters.device }}" />{% endif %}
-{% if gsc_filters.query %}<input type="hidden" name="gsc_query" value="{{ gsc_filters.query }}" />{% endif %}
-{% if gsc_filters.page %}<input type="hidden" name="gsc_page" value="{{ gsc_filters.page }}" />{% endif %}
 <select name="gsc_verdict" class="form-select form-select-solid w-200px">
 <option value="">All Verdicts</option>
 {% for verdict in gsc_verdicts %}
@@ -368,16 +273,16 @@ View Full AI Response
 <td class="text-end">
 <button type="button" class="btn btn-sm btn-icon btn-light js-toggle-gsc-inspection-detail"
 data-url="{{ item.inspection_url }}"
-data-verdict="{{ item.verdict|escapejs }}"
+data-verdict="{{ item.verdict }}"
 data-coverage="{{ item.coverage_state }}"
-data-indexing="{{ item.indexing_state|escapejs }}"
-data-robots="{{ item.robots_txt_state|escapejs }}"
-data-fetch="{{ item.page_fetch_state|escapejs }}"
+data-indexing="{{ item.indexing_state }}"
+data-robots="{{ item.robots_txt_state }}"
+data-fetch="{{ item.page_fetch_state }}"
 data-google-canonical="{{ item.google_canonical }}"
 data-user-canonical="{{ item.user_canonical }}"
-data-mobile="{{ item.mobile_usability_verdict|escapejs }}"
-data-rich="{{ item.rich_results_verdict|escapejs }}"
-data-error="{{ item.error_message|escapejs }}">
+data-mobile="{{ item.mobile_usability_verdict }}"
+data-rich="{{ item.rich_results_verdict }}"
+data-error="{{ item.error_message }}">
 <i class="ki-duotone ki-down fs-3"></i>
 </button>
 </td>
@@ -452,7 +357,7 @@ data-error="{{ item.error_message|escapejs }}">
 <td><span class="audit-clamped-text" title="{{ issue.evidence }}">{{ issue.evidence }}</span></td>
 <td><span class="audit-clamped-text" title="{{ issue.recommendation }}">{{ issue.recommendation }}</span></td>
 <td class="text-end">
-<button type="button" class="btn btn-sm btn-icon btn-light js-toggle-issue-detail" data-page="{% if issue.page %}{{ issue.page.url|escapejs }}{% else %}-{% endif %}" data-evidence="{{ issue.evidence|escapejs }}" data-recommendation="{{ issue.recommendation|escapejs }}">
+<button type="button" class="btn btn-sm btn-icon btn-light js-toggle-issue-detail" data-page="{% if issue.page %}{{ issue.page.url }}{% else %}-{% endif %}" data-evidence="{{ issue.evidence }}" data-recommendation="{{ issue.recommendation }}">
 <i class="ki-duotone ki-down fs-3"></i>
 </button>
 </td>
@@ -552,16 +457,26 @@ return;
 var page = this.dataset.page || "-";
 var evidence = this.dataset.evidence || "-";
 var recommendation = this.dataset.recommendation || "-";
-var pageHtml = page === "-" ? '<span class="text-muted">-</span>' : '<a href="' + page + '" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">' + page + '</a>';
 row.child(
 '<div class="audit-child-panel">' +
-'<div class="mb-4"><div class="text-muted fs-8 text-uppercase fw-bold mb-1">Page</div>' + pageHtml + '</div>' +
+'<div class="mb-4"><div class="text-muted fs-8 text-uppercase fw-bold mb-1">Page</div><div class="js-issue-detail-page"></div></div>' +
 '<div class="row g-5">' +
 '<div class="col-md-6"><div class="text-muted fs-8 text-uppercase fw-bold mb-1">Evidence</div><div class="text-gray-800 audit-expanded-body"></div></div>' +
 '<div class="col-md-6"><div class="text-muted fs-8 text-uppercase fw-bold mb-1">Corrective Action</div><div class="text-gray-800 audit-expanded-body"></div></div>' +
 '</div></div>'
 ).show();
 var child = row.child();
+if (page === "-") {
+jQuery(child).find(".js-issue-detail-page").html('<span class="text-muted">-</span>');
+} else {
+jQuery("<a>", {
+href: page,
+target: "_blank",
+rel: "noopener",
+class: "text-gray-800 text-hover-primary",
+text: page
+}).appendTo(jQuery(child).find(".js-issue-detail-page"));
+}
 jQuery(child).find(".audit-expanded-body").eq(0).text(evidence);
 jQuery(child).find(".audit-expanded-body").eq(1).text(recommendation);
 });
@@ -579,18 +494,6 @@ order: [[2, "asc"]]
 });
 }
 
-var gscPerformanceTableElement = document.querySelector("#kt_gsc_performance_table");
-if (gscPerformanceTableElement && gscPerformanceTableElement.querySelector("[data-gsc-row='true']")) {
-jQuery(gscPerformanceTableElement).DataTable({
-pageLength: 10,
-lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-autoWidth: false,
-scrollX: true,
-dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>",
-order: [[4, "desc"], [5, "desc"]]
-});
-}
-
 var gscInspectionTableElement = document.querySelector("#kt_gsc_inspection_table");
 if (gscInspectionTableElement && gscInspectionTableElement.querySelector("[data-gsc-inspection-row='true']")) {
 var gscInspectionTable = jQuery(gscInspectionTableElement).DataTable({
@@ -603,6 +506,9 @@ order: [[0, "asc"]],
 columnDefs: [
 { orderable: false, searchable: false, targets: 8 }
 ]
+});
+jQuery("#kt_gsc_inspection_table_search").on("keyup", function () {
+gscInspectionTable.search(this.value).draw();
 });
 
 jQuery(document).on("click", ".js-toggle-gsc-inspection-detail", function () {

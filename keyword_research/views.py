@@ -81,30 +81,26 @@ def run_research_view(request):
         return redirect('keyword_research:research')
 
     website_url = request.POST.get('website_url', '').strip()
+    seed_keywords = request.POST.get('seed_keywords', '').strip()
     target_location = request.POST.get('target_location', '').strip()
     language = request.POST.get('language', '').strip()
     seed_topic = request.POST.get('seed_topic', '').strip()
     notes = request.POST.get('notes', '').strip()
-    max_pages_raw = request.POST.get('max_pages', '20')
 
     try:
-        if not website_url:
-            raise ValidationError('Website URL is required.')
+        if not website_url and not seed_keywords:
+            raise ValidationError('Enter either a Page URL or keywords.')
         if not target_location:
             raise ValidationError('Target location is required.')
-        URLValidator()(website_url)
+        if website_url:
+            URLValidator()(website_url)
     except ValidationError as exc:
         messages.error(request, exc.messages[0] if hasattr(exc, 'messages') else str(exc))
         return redirect('keyword_research:research')
 
-    try:
-        max_pages = int(max_pages_raw)
-    except (TypeError, ValueError):
-        max_pages = 20
-    max_pages = max(1, min(max_pages, 50))
-
     project = KeywordResearchProject.objects.create(
         website_url=website_url,
+        seed_keywords=seed_keywords,
         target_location=target_location,
         language=language,
         seed_topic=seed_topic,
@@ -114,7 +110,7 @@ def run_research_view(request):
     run = KeywordResearchRun.objects.create(
         project=project,
         requested_by=request.user,
-        max_pages=max_pages,
+        max_pages=1,
     )
 
     try:

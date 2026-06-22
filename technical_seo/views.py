@@ -5,7 +5,6 @@ from django.core.validators import URLValidator
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.dateparse import parse_date
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from .models import TechnicalSEOAudit, TechnicalSEOIssue, TechnicalSEOWebsite
@@ -124,11 +123,6 @@ def audit_run_view(request):
     website_url = request.POST.get('website_url', '').strip()
     note = request.POST.get('note', '').strip()
     max_pages_raw = request.POST.get('max_pages', '50')
-    gsc_start_date = parse_date(request.POST.get('gsc_start_date', '').strip())
-    gsc_end_date = parse_date(request.POST.get('gsc_end_date', '').strip())
-    gsc_country_filter = request.POST.get('gsc_country_filter', '').strip().upper()
-    gsc_device_filter = request.POST.get('gsc_device_filter', '').strip().upper()
-
     if not website_url:
         messages.error(request, 'Website URL is required.')
         return redirect('technical_seo:audits')
@@ -161,10 +155,6 @@ def audit_run_view(request):
         website=website,
         requested_by=request.user,
         max_pages=max_pages,
-        gsc_start_date=gsc_start_date,
-        gsc_end_date=gsc_end_date,
-        gsc_country_filter=gsc_country_filter[:20],
-        gsc_device_filter=gsc_device_filter[:20],
     )
 
     try:
@@ -206,7 +196,6 @@ def audit_detail_view(request, audit_id):
     )
     issues = audit.issues.select_related('page')
     pages = audit.pages.all()
-    gsc_rows = audit.gsc_rows.all()
     gsc_inspections = audit.gsc_url_inspections.select_related('page')
     issue_type_counts = list(issues.values('issue_type').annotate(total=Count('id')).order_by('-total', 'issue_type'))
     for row in issue_type_counts:
@@ -216,19 +205,6 @@ def audit_detail_view(request, audit_id):
     if severity_filter:
         issues = issues.filter(severity=severity_filter)
 
-    gsc_country = request.GET.get('gsc_country', '').strip().upper()
-    gsc_device = request.GET.get('gsc_device', '').strip().upper()
-    gsc_query = request.GET.get('gsc_query', '').strip()
-    gsc_page = request.GET.get('gsc_page', '').strip()
-    if gsc_country:
-        gsc_rows = gsc_rows.filter(country=gsc_country)
-    if gsc_device:
-        gsc_rows = gsc_rows.filter(device=gsc_device)
-    if gsc_query:
-        gsc_rows = gsc_rows.filter(query__icontains=gsc_query)
-    if gsc_page:
-        gsc_rows = gsc_rows.filter(page_url__icontains=gsc_page)
-
     gsc_inspection_verdict = request.GET.get('gsc_verdict', '').strip()
     if gsc_inspection_verdict:
         gsc_inspections = gsc_inspections.filter(verdict=gsc_inspection_verdict)
@@ -237,17 +213,10 @@ def audit_detail_view(request, audit_id):
         'audit': audit,
         'issues': issues,
         'pages': pages,
-        'gsc_rows': gsc_rows,
         'gsc_inspections': gsc_inspections,
         'gsc_filters': {
-            'country': gsc_country,
-            'device': gsc_device,
-            'query': gsc_query,
-            'page': gsc_page,
             'verdict': gsc_inspection_verdict,
         },
-        'gsc_countries': audit.gsc_rows.exclude(country='').values_list('country', flat=True).distinct().order_by('country'),
-        'gsc_devices': audit.gsc_rows.exclude(device='').values_list('device', flat=True).distinct().order_by('device'),
         'gsc_verdicts': audit.gsc_url_inspections.exclude(verdict='').values_list('verdict', flat=True).distinct().order_by('verdict'),
         'issue_type_counts': issue_type_counts,
         'ai_summary_sections': parse_ai_summary_sections(audit.ai_summary) if audit.ai_summary else [],
