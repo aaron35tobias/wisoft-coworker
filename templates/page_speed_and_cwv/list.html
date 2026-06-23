@@ -12,6 +12,46 @@
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 <!--begin::Container-->
 <div class="container-xxl" id="kt_content_container">
+<!--begin::Messages-->
+{% if messages %}
+{% for message in messages %}
+<div class="d-flex justify-content-center mb-6">
+<div class="notice d-flex bg-light-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}primary{% else %}{{ message.tags }}{% endif %} rounded border-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}primary{% else %}{{ message.tags }}{% endif %} border border-dashed w-lg-500px p-4"
+role="alert">
+<i class="ki-duotone {% if message.tags == 'error' %}ki-cross-circle fs-2tx text-danger{% elif message.tags == 'success' %}ki-check-circle fs-2tx text-primary{% else %}ki-information-5 fs-2tx text-{{ message.tags }}{% endif %} me-4 align-self-center">
+<span class="path1"></span>
+<span class="path2"></span>
+{% if message.tags != 'error' and message.tags != 'success' %}
+<span class="path3"></span>
+{% endif %}
+</i>
+<div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
+<div class="mb-0 fw-semibold">
+<h4 class="text-gray-900 fw-bold fs-6 mb-1">
+{% if message.tags == 'error' %}
+Action failed
+{% elif message.tags == 'success' %}
+Action completed
+{% else %}
+{{ message.tags|title }}
+{% endif %}
+</h4>
+<div class="fs-7 text-gray-700">
+{% if message.tags == 'error' %}
+Please review the form and try again.
+{% elif message.tags == 'success' %}
+{{ message }}
+{% else %}
+{{ message }}
+{% endif %}
+</div>
+</div>
+</div>
+</div>
+</div>
+{% endfor %}
+{% endif %}
+<!--end::Messages-->
 <!--begin::Card-->
 <div class="card">
 <!--begin::Card header-->
@@ -34,7 +74,7 @@
 <!--begin::Toolbar-->
 <div class="d-flex justify-content-end">
 <!--begin::Add website-->
-<button type="button" class="btn btn-sm btn-primary" id="kt_add_website_toggle">Add Website</button>
+<button type="button" class="btn btn-sm btn-primary fs-6" id="kt_add_website_toggle">Add Website</button>
 <!--end::Add website-->
 </div>
 <!--end::Toolbar-->
@@ -43,55 +83,54 @@
 </div>
 <!--end::Card header-->
 <!--begin::Card body-->
-<div class="card-body pt-0">
-
+<div class="card-body pt-1">
 <div class="table-responsive">
 <!--begin::Table-->
-<table class="table table-hover table-rounded border align-middle fs-6 gs-3" id="kt_websites_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_websites_table">
 <thead>
-<tr class="text-start fw-bold fs-6 text-uppercase gs-5">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th class="w-50px table-sort-asc">#</th>
+<th class="min-w-100px">Actions</th>
 <th class="min-w-250px">Website URL</th>
 <th class="min-w-250px">Note</th>
 <th class="min-w-125px">Status</th>
 <th class="min-w-175px">Last Scan</th>
 <th class="min-w-175px">Date Modified</th>
-<th class="min-w-100px">Actions</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 {% for website in websites %}
 <tr data-website-row="true">
 <td>{{ forloop.counter }}</td>
+<td>
+<div class="d-flex">
+<a href="{% url 'page_speed_and_cwv:website-reports' website.id %}" class="btn btn-sm btn-info fs-6 me-2">Reports</a>
+<a href="#" class="btn btn-sm btn-primary fs-6 me-2 js-edit-website" data-website='{"id":{{ website.id }},"website_url":"{{ website.website_url|escapejs }}","note":"{{ website.note|escapejs }}","is_active":{{ website.is_active|yesno:"true,false" }}}'>Edit</a>
+<form method="post" action="{% url 'page_speed_and_cwv:website-delete' website.id %}" class="js-delete-website-form">
+{% csrf_token %}
+<button type="submit" class="btn btn-sm btn-danger fs-6">Delete</button>
+</form>
+</div>
+</td>
 <td>
 <a href="{{ website.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary mb-1">{{ website.website_url }}</a>
 </td>
 <td>{{ website.note|default:"-"|truncatechars:80 }}</td>
 <td>
 {% if website.is_active %}
-<span class="badge badge-light-primary">Active</span>
+<span class="badge badge-light-primary fs-5">ACTIVE</span>
 {% else %}
-<span class="badge badge-light-danger">Inactive</span>
+<span class="badge badge-light-danger fs-5">INACTIVE</span>
 {% endif %}
 </td>
 <td>
 {% if website.latest_report %}
 {{ website.latest_report.scanned_at|date:"d M Y, G:I A" }}
 {% else %}
-<span class="text-muted">Not scanned</span>
+<span>Not scanned</span>
 {% endif %}
 </td>
-<td>{{ website.date_modified|date:"d M Y, G:I A" }}</td>
-<td>
-<div class="d-flex">
-<a href="{% url 'page_speed_and_cwv:website-reports' website.id %}" class="btn btn-sm btn-info me-2">Reports</a>
-<a href="#" class="btn btn-sm btn-primary me-2 js-edit-website" data-website='{"id":{{ website.id }},"website_url":"{{ website.website_url|escapejs }}","note":"{{ website.note|escapejs }}","is_active":{{ website.is_active|yesno:"true,false" }}}'>Edit</a>
-<form method="post" action="{% url 'page_speed_and_cwv:website-delete' website.id %}" class="js-delete-website-form">
-{% csrf_token %}
-<button type="submit" class="btn btn-sm btn-danger">Delete</button>
-</form>
-</div>
-</td>
+<td>{{ website.date_modified|date:"d/m/Y h:i A" }}</td>
 </tr>
 {% empty %}
 <tr>
@@ -133,11 +172,11 @@
 {% csrf_token %}
 <div class="fv-row mb-8">
 <label class="required fs-6 fw-semibold mb-2">Website URL</label>
-<input type="url" name="website_url" class="form-control form-control-solid" placeholder="https://example.com" autocomplete="url" />
+<input type="url" name="website_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com" autocomplete="url" />
 </div>
 <div class="fv-row mb-8">
 <label class="fs-6 fw-semibold mb-2">Note</label>
-<textarea name="note" class="form-control form-control-solid" rows="5" placeholder="Optional note"></textarea>
+<textarea name="note" class="form-control form-control-solid border border-gray-400" rows="5" placeholder="Optional note"></textarea>
 </div>
 <div class="fv-row mb-8">
 <label class="form-check form-switch form-check-custom form-check-solid">
@@ -145,9 +184,10 @@
 <span class="form-check-label fw-semibold text-gray-700">Active</span>
 </label>
 </div>
+<div class="separator separator-dashed mb-4"></div>
 <div class="d-flex justify-content-end">
-<button type="button" class="btn btn-sm btn-light me-3" id="kt_add_website_cancel">Discard</button>
-<button type="submit" class="btn btn-sm btn-primary" id="kt_add_website_submit">
+<button type="button" class="btn btn-sm btn-light fs-6 me-3" id="kt_add_website_cancel">Discard</button>
+<button type="submit" class="btn btn-sm btn-primary fs-6" id="kt_add_website_submit">
 <span class="indicator-label">Submit</span>
 <span class="indicator-progress">Please wait...
 <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
@@ -183,11 +223,11 @@
 <input type="hidden" name="website_id" />
 <div class="fv-row mb-8">
 <label class="required fs-6 fw-semibold mb-2">Website URL</label>
-<input type="url" name="website_url" class="form-control form-control-solid" placeholder="https://example.com" autocomplete="url" />
+<input type="url" name="website_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com" autocomplete="url" />
 </div>
 <div class="fv-row mb-8">
 <label class="fs-6 fw-semibold mb-2">Note</label>
-<textarea name="note" class="form-control form-control-solid" rows="5" placeholder="Optional note"></textarea>
+<textarea name="note" class="form-control form-control-solid border border-gray-400" rows="5" placeholder="Optional note"></textarea>
 </div>
 <div class="fv-row mb-8">
 <label class="form-check form-switch form-check-custom form-check-solid">
@@ -195,9 +235,10 @@
 <span class="form-check-label fw-semibold text-gray-700">Active</span>
 </label>
 </div>
+<div class="separator separator-dashed mb-4"></div>
 <div class="d-flex justify-content-end">
-<button type="button" class="btn btn-sm btn-light me-3" id="kt_edit_website_cancel">Discard</button>
-<button type="submit" class="btn btn-sm btn-primary" id="kt_edit_website_submit">
+<button type="button" class="btn btn-sm btn-light fs-6 me-3" id="kt_edit_website_cancel">Discard</button>
+<button type="submit" class="btn btn-sm btn-primary fs-6" id="kt_edit_website_submit">
 <span class="indicator-label">Update</span>
 <span class="indicator-progress">Please wait...
 <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
@@ -232,7 +273,7 @@ var websitesTable = $(websitesTableElement).DataTable({
 info: false,
 order: [],
 columnDefs: [
-{ orderable: false, targets: 6 }
+{ orderable: false, targets: 1 }
 ]
 });
 $("#kt_websites_table_search").on("keyup", function () {

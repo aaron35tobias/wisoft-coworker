@@ -11,7 +11,6 @@ from .models import (
     WebsiteSpeedReportAiIndex,
 )
 
-
 @login_required(login_url='sign-in')
 def list_view(request):
     websites = Website.objects.filter(added_by=request.user).prefetch_related('speed_report_ai_indexes')
@@ -46,7 +45,7 @@ def create_view(request):
             added_by=request.user,
         )
 
-        messages.success(request, 'Website added successfully.')
+        messages.success(request, 'Record inserted successfully.')
         return redirect('page_speed_and_cwv:website-list')
 
     return redirect('page_speed_and_cwv:website-list')
@@ -80,7 +79,7 @@ def update_view(request):
         website.is_active = is_active
         website.save()
 
-        messages.success(request, 'Website updated successfully.')
+        messages.success(request, 'Record updated successfully.')
         return redirect('page_speed_and_cwv:website-list')
 
     return redirect('page_speed_and_cwv:website-list')
@@ -96,7 +95,7 @@ def delete_view(request, website_id):
 
     if request.method == 'POST':
         website.delete()
-        messages.success(request, 'Website deleted successfully.')
+        messages.success(request, 'Record deleted successfully.')
         return redirect('page_speed_and_cwv:website-list')
 
     return redirect('page_speed_and_cwv:website-list')
