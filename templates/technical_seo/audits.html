@@ -126,14 +126,14 @@ width: calc(100% - 32px);
 <span class="path1"></span>
 <span class="path2"></span>
 </i>
-<input type="text" id="kt_seo_websites_table_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Websites" />
+<input type="text" id="kt_seo_websites_table_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Websites" />
 </div>
 </div>
 </div>
 <div class="card-body pt-0">
-<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_seo_websites_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_seo_websites_table">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th>Website</th>
 <th>Note</th>
 <th>Audits</th>
@@ -143,7 +143,7 @@ width: calc(100% - 32px);
 <th>Actions</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 {% for site in websites %}
 <tr data-website-row="true">
 <td><a href="{{ site.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ site.website_url }}</a></td>
@@ -248,3 +248,4 @@ websitesTable.search(this.value).draw();
 });
 </script>
 {% endblock %}
+

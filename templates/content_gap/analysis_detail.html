@@ -5,16 +5,6 @@
 
 {% block extra_css_scripts %}
 <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
-<style>
-.cg-url-cell {
-max-width: 360px;
-white-space: normal;
-word-break: break-word;
-}
-.cg-copy {
-white-space: pre-line;
-}
-</style>
 {% endblock %}
 
 {% block header %}
@@ -111,7 +101,7 @@ white-space: pre-line;
 <h3 class="card-title fw-bold text-gray-900">AI Summary</h3>
 </div>
 <div class="card-body">
-<div class="cg-copy text-gray-700 fs-6">{{ analysis.display_ai_summary }}</div>
+<div class="text-gray-700 fs-6">{{ analysis.display_ai_summary|linebreaksbr }}</div>
 </div>
 </div>
 
@@ -121,14 +111,14 @@ white-space: pre-line;
 <h3 class="fw-bold m-0">Content Gaps</h3>
 <div class="d-flex align-items-center position-relative my-1">
 <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
-<input type="text" id="kt_content_gaps_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Gaps" />
+<input type="text" id="kt_content_gaps_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Gaps" />
 </div>
 </div>
 </div>
 <div class="card-body pt-0">
-<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_content_gaps_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_content_gaps_table">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th>Priority</th>
 <th>Topic</th>
 <th>Why It Matters</th>
@@ -136,7 +126,7 @@ white-space: pre-line;
 <th>Recommendation</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 {% for gap in analysis.content_gaps %}
 <tr data-gap-row="true">
 <td><span class="badge badge-light-{% if gap.priority == 'High' %}danger{% elif gap.priority == 'Medium' %}warning{% else %}primary{% endif %}">{{ gap.priority|default:"Medium" }}</span></td>
@@ -160,15 +150,15 @@ white-space: pre-line;
 <h3 class="card-title fw-bold text-gray-900">Keyword Opportunities</h3>
 </div>
 <div class="card-body pt-0">
-<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_keyword_opportunities_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_keyword_opportunities_table">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th>Keyword</th>
 <th>Intent</th>
 <th>Opportunity</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 {% for keyword in analysis.keyword_opportunities %}
 <tr data-keyword-row="true">
 <td class="text-gray-900">{{ keyword.keyword|default:"-" }}</td>
@@ -261,9 +251,9 @@ white-space: pre-line;
 </div>
 <div class="card-body">
 <div class="table-responsive">
-<table class="table align-middle table-row-dashed fs-6 gy-5">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th>Type</th>
 <th>URL</th>
 <th>Status</th>
@@ -275,34 +265,90 @@ white-space: pre-line;
 <th>Internal Links</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 <tr>
 <td><span class="badge badge-light-primary">Own</span></td>
-<td class="cg-url-cell"><a href="{{ analysis.own_page_snapshot.url }}" target="_blank" rel="noopener">{{ analysis.own_page_snapshot.url }}</a></td>
+<td class="text-break min-w-200px"><a href="{{ analysis.own_page_snapshot.url }}" target="_blank" rel="noopener">{{ analysis.own_page_snapshot.url }}</a></td>
 <td>{{ analysis.own_page_snapshot.status_code|default:"-" }}</td>
 <td>{{ analysis.own_page_snapshot.title|default:"-"|truncatechars:80 }}</td>
 <td>{{ analysis.own_page_snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
 <td>{{ analysis.own_page_snapshot.word_count|default:"0" }}</td>
 <td><span class="badge badge-light-info">{{ analysis.own_page_snapshot.image_count|default:"0" }}</span></td>
 <td><span class="badge badge-light-primary">{{ analysis.own_page_snapshot.video_count|default:"0" }}</span></td>
-<td><span class="badge badge-light-success">{{ analysis.own_page_snapshot.internal_links_count|default:"0" }}</span></td>
+<td><button type="button" class="btn btn-sm btn-light-success" data-bs-toggle="modal" data-bs-target="#kt_content_gap_internal_links_own">{{ analysis.own_page_snapshot.internal_links_count|default:"0" }}</button></td>
 </tr>
 {% for snapshot in analysis.competitor_snapshots %}
 <tr>
 <td><span class="badge badge-light">Competitor</span></td>
-<td class="cg-url-cell"><a href="{{ snapshot.url }}" target="_blank" rel="noopener">{{ snapshot.url }}</a></td>
+<td class="text-break min-w-200px"><a href="{{ snapshot.url }}" target="_blank" rel="noopener">{{ snapshot.url }}</a></td>
 <td>{{ snapshot.status_code|default:"-" }}</td>
 <td>{{ snapshot.title|default:"-"|truncatechars:80 }}</td>
 <td>{{ snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
 <td>{{ snapshot.word_count|default:"0" }}</td>
 <td><span class="badge badge-light-info">{{ snapshot.image_count|default:"0" }}</span></td>
 <td><span class="badge badge-light-primary">{{ snapshot.video_count|default:"0" }}</span></td>
-<td><span class="badge badge-light-success">{{ snapshot.internal_links_count|default:"0" }}</span></td>
+<td><button type="button" class="btn btn-sm btn-light-success" data-bs-toggle="modal" data-bs-target="#kt_content_gap_internal_links_{{ forloop.counter }}">{{ snapshot.internal_links_count|default:"0" }}</button></td>
 </tr>
 {% endfor %}
 </tbody>
 </table>
 </div>
+<div class="modal fade" tabindex="-1" id="kt_content_gap_internal_links_own">
+<div class="modal-dialog modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Internal Links</h5>
+<div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+<i class="ki-duotone ki-cross fs-2x"><span class="path1"></span><span class="path2"></span></i>
+</div>
+</div>
+<div class="modal-body">
+<div class="text-muted fs-7 mb-4 text-break">{{ analysis.own_page_snapshot.url }}</div>
+{% if analysis.own_page_snapshot.internal_links %}
+<div class="d-flex flex-column gap-3">
+{% for link in analysis.own_page_snapshot.internal_links %}
+<a href="{{ link }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary text-break">{{ link }}</a>
+{% endfor %}
+</div>
+{% else %}
+<div class="text-muted">Internal link URLs were not captured for this analysis. Run the content gap analysis again to save the link list.</div>
+{% endif %}
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+</div>
+</div>
+</div>
+</div>
+{% for snapshot in analysis.competitor_snapshots %}
+<div class="modal fade" tabindex="-1" id="kt_content_gap_internal_links_{{ forloop.counter }}">
+<div class="modal-dialog modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Internal Links</h5>
+<div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+<i class="ki-duotone ki-cross fs-2x"><span class="path1"></span><span class="path2"></span></i>
+</div>
+</div>
+<div class="modal-body">
+<div class="text-muted fs-7 mb-4 text-break">{{ snapshot.url }}</div>
+{% if snapshot.internal_links %}
+<div class="d-flex flex-column gap-3">
+{% for link in snapshot.internal_links %}
+<a href="{{ link }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary text-break">{{ link }}</a>
+{% endfor %}
+</div>
+{% else %}
+<div class="text-muted">Internal link URLs were not captured for this analysis. Run the content gap analysis again to save the link list.</div>
+{% endif %}
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+</div>
+</div>
+</div>
+</div>
+{% endfor %}
 </div>
 </div>
 
@@ -345,3 +391,4 @@ event.preventDefault();
 });
 </script>
 {% endblock %}
+

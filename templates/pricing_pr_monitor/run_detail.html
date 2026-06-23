@@ -86,7 +86,7 @@
 </div>
 
 <div class="card mb-5"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">Detected Changes</h3></div><div class="card-body">
-<table class="table align-middle table-row-dashed fs-6 gy-5"><thead><tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0"><th>Severity</th><th>Type</th><th>URL</th><th>Evidence</th><th>Recommendation</th></tr></thead><tbody class="fw-semibold text-gray-600">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"><thead><tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary"><th>Severity</th><th>Type</th><th>URL</th><th>Evidence</th><th>Recommendation</th></tr></thead><tbody class="fw-semibold text-gray-700">
 {% for change in changes %}
 <tr><td><span class="badge badge-light-{% if change.severity == 'high' %}danger{% elif change.severity == 'medium' %}warning{% else %}primary{% endif %}">{{ change.get_severity_display }}</span></td><td>{{ change.change_type|title }}</td><td class="pp-url-cell"><a href="{{ change.current_snapshot.url }}" target="_blank" rel="noopener">{{ change.current_snapshot.url }}</a></td><td>{{ change.evidence }}</td><td>{{ change.recommendation }}</td></tr>
 {% empty %}
@@ -102,7 +102,7 @@ No website snapshots were available for change detection.
 </div></div>
 
 <div class="card mb-5"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">Google News / Press Releases</h3></div><div class="card-body">
-<table class="table align-middle table-row-dashed fs-6 gy-5"><thead><tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0"><th>Keyword</th><th>Title</th><th>Type</th><th>Source</th><th>AI Relevance</th><th>Published</th></tr></thead><tbody class="fw-semibold text-gray-600">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"><thead><tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary"><th>Keyword</th><th>Title</th><th>Type</th><th>Source</th><th>AI Relevance</th><th>Published</th></tr></thead><tbody class="fw-semibold text-gray-700">
 {% for mention in news_mentions %}
 <tr><td>{{ mention.keyword }}</td><td class="pp-url-cell"><a href="{{ mention.url }}" target="_blank" rel="noopener">{{ mention.title }}</a></td><td><span class="badge badge-light-info">{{ mention.mention_type|default:"Competitor News"|title }}</span></td><td>{{ mention.source|default:"Google News" }}</td><td>{{ mention.relevance_reason|default:"Validated against competitor identity." }}</td><td>{% if mention.published_at %}{{ mention.published_at|date:"d M Y, g:i A" }}{% else %}-{% endif %}</td></tr>
 {% empty %}
@@ -112,7 +112,7 @@ No website snapshots were available for change detection.
 </div></div>
 
 <div class="card"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">Page Snapshots</h3></div><div class="card-body">
-<table class="table align-middle table-row-dashed fs-6 gy-5"><thead><tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0"><th>URL</th><th>Status</th><th>Title</th><th>Pricing Terms</th><th>Checked</th></tr></thead><tbody class="fw-semibold text-gray-600">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"><thead><tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary"><th>URL</th><th>Status</th><th>Title</th><th>Pricing Terms</th><th>Checked</th></tr></thead><tbody class="fw-semibold text-gray-700">
 {% for snapshot in snapshots %}
 <tr><td class="pp-url-cell"><a href="{{ snapshot.url }}" target="_blank" rel="noopener">{{ snapshot.url }}</a></td><td>{{ snapshot.status_code|default:"-" }}</td><td>{{ snapshot.title|default:"-"|truncatechars:90 }}</td><td>{{ snapshot.pricing_terms|join:", "|default:"-"|truncatechars:90 }}</td><td>{{ snapshot.checked_at|date:"d M Y, g:i A" }}</td></tr>
 {% empty %}
@@ -133,3 +133,4 @@ if (!window.confirm("Delete this monitor run and its saved snapshots, changes, a
 });
 </script>
 {% endblock %}
+

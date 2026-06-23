@@ -137,6 +137,14 @@ def build_scorecard_rows(analysis):
     return rows
 
 
+def build_scorecard_chart(rows):
+    return {
+        'categories': [row['metric'] for row in rows],
+        'own': [row['own'] for row in rows],
+        'competitors': [row['competitors'] for row in rows],
+    }
+
+
 def build_comparison_rows(analysis):
     own = analysis.target_snapshot or {}
     competitors = analysis.competitor_snapshots or []
@@ -238,9 +246,11 @@ def run_analysis_view(request):
 @login_required(login_url='sign-in')
 def detail_view(request, analysis_id):
     analysis = get_object_or_404(SERPAnalysis, id=analysis_id, requested_by=request.user)
+    scorecard_rows = build_scorecard_rows(analysis)
     return render(request, 'serp_analysis/detail.html', {
         'analysis': analysis,
-        'scorecard_rows': build_scorecard_rows(analysis),
+        'scorecard_rows': scorecard_rows,
+        'scorecard_chart': build_scorecard_chart(scorecard_rows),
         'comparison_rows': build_comparison_rows(analysis),
         'ai_summary_sections': parse_ai_summary_sections(analysis.ai_summary),
         'back_to_history_url': reverse('serp_analysis:history'),

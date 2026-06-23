@@ -57,6 +57,8 @@ class SERPPageParser(HTMLParser):
         self.video_count = 0
         self.internal_links_count = 0
         self.external_links_count = 0
+        self.internal_links = []
+        self.external_links = []
         self.schema_types = []
         self._active_tag = None
         self._buffer = []
@@ -121,8 +123,10 @@ class SERPPageParser(HTMLParser):
                     self._seen_links.add(normalized)
                     if parsed_link.netloc.lower() == self.base_netloc:
                         self.internal_links_count += 1
+                        self.internal_links.append(normalized)
                     else:
                         self.external_links_count += 1
+                        self.external_links.append(normalized)
 
     def handle_data(self, data):
         if self._json_ld_depth:
@@ -314,6 +318,8 @@ def build_snapshot(url, result_type):
         'video_count': 0,
         'internal_links_count': 0,
         'external_links_count': 0,
+        'internal_links': [],
+        'external_links': [],
         'schema_types': [],
         'top_terms': [],
         'content_excerpt': '',
@@ -340,6 +346,8 @@ def build_snapshot(url, result_type):
         'video_count': parser.video_count,
         'internal_links_count': parser.internal_links_count,
         'external_links_count': parser.external_links_count,
+        'internal_links': parser.internal_links[:100],
+        'external_links': parser.external_links[:100],
         'schema_types': sorted(set(parser.schema_types))[:10],
         'top_terms': extract_terms(body_text),
         'content_excerpt': body_text[:1200],
