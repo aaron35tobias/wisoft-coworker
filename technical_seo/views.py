@@ -133,6 +133,10 @@ def audit_run_view(request):
         messages.error(request, 'Website URL is required.')
         return redirect('technical_seo:audits')
 
+    # Accept bare domains (e.g. "nike.com") by defaulting to https.
+    if '://' not in website_url:
+        website_url = 'https://' + website_url
+
     try:
         URLValidator()(website_url)
     except ValidationError:

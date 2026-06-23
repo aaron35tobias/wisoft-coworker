@@ -187,8 +187,8 @@
 <span class="menu-arrow"></span>
 </span>
 <div class="menu-sub menu-sub-accordion">
-<div class="menu-item"><a class="menu-link{% if request.resolver_match.namespace == 'technical_seo' and request.resolver_match.url_name == 'audits' or request.resolver_match.namespace == 'technical_seo' and request.resolver_match.url_name == 'website-audits' %} active{% endif %}" href="{% url 'technical_seo:audits' %}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Run Audit</span></a></div>
-<div class="menu-item"><a class="menu-link{% if request.resolver_match.namespace == 'technical_seo' and request.resolver_match.url_name == 'history' or request.resolver_match.namespace == 'technical_seo' and request.resolver_match.url_name == 'website-history' or request.resolver_match.namespace == 'technical_seo' and request.resolver_match.url_name == 'audit-detail' %} active{% endif %}" href="{% url 'technical_seo:history' %}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Audit History</span></a></div>
+<div class="menu-item"><a class="menu-link{% if request.resolver_match.namespace == 'technical_seo' and request.resolver_match.url_name == 'audits' or request.resolver_match.namespace == 'technical_seo' and request.resolver_match.url_name == 'website-audits' or request.resolver_match.namespace == 'technical_seo' and request.resolver_match.url_name == 'audit-detail' %} active{% endif %}" href="{% url 'technical_seo:audits' %}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Run Audit</span></a></div>
+<div class="menu-item"><a class="menu-link{% if request.resolver_match.namespace == 'technical_seo' and request.resolver_match.url_name == 'history' or request.resolver_match.namespace == 'technical_seo' and request.resolver_match.url_name == 'website-history' %} active{% endif %}" href="{% url 'technical_seo:history' %}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Audit History</span></a></div>
 </div>
 </div>
 
