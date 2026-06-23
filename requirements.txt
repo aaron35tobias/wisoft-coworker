@@ -1,5 +1,6 @@
 Django==5.2.8
 python-dotenv==1.0.1
+anthropic==0.111.0
 google-ads
 google-api-python-client
 google-auth
