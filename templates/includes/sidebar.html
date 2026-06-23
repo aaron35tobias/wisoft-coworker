@@ -14,6 +14,9 @@
 <button type="button" class="seo-rail-link" data-sidebar-group="automation" title="AI Automation" aria-label="AI Automation menu">
 <i class="la la-cogs"></i>
 </button>
+<button type="button" class="seo-rail-link{% if request.resolver_match.url_name == 'billing' %} active{% endif %}" data-sidebar-group="billing" title="Billing" aria-label="Billing menu">
+<i class="la la-credit-card"></i>
+</button>
 <span class="seo-rail-separator"></span>
 <button type="button" class="seo-rail-link seo-sidebar-toggle" id="kt_sidebar_hide_toggle" title="Collapse sidebar" aria-label="Collapse sidebar">
 <i class="ki-duotone ki-black-left fs-2 seo-collapse-icon"></i>
@@ -253,6 +256,12 @@
 <div class="menu-item"><a class="menu-link" href="#"><span class="menu-icon"><i class="ki-duotone ki-technology-2 fs-2"></i></span><span class="menu-title">AI Workflows</span></a></div>
 <div class="menu-item"><a class="menu-link" href="#"><span class="menu-icon"><i class="ki-duotone ki-message-programming fs-2"></i></span><span class="menu-title">Prompt Library</span></a></div>
 <div class="menu-item"><a class="menu-link" href="#"><span class="menu-icon"><i class="ki-duotone ki-setting-4 fs-2"></i></span><span class="menu-title">Automation Rules</span></a></div>
+</div>
+</div>
+<div class="seo-sidebar-group{% if request.resolver_match.url_name == 'billing' %} active{% endif %}" data-sidebar-panel="billing">
+<div class="seo-sidebar-heading">Billing</div>
+<div class="menu menu-column menu-rounded menu-sub-indention menu-active-bg fw-semibold my-auto">
+<div class="menu-item"><a class="menu-link{% if request.resolver_match.url_name == 'billing' %} active{% endif %}" href="{% url 'billing' %}"><span class="menu-icon"><i class="ki-duotone ki-wallet fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i></span><span class="menu-title">API Usage</span></a></div>
 </div>
 </div>
 <!--end::Menu-->
