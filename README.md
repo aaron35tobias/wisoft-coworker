@@ -1,19 +1,11 @@
 # WiSoft Co-Worker AI Agent
-
-A comprehensive SEO AI agent platform built with Django. It provides an integrated suite of tools for Technical SEO audits, Content Gap analysis, Keyword Research, and Pricing/PR monitoring, powered by AI (Anthropic Claude & OpenAI).
-
-## Core Features
-
-* **Technical SEO Audit**: Crawls internal pages, applies deterministic SEO rules, and uses AI to generate client-ready summaries and prioritize fixes.
-* **Content Gap Analysis**: Compares your page against competitors, extracts content signals, and leverages AI to identify missing topics, keyword opportunities, and provide execution plans.
-* **Keyword Research**: Integrated keyword research tools (utilizing Google Ads API).
-* **Pricing & PR Monitor**: Tracks and monitors pricing and PR metrics.
+A comprehensive SEO AI agent platform built with Django. It provides an integrated suite of tools for Technical SEO audits, Content Gap analysis, Keyword Research, PageSpeed tracking, and Pricing/PR monitoring, powered by AI (Anthropic Claude & OpenAI).
 
 ## Prerequisites
 Before you begin, ensure you have the following installed on your machine:
 * **Python 3.10+**
-* **Node.js** (optional, for frontend/node tools)
-* **MySQL Server** (and optionally MySQL Workbench) or SQLite
+* **Node.js** 
+* **MySQL Server** 
 * **Git**
 
 ---
@@ -35,17 +27,6 @@ cd wisoft-coworker
 **3. Environment Variables**
 - Create a `.env` file in the root directory (use `.env.example` as a reference if available).
 - Make sure to configure the AI and Database parameters:
-  ```env
-  # AI Configuration
-  ANTHROPIC_API_KEY=your_anthropic_api_key
-  ANTHROPIC_MODEL=claude-sonnet-4-6
-  CONTENT_GAP_ANTHROPIC_TIMEOUT_SECONDS=120
-  CONTENT_GAP_ANTHROPIC_MAX_TOKENS=1600
-
-  # Optional Fallback
-  OPENAI_API_KEY=your_openai_api_key
-  OPENAI_MODEL=gpt-4.1
-  ```
 
 **4. Database & Execution**
 - Apply the database schema to your local database: `python manage.py migrate`
