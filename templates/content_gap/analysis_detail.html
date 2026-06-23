@@ -111,14 +111,14 @@
 <h3 class="fw-bold m-0">Content Gaps</h3>
 <div class="d-flex align-items-center position-relative my-1">
 <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
-<input type="text" id="kt_content_gaps_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Gaps" />
+<input type="text" id="kt_content_gaps_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Gaps" />
 </div>
 </div>
 </div>
 <div class="card-body pt-0">
-<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_content_gaps_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_content_gaps_table">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th>Priority</th>
 <th>Topic</th>
 <th>Why It Matters</th>
@@ -126,7 +126,7 @@
 <th>Recommendation</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 {% for gap in analysis.content_gaps %}
 <tr data-gap-row="true">
 <td><span class="badge badge-light-{% if gap.priority == 'High' %}danger{% elif gap.priority == 'Medium' %}warning{% else %}primary{% endif %}">{{ gap.priority|default:"Medium" }}</span></td>
@@ -150,15 +150,15 @@
 <h3 class="card-title fw-bold text-gray-900">Keyword Opportunities</h3>
 </div>
 <div class="card-body pt-0">
-<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_keyword_opportunities_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_keyword_opportunities_table">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th>Keyword</th>
 <th>Intent</th>
 <th>Opportunity</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 {% for keyword in analysis.keyword_opportunities %}
 <tr data-keyword-row="true">
 <td class="text-gray-900">{{ keyword.keyword|default:"-" }}</td>
@@ -251,9 +251,9 @@
 </div>
 <div class="card-body">
 <div class="table-responsive">
-<table class="table align-middle table-row-dashed fs-6 gy-5">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th>Type</th>
 <th>URL</th>
 <th>Status</th>
@@ -265,7 +265,7 @@
 <th>Internal Links</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 <tr>
 <td><span class="badge badge-light-primary">Own</span></td>
 <td class="text-break min-w-200px"><a href="{{ analysis.own_page_snapshot.url }}" target="_blank" rel="noopener">{{ analysis.own_page_snapshot.url }}</a></td>
@@ -391,3 +391,4 @@ event.preventDefault();
 });
 </script>
 {% endblock %}
+

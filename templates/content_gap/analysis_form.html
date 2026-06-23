@@ -141,14 +141,14 @@ width: calc(100% - 32px);
 <h3 class="fw-bold m-0">Content Gap Projects</h3>
 <div class="d-flex align-items-center position-relative my-1">
 <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
-<input type="text" id="kt_content_gap_projects_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Projects" />
+<input type="text" id="kt_content_gap_projects_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Projects" />
 </div>
 </div>
 </div>
 <div class="card-body pt-0">
-<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_content_gap_projects_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_content_gap_projects_table">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th>Website</th>
 <th>Topic</th>
 <th>Market</th>
@@ -158,7 +158,7 @@ width: calc(100% - 32px);
 <th>Actions</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 {% for project in projects %}
 <tr data-project-row="true">
 <td><a href="{{ project.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ project.website_url }}</a></td>
@@ -254,3 +254,4 @@ projectsTable.search(this.value).draw();
 });
 </script>
 {% endblock %}
+

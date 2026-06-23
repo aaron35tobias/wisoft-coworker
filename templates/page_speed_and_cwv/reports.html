@@ -18,7 +18,7 @@
 <span class="path1"></span>
 <span class="path2"></span>
 </i>
-<input type="text" id="kt_reports_table_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Reports" />
+<input type="text" id="kt_reports_table_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Reports" />
 </div>
 {% if website %}
 <div class="fw-bold fs-4 text-end">
@@ -28,9 +28,9 @@ SITE: <a href="{{ website.website_url }}" target="_blank" rel="noopener" class="
 </div>
 </div>
 <div class="card-body pt-0">
-<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_reports_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_reports_table">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th class="w-50px">#</th>
 <th>Website</th>
 <th>Scanned At</th>
@@ -40,7 +40,7 @@ SITE: <a href="{{ website.website_url }}" target="_blank" rel="noopener" class="
 <th>Actions</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 {% for report_index in report_indexes %}
 <tr data-report-row="true">
 <td>{{ forloop.counter }}</td>

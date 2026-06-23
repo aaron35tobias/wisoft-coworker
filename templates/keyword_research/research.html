@@ -39,8 +39,8 @@
 </div></div></div></div>
 </div>
 
-<div class="card"><div class="card-header border-0 pt-6"><div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100"><h3 class="fw-bold m-0">Keyword Research Projects</h3><div class="d-flex align-items-center position-relative my-1"><i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i><input type="text" id="kt_keyword_projects_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Projects" /></div></div></div><div class="card-body pt-0">
-<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_keyword_projects_table"><thead><tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0"><th>Page / Keywords</th><th>Location</th><th>Topic</th><th>Runs</th><th>Keywords</th><th>Planner</th><th>Last Run</th></tr></thead><tbody class="fw-semibold text-gray-600">
+<div class="card"><div class="card-header border-0 pt-6"><div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100"><h3 class="fw-bold m-0">Keyword Research Projects</h3><div class="d-flex align-items-center position-relative my-1"><i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i><input type="text" id="kt_keyword_projects_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Projects" /></div></div></div><div class="card-body pt-0">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_keyword_projects_table"><thead><tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary"><th>Page / Keywords</th><th>Location</th><th>Topic</th><th>Runs</th><th>Keywords</th><th>Planner</th><th>Last Run</th></tr></thead><tbody class="fw-semibold text-gray-700">
 {% for project in projects %}
 <tr data-project-row="true"><td>{% if project.website_url %}<a href="{{ project.website_url }}" target="_blank" rel="noopener">{{ project.website_url }}</a>{% else %}<span class="text-gray-800">{{ project.seed_keywords|truncatechars:80 }}</span>{% endif %}</td><td>{{ project.target_location }}</td><td>{{ project.seed_topic|default:"-" }}</td><td>{{ project.run_count }}</td><td><span class="badge badge-light-primary">{{ project.latest_keywords_count }}</span></td><td><span class="badge badge-light-info">{{ project.latest_planner_count }}</span></td><td>{% if project.latest_run %}<a href="{% url 'keyword_research:detail' project.latest_run.id %}" class="btn btn-sm btn-light-primary">View Latest</a>{% else %}-{% endif %}</td></tr>
 {% empty %}
@@ -63,3 +63,4 @@ if(tableElement&&tableElement.querySelector("[data-project-row='true']")){var ta
 });
 </script>
 {% endblock %}
+

@@ -217,7 +217,7 @@ View Full AI Response
 <span class="path1"></span>
 <span class="path2"></span>
 </i>
-<input type="text" id="kt_gsc_inspection_table_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search URL Inspection" />
+<input type="text" id="kt_gsc_inspection_table_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search URL Inspection" />
 </div>
 </div>
 <form method="get" class="d-flex gap-2 align-items-center">
@@ -234,9 +234,9 @@ View Full AI Response
 </div>
 <div class="card-body pt-0">
 <div class="table-responsive">
-<table class="table align-middle table-row-dashed fs-7 gy-3 audit-detail-table" id="kt_gsc_inspection_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6 audit-detail-table" id="kt_gsc_inspection_table">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th class="min-w-280px">URL</th>
 <th class="w-120px">Verdict</th>
 <th class="min-w-180px">Coverage</th>
@@ -248,7 +248,7 @@ View Full AI Response
 <th class="w-70px text-end">More</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 {% for item in gsc_inspections %}
 <tr data-gsc-inspection-row="true">
 <td><a href="{{ item.inspection_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary audit-url-text" title="{{ item.inspection_url }}">{{ item.inspection_url }}</a></td>
@@ -295,7 +295,7 @@ data-error="{{ item.error_message }}">
 <span class="path1"></span>
 <span class="path2"></span>
 </i>
-<input type="text" id="kt_seo_issues_table_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Issues" />
+<input type="text" id="kt_seo_issues_table_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Issues" />
 </div>
 <div class="d-flex gap-2 flex-wrap">
 <a class="btn btn-sm {% if not severity_filter %}btn-primary{% else %}btn-light{% endif %}" href="{% url 'technical_seo:audit-detail' audit.id %}">All</a>
@@ -307,9 +307,9 @@ data-error="{{ item.error_message }}">
 </div>
 <div class="card-body pt-0">
 <div class="table-responsive">
-<table class="table align-middle table-row-dashed fs-7 gy-3 audit-detail-table" id="kt_seo_issues_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6 audit-detail-table" id="kt_seo_issues_table">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th class="w-95px">Severity</th>
 <th class="min-w-180px">Issue</th>
 <th class="min-w-260px">Page</th>
@@ -318,7 +318,7 @@ data-error="{{ item.error_message }}">
 <th class="w-70px text-end">More</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 {% for issue in issues %}
 <tr data-issue-row="true">
 <td>
@@ -370,9 +370,9 @@ data-error="{{ item.error_message }}">
 </div>
 <div class="card-body pt-0">
 <div class="table-responsive">
-<table class="table align-middle table-row-dashed fs-7 gy-3 audit-detail-table" id="kt_seo_pages_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6 audit-detail-table" id="kt_seo_pages_table">
 <thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th class="min-w-320px">URL</th>
 <th class="w-90px">Status</th>
 <th class="w-80px">Depth</th>
@@ -382,7 +382,7 @@ data-error="{{ item.error_message }}">
 <th class="w-90px">Load</th>
 </tr>
 </thead>
-<tbody class="fw-semibold text-gray-600">
+<tbody class="fw-semibold text-gray-700">
 {% for page in pages %}
 <tr data-page-row="true">
 <td><a href="{{ page.url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary audit-url-text" title="{{ page.url }}">{{ page.url }}</a></td>
@@ -538,3 +538,4 @@ jQuery(this).text(fields[index][1]);
 });
 </script>
 {% endblock %}
+
