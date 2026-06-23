@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.contrib.auth import authenticate, get_user_model, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
@@ -102,3 +102,72 @@ def sign_up_view(request):
 def logout_view(request):
     logout(request)
     return redirect('sign-in')
+
+
+@login_required(login_url='sign-in')
+def settings_view(request):
+    user = request.user
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        errors = {}
+        success_message = ''
+        
+        if action == 'update_username':
+            new_username = request.POST.get('username', '').strip()
+            current_password = request.POST.get('current_password', '')
+            
+            if not current_password:
+                errors['username_current_password'] = 'Current password is required.'
+            elif not user.check_password(current_password):
+                errors['username_current_password'] = 'Incorrect password.'
+                
+            if not new_username:
+                errors['username'] = 'Username is required.'
+            elif new_username != user.username and User.objects.filter(username=new_username).exists():
+                errors['username'] = 'Username is already taken.'
+                
+            if not errors and new_username != user.username:
+                user.username = new_username
+                user.save()
+                success_message = 'Username updated successfully.'
+                
+        elif action == 'update_password':
+            current_password = request.POST.get('current_password', '')
+            new_password = request.POST.get('new_password', '')
+            confirm_password = request.POST.get('confirm_password', '')
+            
+            if not current_password:
+                errors['password_current_password'] = 'Current password is required.'
+            elif not user.check_password(current_password):
+                errors['password_current_password'] = 'Incorrect current password.'
+                
+            if not new_password:
+                errors['new_password'] = 'New password is required.'
+            elif len(new_password) < 8:
+                errors['new_password'] = 'Password must be at least 8 characters long.'
+                
+            if new_password != confirm_password:
+                errors['confirm_password'] = 'Passwords do not match.'
+                
+            if not errors:
+                user.set_password(new_password)
+                user.save()
+                update_session_auth_hash(request, user)  # Keep user logged in
+                success_message = 'Password updated successfully.'
+                
+        elif action == 'update_profile_picture':
+            profile_picture = request.FILES.get('profile_picture')
+            if profile_picture:
+                user.profile.profile_picture = profile_picture
+                user.profile.save()
+                success_message = 'Profile picture updated successfully.'
+            else:
+                errors['profile_picture'] = 'Please select an image to upload.'
+                
+        context = {
+            'errors': errors,
+            'success_message': success_message,
+        }
+        return render(request, 'accounts/settings.html', context)
+        
+    return render(request, 'accounts/settings.html')

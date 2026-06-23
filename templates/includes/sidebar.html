@@ -14,9 +14,6 @@
 <button type="button" class="seo-rail-link" data-sidebar-group="automation" title="AI Automation" aria-label="AI Automation menu">
 <i class="la la-cogs"></i>
 </button>
-<button type="button" class="seo-rail-link{% if request.resolver_match.url_name == 'billing' %} active{% endif %}" data-sidebar-group="billing" title="Billing" aria-label="Billing menu">
-<i class="la la-credit-card"></i>
-</button>
 <span class="seo-rail-separator"></span>
 <button type="button" class="seo-rail-link seo-sidebar-toggle" id="kt_sidebar_hide_toggle" title="Collapse sidebar" aria-label="Collapse sidebar">
 <i class="ki-duotone ki-black-left fs-2 seo-collapse-icon"></i>
@@ -65,13 +62,13 @@
 </div>
 <div class="seo-rail-control">
 <button type="button" class="seo-rail-user" title="{{ request.user.username }}" aria-label="User menu" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="right-start">
-<img src="{% static 'assets/media/avatars/300-1.jpg' %}" alt="photo" />
+<img src="{% if request.user.profile.profile_picture %}{{ request.user.profile.profile_picture.url }}{% else %}{% static 'assets/media/avatars/300-1.jpg' %}{% endif %}" alt="photo" />
 </button>
 <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px" data-kt-menu="true">
 <div class="menu-item px-3">
 <div class="menu-content d-flex align-items-center px-3">
 <div class="symbol symbol-50px me-5">
-<img alt="Logo" src="{% static 'assets/media/avatars/300-1.jpg' %}" />
+<img alt="Logo" src="{% if request.user.profile.profile_picture %}{{ request.user.profile.profile_picture.url }}{% else %}{% static 'assets/media/avatars/300-1.jpg' %}{% endif %}" />
 </div>
 <div class="d-flex flex-column min-w-0 flex-grow-1 overflow-hidden" style="max-width: 145px;">
 <div class="fw-bold d-flex align-items-center fs-5 min-w-0">
@@ -86,10 +83,10 @@
 </div>
 <div class="separator my-2"></div>
 <div class="menu-item px-5">
-<a href="account/overview.html" class="menu-link px-5">My Profile</a>
+<a href="{% url 'settings' %}" class="menu-link px-5">My Profile</a>
 </div>
 <div class="menu-item px-5 my-1">
-<a href="account/settings.html" class="menu-link px-5">Settings</a>
+<a href="{% url 'settings' %}" class="menu-link px-5">Settings</a>
 </div>
 <div class="separator my-2"></div>
 <div class="menu-item px-5">
@@ -256,12 +253,6 @@
 <div class="menu-item"><a class="menu-link" href="#"><span class="menu-icon"><i class="ki-duotone ki-technology-2 fs-2"></i></span><span class="menu-title">AI Workflows</span></a></div>
 <div class="menu-item"><a class="menu-link" href="#"><span class="menu-icon"><i class="ki-duotone ki-message-programming fs-2"></i></span><span class="menu-title">Prompt Library</span></a></div>
 <div class="menu-item"><a class="menu-link" href="#"><span class="menu-icon"><i class="ki-duotone ki-setting-4 fs-2"></i></span><span class="menu-title">Automation Rules</span></a></div>
-</div>
-</div>
-<div class="seo-sidebar-group{% if request.resolver_match.url_name == 'billing' %} active{% endif %}" data-sidebar-panel="billing">
-<div class="seo-sidebar-heading">Billing</div>
-<div class="menu menu-column menu-rounded menu-sub-indention menu-active-bg fw-semibold my-auto">
-<div class="menu-item"><a class="menu-link{% if request.resolver_match.url_name == 'billing' %} active{% endif %}" href="{% url 'billing' %}"><span class="menu-icon"><i class="ki-duotone ki-wallet fs-2"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span></i></span><span class="menu-title">API Usage</span></a></div>
 </div>
 </div>
 <!--end::Menu-->
