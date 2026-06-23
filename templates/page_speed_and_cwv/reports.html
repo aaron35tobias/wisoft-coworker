@@ -1,20 +1,15 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}Reports | Wisoft Co-Worker{% endblock %}
-
 {% block extra_css_scripts %}
 <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
 {% endblock %}
-
 {% block header %}
 {% include 'includes/header.html' with page_title='Reports' parent_title='Page Speed & CWV' action_url=back_to_websites_url action_label='Back to Websites' %}
 {% endblock %}
-
 {% block content %}
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 <div class="container-xxl" id="kt_content_container">
-
 <div class="card">
 <div class="card-header border-0 pt-6">
 <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
@@ -87,7 +82,6 @@ SITE: <a href="{{ website.website_url }}" target="_blank" rel="noopener" class="
 </div>
 </div>
 {% endblock %}
-
 {% block extra_js_scripts %}
 <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
 <script>
@@ -101,7 +95,6 @@ columnDefs: [
 { orderable: false, targets: [0, 6] }
 ]
 });
-
 jQuery("#kt_reports_table_search").on("keyup", function () {
 reportsTable.search(this.value).draw();
 });
