@@ -21,16 +21,17 @@
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content"><div class="container-xxl" id="kt_content_container">
 <div class="row g-5 g-xl-10 mb-5">
 <div class="col-xl-5"><div class="card card-flush h-100"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">Run SERP Analysis</h3></div><div class="card-body">
-<form method="post" action="{% url 'serp_analysis:run' %}" id="kt_serp_analysis_form">
+<form class="form" method="post" action="{% url 'serp_analysis:run' %}" id="kt_serp_analysis_form">
 {% csrf_token %}
-<div class="fv-row mb-5"><label class="required fs-6 fw-semibold mb-2">Target Keyword</label><input type="text" name="keyword" class="form-control form-control-solid" placeholder="seo services dubai" required /></div>
-<div class="fv-row mb-5"><label class="fs-6 fw-semibold mb-2">Location</label><input type="text" name="location" class="form-control form-control-solid" placeholder="Dubai, UAE" /></div>
-<div class="fv-row mb-5"><label class="required fs-6 fw-semibold mb-2">Own Target URL</label><input type="url" name="target_url" class="form-control form-control-solid" placeholder="https://example.com/service-page" required /><div class="text-muted fs-7 mt-2">Your page will be compared directly against the competitor SERP URLs below.</div></div>
+<div class="fv-row mb-5"><label class="required fs-6 fw-semibold mb-2">Target Keyword</label><input type="text" name="keyword" class="form-control form-control-solid border border-gray-400" placeholder="seo services dubai" required /></div>
+<div class="fv-row mb-5"><label class="fs-6 fw-semibold mb-2">Location</label><input type="text" name="location" class="form-control form-control-solid border border-gray-400" placeholder="Dubai, UAE" /></div>
+<div class="fv-row mb-5"><label class="required fs-6 fw-semibold mb-2">Own Target URL</label><input type="url" name="target_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com/service-page" required /><div class="text-muted fs-7 mt-2">Your page will be compared directly against the competitor SERP URLs below.</div></div>
 <div class="separator separator-dashed my-6"></div>
 <div class="fw-bold text-gray-900 mb-4">Competitor SERP URLs</div>
 {% for index in "12345" %}
-<div class="fv-row mb-4"><input type="url" name="competitor_url_{{ forloop.counter }}" class="form-control form-control-solid" placeholder="https://competitor.com/ranking-page"{% if forloop.first %} required{% endif %} /></div>
+<div class="fv-row mb-4"><input type="url" name="competitor_url_{{ forloop.counter }}" class="form-control form-control-solid border border-gray-400" placeholder="https://competitor.com/ranking-page"{% if forloop.first %} required{% endif %} /></div>
 {% endfor %}
+<div class="separator separator-dashed mb-4"></div>
 <button type="submit" class="btn btn-sm btn-primary w-100" id="kt_serp_analysis_submit"><span class="indicator-label">Start SERP Analysis</span><span class="indicator-progress">Analyzing... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span></button>
 </form>
 </div></div></div>

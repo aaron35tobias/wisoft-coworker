@@ -44,20 +44,21 @@ width: calc(100% - 32px);
 <h3 class="card-title fw-bold text-gray-900">Run Audit</h3>
 </div>
 <div class="card-body">
-<form method="post" action="{% url 'technical_seo:audit-run' %}" id="kt_technical_seo_audit_form">
+<form class="form" method="post" action="{% url 'technical_seo:audit-run' %}" id="kt_technical_seo_audit_form">
 {% csrf_token %}
 <div class="fv-row mb-6">
 <label class="required fs-6 fw-semibold mb-2">Website URL</label>
-<input type="url" name="website_url" class="form-control form-control-solid" placeholder="https://example.com" value="{% if website %}{{ website.website_url }}{% endif %}" required />
+<input type="url" name="website_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com" value="{% if website %}{{ website.website_url }}{% endif %}" required />
 </div>
 <div class="fv-row mb-6">
 <label class="fs-6 fw-semibold mb-2">Note</label>
-<textarea name="note" class="form-control form-control-solid" rows="3" placeholder="Optional audit note">{% if website %}{{ website.note }}{% endif %}</textarea>
+<textarea name="note" class="form-control form-control-solid border border-gray-400" rows="3" placeholder="Optional audit note">{% if website %}{{ website.note }}{% endif %}</textarea>
 </div>
 <div class="fv-row mb-6">
 <label class="required fs-6 fw-semibold mb-2">Max Pages</label>
-<input type="number" name="max_pages" class="form-control form-control-solid" value="50" min="1" max="100" />
+<input type="number" name="max_pages" class="form-control form-control-solid border border-gray-400" value="50" min="1" max="100" />
 </div>
+<div class="separator separator-dashed mb-4"></div>
 <button type="submit" class="btn btn-sm btn-primary w-100" id="kt_technical_seo_audit_submit">
 <span class="indicator-label">Start Technical Audit</span>
 <span class="indicator-progress">Running audit...

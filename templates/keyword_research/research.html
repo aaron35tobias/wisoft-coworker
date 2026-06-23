@@ -21,13 +21,14 @@
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content"><div class="container-xxl" id="kt_content_container">
 <div class="row g-5 g-xl-10 mb-5">
 <div class="col-xl-5"><div class="card card-flush h-100"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">Run Keyword Research</h3></div><div class="card-body">
-<form method="post" action="{% url 'keyword_research:run' %}" id="kt_keyword_research_form">
+<form class="form" method="post" action="{% url 'keyword_research:run' %}" id="kt_keyword_research_form">
 {% csrf_token %}
-<div class="fv-row mb-5"><label class="fs-6 fw-semibold mb-2">Page URL</label><input type="url" name="website_url" class="form-control form-control-solid" placeholder="https://example.com/service-page" /><div class="text-muted fs-7 mt-2">Use this when you want AI to read one specific page.</div></div>
-<div class="fv-row mb-5"><label class="fs-6 fw-semibold mb-2">Keywords</label><textarea name="seed_keywords" class="form-control form-control-solid" rows="3" placeholder="SEO services Dubai&#10;digital marketing agency&#10;PPC management"></textarea><div class="text-muted fs-7 mt-2">Use this when you do not have a URL. Add one keyword per line or separate with commas.</div></div>
-<div class="row g-4 mb-5"><div class="col-md-6"><label class="required fs-6 fw-semibold mb-2">Location</label><input type="text" name="target_location" class="form-control form-control-solid" placeholder="Dubai, UAE" required /></div><div class="col-md-6"><label class="fs-6 fw-semibold mb-2">Language</label><input type="text" name="language" class="form-control form-control-solid" placeholder="English" /></div></div>
-<div class="fv-row mb-5"><label class="fs-6 fw-semibold mb-2">Seed Topic</label><input type="text" name="seed_topic" class="form-control form-control-solid" placeholder="SEO services" /></div>
-<div class="fv-row mb-6"><label class="fs-6 fw-semibold mb-2">Notes</label><textarea name="notes" class="form-control form-control-solid" rows="3" placeholder="Audience, market, or services to prioritize"></textarea></div>
+<div class="fv-row mb-5"><label class="fs-6 fw-semibold mb-2">Page URL</label><input type="url" name="website_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com/service-page" /><div class="text-muted fs-7 mt-2">Use this when you want AI to read one specific page.</div></div>
+<div class="fv-row mb-5"><label class="fs-6 fw-semibold mb-2">Keywords</label><textarea name="seed_keywords" class="form-control form-control-solid border border-gray-400" rows="3" placeholder="SEO services Dubai&#10;digital marketing agency&#10;PPC management"></textarea><div class="text-muted fs-7 mt-2">Use this when you do not have a URL. Add one keyword per line or separate with commas.</div></div>
+<div class="row g-4 mb-5"><div class="col-md-6"><label class="required fs-6 fw-semibold mb-2">Location</label><input type="text" name="target_location" class="form-control form-control-solid border border-gray-400" placeholder="Dubai, UAE" required /></div><div class="col-md-6"><label class="fs-6 fw-semibold mb-2">Language</label><input type="text" name="language" class="form-control form-control-solid border border-gray-400" placeholder="English" /></div></div>
+<div class="fv-row mb-5"><label class="fs-6 fw-semibold mb-2">Seed Topic</label><input type="text" name="seed_topic" class="form-control form-control-solid border border-gray-400" placeholder="SEO services" /></div>
+<div class="fv-row mb-6"><label class="fs-6 fw-semibold mb-2">Notes</label><textarea name="notes" class="form-control form-control-solid border border-gray-400" rows="3" placeholder="Audience, market, or services to prioritize"></textarea></div>
+<div class="separator separator-dashed mb-4"></div>
 <button type="submit" class="btn btn-sm btn-primary w-100" id="kt_keyword_research_submit"><span class="indicator-label">Start Keyword Research</span><span class="indicator-progress">Researching... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span></button>
 </form>
 </div></div></div>
