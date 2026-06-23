@@ -39,10 +39,8 @@
                         {% if usage_data %}
                         <div class="d-flex flex-column mb-7">
                             <div class="d-flex flex-stack mb-2">
-                                <span class="text-gray-800 fw-bold fs-6">Usage ({{
-                                    usage_data.usage_percent|floatformat:1 }}%)</span>
-                                <span class="text-gray-600 fw-bold fs-6">{{ usage_data.total_tokens }} / {{
-                                    usage_data.limit }} Tokens</span>
+                                <span class="text-gray-800 fw-bold fs-6">Usage ({{ usage_data.usage_percent|floatformat:1 }}%)</span>
+                                <span class="text-gray-600 fw-bold fs-6">{{ usage_data.total_tokens }} / {{ usage_data.limit }} Tokens</span>
                             </div>
                             <div class="progress h-8px w-100 bg-light-primary">
                                 <div class="progress-bar bg-primary" role="progressbar"
@@ -172,5 +170,52 @@
     </div>
     <!--end::Container-->
 </div>
-<!--end::Content-->
+<!--begin::Modal - Limit Exceeded-->
+<div class="modal fade" id="kt_modal_limit_exceeded" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered mw-650px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="fw-bold text-danger">Action Required: Limit Exceeded</h2>
+                <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                    <i class="ki-duotone ki-cross fs-1">
+                        <span class="path1"></span>
+                        <span class="path2"></span>
+                    </i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
+                <div class="text-center mb-13">
+                    <i class="ki-duotone ki-information-5 fs-5x text-danger mb-5">
+                        <span class="path1"></span>
+                        <span class="path2"></span>
+                        <span class="path3"></span>
+                    </i>
+                    <div class="text-muted fw-semibold fs-5">
+                        Your AI API token usage has exceeded the monthly limit of <strong>{{ usage_data.limit }}</strong> tokens.
+                        <br /><br />
+                        An email notification has been sent to your registered address. Please upgrade your plan or add
+                        more credits to continue using the AI services.
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Dismiss</button>
+                    <a href="#" class="btn btn-primary">Upgrade Plan</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--end::Modal - Limit Exceeded-->
+
+{% if limit_exceeded %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var modalElement = document.getElementById('kt_modal_limit_exceeded');
+        if (modalElement) {
+            var myModal = new bootstrap.Modal(modalElement);
+            myModal.show();
+        }
+    });
+</script>
+{% endif %}
 {% endblock %}
