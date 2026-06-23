@@ -7,3 +7,4 @@
 - Do not introduce a new coding style unless I ask for it or there is a clear reason.
 - Keep similar features implemented in a similar way.
 - Do not add or install new packages without asking me first.
+- In this project, structure JavaScript consistently with section headers in this order: Initial Setup, DataTable, jQuery Validate, Drawer Handling, and Form Submission; place any additional upcoming sections after these in a logical order.
