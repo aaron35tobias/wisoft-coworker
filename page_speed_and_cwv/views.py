@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
+from django.http import JsonResponse
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -21,10 +22,33 @@ def list_view(request):
     context = { 'websites': websites, }
     return render(request, 'page_speed_and_cwv/list.html', context)
 
+
+@login_required(login_url='sign-in')
+def validate_website_view(request):
+    website_url = request.GET.get('website_url', '').strip().lower()
+    website_id = request.GET.get('website_id')
+
+    if not website_url:
+        return JsonResponse(False, safe=False)
+
+    query = Website.objects.filter(
+        added_by=request.user,
+        website_url__iexact=website_url,
+    )
+
+    if website_id:
+        query = query.exclude(id=website_id)
+
+    if query.exists():
+        return JsonResponse('This website has already been added.', safe=False)
+
+    return JsonResponse(True, safe=False)
+
+
 @login_required(login_url='sign-in')
 def create_view(request):
     if request.method == 'POST':
-        website_url = request.POST.get('website_url', '').strip()
+        website_url = request.POST.get('website_url', '').strip().lower()
         note = request.POST.get('note', '').strip()
         is_active = request.POST.get('is_active') == '1'
 
@@ -36,6 +60,13 @@ def create_view(request):
             URLValidator()(website_url)
         except ValidationError:
             messages.error(request, 'Enter a valid website URL.')
+            return redirect('page_speed_and_cwv:website-list')
+
+        if Website.objects.filter(
+            added_by=request.user,
+            website_url__iexact=website_url,
+        ).exists():
+            messages.error(request, 'This website has already been added.')
             return redirect('page_speed_and_cwv:website-list')
 
         Website.objects.create(
@@ -50,12 +81,11 @@ def create_view(request):
 
     return redirect('page_speed_and_cwv:website-list')
 
-
 @login_required(login_url='sign-in')
 def update_view(request):
     if request.method == 'POST':
         website_id = request.POST.get('website_id')
-        website_url = request.POST.get('website_url', '').strip()
+        website_url = request.POST.get('website_url', '').strip().lower()
         note = request.POST.get('note', '').strip()
         is_active = request.POST.get('is_active') == '1'
         website = get_object_or_404(
@@ -72,6 +102,13 @@ def update_view(request):
             URLValidator()(website_url)
         except ValidationError:
             messages.error(request, 'Enter a valid website URL.')
+            return redirect('page_speed_and_cwv:website-list')
+
+        if Website.objects.filter(
+            added_by=request.user,
+            website_url__iexact=website_url,
+        ).exclude(id=website.id).exists():
+            messages.error(request, 'This website has already been added.')
             return redirect('page_speed_and_cwv:website-list')
 
         website.website_url = website_url
