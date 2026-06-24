@@ -42,6 +42,27 @@ max-width: 280px;
 .audit-expanded-body {
 white-space: pre-line;
 }
+.audit-loading-overlay {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.92);
+    bottom: 0;
+    display: none;
+    justify-content: center;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1090;
+}
+
+[data-bs-theme="dark"] .audit-loading-overlay {
+    background: rgba(18, 18, 23, 0.92);
+}
+
+.audit-loading-panel {
+    max-width: 420px;
+    width: calc(100% - 32px);
+}
 </style>
 {% endblock %}
 
@@ -50,6 +71,32 @@ white-space: pre-line;
 {% endblock %}
 
 {% block content %}
+{% if audit.status == 'running' %}
+<div class="audit-loading-overlay" id="kt_audit_loading_overlay" style="display:flex;">
+    <div class="card shadow-sm audit-loading-panel">
+        <div class="card-body p-8 text-center">
+            <div class="spinner-border text-primary mb-5" role="status"></div>
+            <h3 class="fw-bold text-gray-900 mb-3">Running Technical SEO Audit</h3>
+            <div class="text-muted fs-6 mb-5">
+                Crawling pages, detecting SEO issues, and preparing AI recommendations.
+            </div>
+
+            <div class="mb-3 text-muted fs-7">
+                Pages crawled: <span id="audit_pages_crawled">{{ audit.pages_crawled }}</span>
+                |
+                Issues found: <span id="audit_issues_found">{{ audit.issues_found }}</span>
+            </div>
+
+            <div class="progress h-8px bg-light-primary">
+                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+                     role="progressbar"
+                     style="width: 100%">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 <div class="container-xxl" id="kt_content_container">
 
@@ -84,6 +131,20 @@ white-space: pre-line;
 </div>
 </div>
 </div>
+
+{% if audit.status == 'running' %}
+<div class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6 mb-5">
+<div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
+<div class="d-flex align-items-center">
+<span class="spinner-border spinner-border-sm text-primary me-4"></span>
+<div>
+<h4 class="text-gray-900 fw-bold mb-1">Audit is running</h4>
+<div class="fs-7 text-gray-700">Crawling pages, checking technical SEO signals, and preparing AI recommendations. This page refreshes automatically.</div>
+</div>
+</div>
+</div>
+</div>
+{% endif %}
 
 <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
 <div class="col-md-2">
@@ -406,12 +467,42 @@ data-error="{{ item.error_message }}">
 
 </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js_scripts %}
 <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
 <script>
 jQuery(function () {
+{% if audit.status == 'running' %}
+
+    function checkAuditStatus() {
+        fetch("{% url 'technical_seo:audit-status' audit.id %}?t=" + Date.now(), {
+            cache: "no-store"
+        })
+        .then(r => r.json())
+        .then(data => {
+
+            console.log(data);
+
+            $("#audit_pages_crawled").text(data.pages_crawled);
+            $("#audit_issues_found").text(data.issues_found);
+
+            if (data.status === "completed" || data.status === "failed") {
+                location.reload(true);
+                return;
+            }
+
+            setTimeout(checkAuditStatus, 5000);
+
+        })
+        .catch(() => {
+            setTimeout(checkAuditStatus, 5000);
+        });
+    }
+
+    checkAuditStatus();
+{% endif %}
 jQuery(document).on("submit", ".js-delete-audit-form", function (event) {
 if (!window.confirm("Delete this audit history? This removes its crawled pages, issues, and AI recommendations.")) {
 event.preventDefault();

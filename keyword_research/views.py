@@ -4,9 +4,13 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.http import JsonResponse
+from django.urls import reverse
+from django.views.decorators.http import require_GET
 
 from .models import KeywordResearchProject, KeywordResearchRun
-from .research import run_keyword_research
+from .tasks import run_keyword_research_task
+from wisoft_co_worker.task_utils import enqueue_background_task
 
 
 def project_queryset(user):
@@ -113,13 +117,15 @@ def run_research_view(request):
         max_pages=1,
     )
 
-    try:
-        run_keyword_research(run)
-    except Exception:
-        messages.error(request, 'Keyword research failed. Open the detail page for the error.')
-        return redirect('keyword_research:detail', run.id)
-
-    messages.success(request, 'Keyword research completed successfully.')
+    queued = enqueue_background_task(
+        run_keyword_research_task,
+        run,
+        'Keyword research could not be queued',
+    )
+    if queued:
+        messages.success(request, 'Keyword research started. This page will update when the research completes.')
+    else:
+        messages.error(request, 'Keyword research could not be queued. Check Redis/Celery and open the detail page for the error.')
     return redirect('keyword_research:detail', run.id)
 
 
@@ -155,3 +161,28 @@ def delete_run_view(request, run_id):
             return redirect(next_url)
         return redirect('keyword_research:history')
     return redirect('keyword_research:history')
+
+@login_required(login_url='sign-in')
+@require_GET
+def keyword_run_status_view(request, run_id):
+    run = get_object_or_404(
+        KeywordResearchRun.objects.only(
+            'id',
+            'status',
+            'pages_crawled',
+            'planner_status',
+            'error_message',
+        ),
+        id=run_id,
+        project__added_by=request.user,
+    )
+
+    return JsonResponse({
+        'status': str(run.status).lower().strip(),
+        'pages_crawled': run.pages_crawled or 0,
+        'planner_status': run.planner_status or '',
+        'keyword_ideas_count': run.keyword_ideas.count(),
+        'clusters_count': run.clusters.count(),
+        'planner_metrics_count': run.planner_metrics.count(),
+        'detail_url': reverse('keyword_research:detail', args=[run.id]),
+    })

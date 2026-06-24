@@ -6,9 +6,11 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.http import JsonResponse
 
 from .models import TechnicalSEOAudit, TechnicalSEOIssue, TechnicalSEOWebsite
-from .seo_audit import run_technical_seo_audit
+from .tasks import run_technical_seo_audit_task
+from wisoft_co_worker.task_utils import enqueue_background_task
 
 
 def get_website_dashboard_queryset(user):
@@ -157,13 +159,15 @@ def audit_run_view(request):
         max_pages=max_pages,
     )
 
-    try:
-        run_technical_seo_audit(audit)
-    except Exception:
-        messages.error(request, 'Technical SEO audit failed. Open the audit detail for the error message.')
-        return redirect('technical_seo:audit-detail', audit.id)
-
-    messages.success(request, 'Technical SEO audit completed successfully.')
+    queued = enqueue_background_task(
+        run_technical_seo_audit_task,
+        audit,
+        'Technical SEO audit could not be queued',
+    )
+    if queued:
+        messages.success(request, 'Technical SEO audit started. This page will update when the crawl completes.')
+    else:
+        messages.error(request, 'Technical SEO audit could not be queued. Check Redis/Celery and open the detail page for the error.')
     return redirect('technical_seo:audit-detail', audit.id)
 
 
@@ -225,3 +229,18 @@ def audit_detail_view(request, audit_id):
         'back_to_audits_url': reverse('technical_seo:history'),
     }
     return render(request, 'technical_seo/audit_detail.html', context)
+
+@login_required(login_url='sign-in')
+def audit_status_view(request, audit_id):
+    audit = get_object_or_404(
+        TechnicalSEOAudit,
+        id=audit_id,
+        website__added_by=request.user,
+    )
+
+    return JsonResponse({
+        "status": audit.status,
+        "pages_crawled": audit.pages_crawled,
+        "issues_found": audit.issues_found,
+        "detail_url": reverse("technical_seo:audit-detail", args=[audit.id]),
+    })

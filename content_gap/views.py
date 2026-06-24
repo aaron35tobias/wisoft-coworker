@@ -5,9 +5,12 @@ from django.core.validators import URLValidator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
 
-from .analyzer import run_content_gap_analysis
 from .models import ContentGapAnalysis, ContentGapProject
+from .tasks import run_content_gap_analysis_task
+from wisoft_co_worker.task_utils import enqueue_background_task
 
 
 def get_project_queryset(user):
@@ -104,13 +107,15 @@ def analysis_run_view(request):
         competitor_urls=competitor_urls,
     )
 
-    try:
-        run_content_gap_analysis(analysis)
-    except Exception:
-        messages.error(request, 'Content gap analysis failed. Open the result for the error details.')
-        return redirect('content_gap:analysis-detail', analysis.id)
-
-    messages.success(request, 'Content gap analysis completed successfully.')
+    queued = enqueue_background_task(
+        run_content_gap_analysis_task,
+        analysis,
+        'Content gap analysis could not be queued',
+    )
+    if queued:
+        messages.success(request, 'Content gap analysis started. This page will update when the analysis completes.')
+    else:
+        messages.error(request, 'Content gap analysis could not be queued. Check Redis/Celery and open the result for the error.')
     return redirect('content_gap:analysis-detail', analysis.id)
 
 
@@ -145,3 +150,27 @@ def analysis_detail_view(request, analysis_id):
         'back_to_history_url': reverse('content_gap:history'),
     }
     return render(request, 'content_gap/analysis_detail.html', context)
+
+@login_required(login_url='sign-in')
+@require_GET
+def analysis_status_view(request, analysis_id):
+    analysis = get_object_or_404(
+        ContentGapAnalysis.objects.only(
+            'id',
+            'status',
+            'competitor_urls',
+            'content_gaps',
+            'keyword_opportunities',
+            'error_message',
+        ),
+        id=analysis_id,
+        project__added_by=request.user,
+    )
+
+    return JsonResponse({
+        'status': str(analysis.status).lower().strip(),
+        'competitor_count': len(analysis.competitor_urls or []),
+        'content_gap_count': len(analysis.content_gaps or []),
+        'keyword_count': len(analysis.keyword_opportunities or []),
+        'detail_url': reverse('content_gap:analysis-detail', args=[analysis.id]),
+    })

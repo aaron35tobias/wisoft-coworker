@@ -12,4 +12,5 @@ urlpatterns = [
     path('websites/<int:website_id>/', views.audits_view, name='website-audits'),
     path('<int:audit_id>/delete/', views.audit_delete_view, name='audit-delete'),
     path('<int:audit_id>/', views.audit_detail_view, name='audit-detail'),
+    path("audit/<int:audit_id>/status/",views.audit_status_view,name="audit-status"),
 ]

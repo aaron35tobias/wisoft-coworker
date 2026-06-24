@@ -11,4 +11,5 @@ urlpatterns = [
     path('history/', views.analysis_history_view, name='history'),
     path('<int:analysis_id>/delete/', views.analysis_delete_view, name='analysis-delete'),
     path('<int:analysis_id>/', views.analysis_detail_view, name='analysis-detail'),
+    path('analysis/<int:analysis_id>/status/',views.analysis_status_view,name='analysis-status'),
 ]
