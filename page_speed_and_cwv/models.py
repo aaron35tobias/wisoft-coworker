@@ -18,7 +18,27 @@ class Website(models.Model):
 
     def __str__(self):
         return self.website_url
-    
+
+class WebsitePage(models.Model):
+    website = models.ForeignKey(
+        Website,
+        on_delete=models.CASCADE,
+        related_name='pages',
+    )
+    page_url = models.URLField(max_length=500)
+    is_active = models.BooleanField(default=True)
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date_added']
+        indexes = [
+            models.Index(fields=['website', 'page_url']),
+        ]
+
+    def __str__(self):
+        return self.page_url
+
 class WebsiteSpeedReportAiIndex(models.Model):
     website = models.ForeignKey(
         Website,
@@ -35,7 +55,6 @@ class WebsiteSpeedReportAiIndex(models.Model):
 
     def __str__(self):
         return f'{self.website} - {self.scanned_at:%Y-%m-%d %H:%M}'
-
 
 class WebsiteSpeedReport(models.Model):
     DEVICE_MOBILE = 'mobile'
@@ -125,4 +144,3 @@ class WebsiteSpeedReport(models.Model):
 
     def __str__(self):
         return f'{self.website} - {self.device_type} - {self.scanned_at:%Y-%m-%d %H:%M}'
-
