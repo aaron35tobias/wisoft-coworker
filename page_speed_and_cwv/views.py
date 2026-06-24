@@ -162,6 +162,6 @@ def report_detail_view(request, website_id, report_index_id):
         'reports': reports,
         'mobile_report': mobile_report,
         'desktop_report': desktop_report,
-        'back_to_reports_url': reverse('page_speed_and_cwv:website-reports', args=[website.id]),
+        'back_to_overview_url': reverse('page_speed_and_cwv:website-overview', args=[website.id]),
     }
     return render(request, 'page_speed_and_cwv/report_detail.html', context)

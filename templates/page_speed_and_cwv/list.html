@@ -103,13 +103,13 @@ Please review the form and try again.
 <tr data-website-row="true">
 <td>{{ forloop.counter }}</td>
 <td>
-<div class="d-flex">
-<a href="{% url 'page_speed_and_cwv:website-reports' website.id %}" class="btn btn-sm btn-info fs-6 me-2">Reports</a>
-<a href="#" class="btn btn-sm btn-primary fs-6 me-2 js-edit-website" data-website='{"id":{{ website.id }},"website_url":"{{ website.website_url|escapejs }}","note":"{{ website.note|escapejs }}","is_active":{{ website.is_active|yesno:"true,false" }}}'>Edit</a>
+<div class="d-flex gap-2">
+<a href="#" class="btn btn-sm btn-primary fs-6 js-edit-website" data-website='{"id":{{ website.id }},"website_url":"{{ website.website_url|escapejs }}","note":"{{ website.note|escapejs }}","is_active":{{ website.is_active|yesno:"true,false" }}}'>Edit</a>
 <form method="post" action="{% url 'page_speed_and_cwv:website-delete' website.id %}" class="js-delete-website-form">
 {% csrf_token %}
 <button type="submit" class="btn btn-sm btn-danger fs-6">Delete</button>
 </form>
+<a href="{% url 'page_speed_and_cwv:website-overview' website.id %}" class="btn btn-sm btn-info fs-6">Overview</a>
 </div>
 </td>
 <td>
