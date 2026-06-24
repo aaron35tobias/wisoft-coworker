@@ -5,9 +5,13 @@ from django.core.validators import URLValidator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
 
-from .analyzer import normalize_url, run_serp_analysis
+from .analyzer import normalize_url
 from .models import SERPAnalysis
+from .tasks import run_serp_analysis_task
+from wisoft_co_worker.task_utils import enqueue_background_task
 
 
 SCORE_LABELS = [
@@ -233,13 +237,15 @@ def run_analysis_view(request):
         requested_by=request.user,
     )
 
-    try:
-        run_serp_analysis(analysis)
-    except Exception:
-        messages.error(request, 'SERP analysis failed. Open the result for details.')
-        return redirect('serp_analysis:detail', analysis.id)
-
-    messages.success(request, 'SERP analysis completed successfully.')
+    queued = enqueue_background_task(
+        run_serp_analysis_task,
+        analysis,
+        'SERP analysis could not be queued',
+    )
+    if queued:
+        messages.success(request, 'SERP analysis started. This page will update when the analysis completes.')
+    else:
+        messages.error(request, 'SERP analysis could not be queued. Check Redis/Celery and open the result for the error.')
     return redirect('serp_analysis:detail', analysis.id)
 
 
@@ -268,3 +274,31 @@ def delete_view(request, analysis_id):
             return redirect(next_url)
         return redirect('serp_analysis:history')
     return redirect('serp_analysis:history')
+
+@login_required(login_url='sign-in')
+@require_GET
+def serp_status_view(request, analysis_id):
+    analysis = get_object_or_404(
+        SERPAnalysis.objects.only(
+            'id',
+            'status',
+            'competitor_urls',
+            'serp_opportunities',
+            'technical_findings',
+            'target_snapshot',
+            'error_message',
+        ),
+        id=analysis_id,
+        requested_by=request.user,
+    )
+
+    target_snapshot = analysis.target_snapshot or {}
+
+    return JsonResponse({
+        'status': str(analysis.status).lower().strip(),
+        'competitor_count': len(analysis.competitor_urls or []),
+        'opportunity_count': len(analysis.serp_opportunities or []),
+        'technical_finding_count': len(analysis.technical_findings or []),
+        'target_words': target_snapshot.get('word_count') or 0,
+        'detail_url': reverse('serp_analysis:detail', args=[analysis.id]),
+    })

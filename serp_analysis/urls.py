@@ -11,5 +11,6 @@ urlpatterns = [
     path('history/', views.history_view, name='history'),
     path('<int:analysis_id>/', views.detail_view, name='detail'),
     path('<int:analysis_id>/delete/', views.delete_view, name='delete'),
+    path('analysis/<int:analysis_id>/status/',views.serp_status_view,name='analysis-status'),
 ]
 

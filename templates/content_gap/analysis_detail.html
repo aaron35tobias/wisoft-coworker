@@ -5,6 +5,29 @@
 
 {% block extra_css_scripts %}
 <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+<style>
+.content-gap-loading-overlay {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.92);
+    bottom: 0;
+    display: none;
+    justify-content: center;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1090;
+}
+
+[data-bs-theme="dark"] .content-gap-loading-overlay {
+    background: rgba(18, 18, 23, 0.92);
+}
+
+.content-gap-loading-panel {
+    max-width: 450px;
+    width: calc(100% - 32px);
+}
+</style>
 {% endblock %}
 
 {% block header %}
@@ -12,6 +35,36 @@
 {% endblock %}
 
 {% block content %}
+{% if analysis.status == 'running' %}
+<div class="content-gap-loading-overlay" id="kt_content_gap_loading_overlay" style="display:flex;">
+    <div class="card shadow-sm content-gap-loading-panel">
+        <div class="card-body p-8 text-center">
+            <div class="spinner-border text-primary mb-5" role="status"></div>
+
+            <h3 class="fw-bold text-gray-900 mb-3">Running Content Gap Analysis</h3>
+
+            <div class="text-muted fs-6 mb-5">
+                Fetching your page, comparing competitor coverage, and preparing AI recommendations.
+            </div>
+
+            <div class="mb-3 text-muted fs-7">
+                Competitors: <span id="content_gap_competitor_count">{{ analysis.competitor_count }}</span>
+                |
+                Gaps: <span id="content_gap_count">{{ analysis.content_gaps|length }}</span>
+                |
+                Keywords: <span id="content_gap_keyword_count">{{ analysis.keyword_opportunities|length }}</span>
+            </div>
+
+            <div class="progress h-8px bg-light-primary">
+                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+                     role="progressbar"
+                     style="width: 100%">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 <div class="container-xxl" id="kt_content_container">
 
@@ -42,6 +95,18 @@
 </div>
 </div>
 </div>
+
+{% if analysis.status == 'running' %}
+<div class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6 mb-5">
+<div class="d-flex align-items-center">
+<span class="spinner-border spinner-border-sm text-primary me-4"></span>
+<div>
+<h4 class="text-gray-900 fw-bold mb-1">Analysis is running</h4>
+<div class="fs-7 text-gray-700">Fetching pages, comparing competitor coverage, and preparing AI recommendations. This page refreshes automatically.</div>
+</div>
+</div>
+</div>
+{% endif %}
 
 {% if analysis.status == 'failed' %}
 <div class="alert alert-danger d-flex align-items-center p-5 mb-5">
@@ -354,12 +419,47 @@
 
 </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js_scripts %}
 <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
 <script>
 jQuery(function () {
+{% if analysis.status == 'running' %}
+function checkContentGapStatus() {
+    fetch("{% url 'content_gap:analysis-status' analysis.id %}?t=" + Date.now(), {
+        cache: "no-store",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest"
+        }
+    })
+    .then(function (response) {
+        return response.json();
+    })
+    .then(function (data) {
+        console.log("Content gap status:", data);
+
+        var status = (data.status || "").toLowerCase().trim();
+
+        $("#content_gap_competitor_count").text(data.competitor_count || 0);
+        $("#content_gap_count").text(data.content_gap_count || 0);
+        $("#content_gap_keyword_count").text(data.keyword_count || 0);
+
+        if (status === "completed" || status === "failed") {
+            window.location.replace(data.detail_url + "?t=" + Date.now());
+            return;
+        }
+
+        setTimeout(checkContentGapStatus, 5000);
+    })
+    .catch(function () {
+        setTimeout(checkContentGapStatus, 5000);
+    });
+}
+
+checkContentGapStatus();
+{% endif %}
 var gapsTableElement = document.querySelector("#kt_content_gaps_table");
 if (gapsTableElement && gapsTableElement.querySelector("[data-gap-row='true']")) {
 var gapsTable = jQuery(gapsTableElement).DataTable({

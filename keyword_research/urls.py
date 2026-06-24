@@ -11,4 +11,5 @@ urlpatterns = [
     path('history/', views.history_view, name='history'),
     path('<int:run_id>/', views.detail_view, name='detail'),
     path('<int:run_id>/delete/', views.delete_run_view, name='delete'),
+    path('run/<int:run_id>/status/',views.keyword_run_status_view,name='run-status'),
 ]
