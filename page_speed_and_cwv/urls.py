@@ -13,9 +13,8 @@ urlpatterns = [
     path('websites/validate/', views.validate_website_view, name='website-validate'),
     path('websites/<int:website_id>/overview/', views.reports_view, name='website-overview'),
     path('websites/<int:website_id>/overview/run-scan/', views.run_website_scan_view, name='website-overview-run-scan'),
-    path('overview/', views.reports_view, name='overview'),
     path('websites/<int:website_id>/overview/page/<int:page_id>/', views.page_report_history_view, name='website-overview-page-history'),
-    path('websites/<int:website_id>/overview/<int:report_index_id>/', views.report_detail_view, name='website-overview-detail'),
+    path('websites/<int:website_id>/overview/<int:report_index_id>/modal/', views.report_detail_modal_view, name='website-overview-modal'),
 
     path('websites/pages/list/', views.list_pages_view, name='page-list'),
     path('websites/pages/create/', views.create_page_view, name='page-create'),

@@ -6,6 +6,7 @@ from django.core.management.base import CommandError
 from django.core.validators import URLValidator
 from django.http import JsonResponse
 from django.urls import reverse
+from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect, render
 from urllib.parse import urljoin, urlparse, urldefrag
 from urllib.request import Request, urlopen
@@ -23,6 +24,63 @@ from .models import (
 )
 
 DISCOVERY_REQUEST_TIMEOUT = 15
+
+def format_report_datetime(value):
+    if not value:
+        return '-'
+    return timezone.localtime(value).strftime('%d %b %Y, %I:%M %p').lstrip('0')
+
+def get_report_issues(report):
+    if not report or not report.raw_response_json:
+        return []
+
+    audits = report.raw_response_json.get('lighthouseResult', {}).get('audits', {})
+    issues = []
+
+    for audit_key, audit in audits.items():
+        score = audit.get('score')
+        display_mode = audit.get('scoreDisplayMode')
+
+        if display_mode in ['notApplicable', 'manual', 'informative']:
+            continue
+
+        if score is not None and score >= 0.9:
+            continue
+
+        if score is None and not audit.get('displayValue'):
+            continue
+
+        issues.append({
+            'audit_key': audit_key,
+            'title': audit.get('title', ''),
+            'description': audit.get('description', ''),
+            'display_value': audit.get('displayValue', ''),
+            'score': score,
+        })
+
+    return issues[:30]
+
+def get_report_payload(report):
+    if not report:
+        return None
+
+    lighthouse_result = report.raw_response_json.get('lighthouseResult', {}) if report.raw_response_json else {}
+
+    return {
+        'performance_score': report.performance_score,
+        'accessibility_score': report.accessibility_score,
+        'best_practices_score': report.best_practices_score,
+        'seo_score': report.seo_score,
+        'first_contentful_paint': str(report.first_contentful_paint) if report.first_contentful_paint is not None else '-',
+        'largest_contentful_paint': str(report.largest_contentful_paint) if report.largest_contentful_paint is not None else '-',
+        'interaction_to_next_paint': str(report.interaction_to_next_paint) if report.interaction_to_next_paint is not None else '-',
+        'cumulative_layout_shift': str(report.cumulative_layout_shift) if report.cumulative_layout_shift is not None else '-',
+        'total_blocking_time': str(report.total_blocking_time) if report.total_blocking_time is not None else '-',
+        'speed_index': str(report.speed_index) if report.speed_index is not None else '-',
+        'time_to_first_byte': str(report.time_to_first_byte) if report.time_to_first_byte is not None else '-',
+        'run_warnings': lighthouse_result.get('runWarnings', []),
+        'issues': get_report_issues(report),
+    }
 
 @login_required(login_url='sign-in')
 def list_view(request):
@@ -209,28 +267,21 @@ def page_report_history_view(request, website_id, page_id):
     return render(request, 'page_speed_and_cwv/overview_page_history.html', context)
 
 @login_required(login_url='sign-in')
-def report_detail_view(request, website_id, report_index_id):
+def report_detail_modal_view(request, website_id, report_index_id):
     website = get_object_or_404(Website, id=website_id, added_by=request.user)
-    report_index = get_object_or_404(WebsiteSpeedReportAiIndex.objects.prefetch_related('reports'), id=report_index_id, website=website)
+    report_index = get_object_or_404(WebsiteSpeedReportAiIndex.objects.select_related('website', 'page').prefetch_related('reports'), id=report_index_id, website=website)
     reports = list(report_index.reports.all())
-    mobile_report = next(
-        (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_MOBILE),
-        None,
-    )
-    desktop_report = next(
-        (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_DESKTOP),
-        None,
-    )
+    mobile_report = next((report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_MOBILE), None)
+    desktop_report = next((report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_DESKTOP), None)
 
-    context = {
-        'website': website,
-        'report_index': report_index,
-        'reports': reports,
-        'mobile_report': mobile_report,
-        'desktop_report': desktop_report,
-        'back_to_overview_url': reverse('page_speed_and_cwv:website-overview', args=[website.id]),
-    }
-    return render(request, 'page_speed_and_cwv/report_detail.html', context)
+    return JsonResponse({
+        'scan_id': report_index.scan_group_token or '-',
+        'scanned_at': format_report_datetime(report_index.scanned_at),
+        'website_url': website.website_url,
+        'page_url': report_index.page.page_url if report_index.page else website.website_url,
+        'mobile': get_report_payload(mobile_report),
+        'desktop': get_report_payload(desktop_report),
+    })
 
 @login_required(login_url='sign-in')
 def list_pages_view(request):
