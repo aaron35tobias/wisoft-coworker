@@ -7,7 +7,7 @@ User = get_user_model()
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    profile_picture = models.ImageField(upload_to='profile_pics/', default='avatars/300-1.jpg', blank=True, null=True)
+    profile_picture = models.TextField(blank=True, default='')
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
