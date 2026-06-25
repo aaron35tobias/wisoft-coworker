@@ -299,8 +299,8 @@ def discover_pages_view(request):
     sitemap_urls = []
     blocked_extensions = (
         '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico',
-        '.css', '.js', '.json', '.txt', '.pdf',
-        '.woff', '.woff2', '.ttf', '.eot', '.webmanifest', '.php'
+        '.css', '.js', '.json', '.xml', '.txt', '.pdf',
+        '.woff', '.woff2', '.ttf', '.eot', '.webmanifest', '.php',
     )
     blocked_paths = (
         '/_next/',
@@ -311,10 +311,10 @@ def discover_pages_view(request):
         '/css/',
         '/js/',
         '/fonts/',
-        '/wp-json/'
+        '/wp-json/',
     )
 
-    #robots txt scanning
+    # robots.txt scanning
     try:
         robots_request = Request(f'{website_url}/robots.txt', headers={'User-Agent': 'CoWorkerBot/1.0'})
         with urlopen(robots_request, timeout=DISCOVERY_REQUEST_TIMEOUT) as robots_response:
@@ -329,7 +329,7 @@ def discover_pages_view(request):
     except Exception as error:
         error_messages.append(f'Robots fetch failed: {error}')
 
-    #sitemap processing txt scanning
+    # sitemap processing
     if not sitemap_urls:
         sitemap_urls = [
             f'{website_url}/sitemap.xml',
@@ -360,12 +360,12 @@ def discover_pages_view(request):
                 if not element.tag.endswith('loc') or not element.text:
                     continue
 
-                #domain_address + found_url
+                # domain_address + found_url
                 found_url = element.text.strip()
                 if not urlparse(found_url).scheme:
                     found_url = urljoin(website_url, found_url)
 
-                #eg: /about#contact will remove #contact
+                # eg: /about#contact will remove #contact
                 found_url, _fragment = urldefrag(found_url)
                 parsed_found_url = urlparse(found_url)
 
@@ -397,8 +397,8 @@ def discover_pages_view(request):
                     break
         except Exception as error:
             error_messages.append(f'Sitemap fetch failed: {sitemap_url} - {error}')
-    
-    #if sitemap does not reveal anything then this direct scraping will work
+
+    # if sitemap does not reveal anything then this direct scraping will work
     if not discovered_urls:
         try:
             homepage_request = Request(website_url, headers={'User-Agent': 'CoWorkerBot/1.0'})
