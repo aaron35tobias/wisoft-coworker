@@ -5,7 +5,7 @@
 <a href="{% url 'dashboard' %}" class="seo-rail-link{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" title="Dashboard" aria-label="Dashboard">
 <i class="la la-home"></i>
 </a>
-<button type="button" class="seo-rail-link{% if request.resolver_match.namespace == 'technical_seo' or request.resolver_match.namespace == 'page_speed_and_cwv' or request.resolver_match.namespace == 'pricing_pr_monitor' or request.resolver_match.namespace == 'keyword_research' or request.resolver_match.namespace == 'content_gap' or request.resolver_match.namespace == 'serp_analysis' %} active{% endif %}" data-sidebar-group="seo" title="SEO" aria-label="SEO menu">
+<button type="button" class="seo-rail-link{% if request.resolver_match.namespace == 'technical_seo' or request.resolver_match.namespace == 'page_speed_and_cwv' or request.resolver_match.namespace == 'pricing_pr_monitor' or request.resolver_match.namespace == 'keyword_research' or request.resolver_match.namespace == 'content_gap' or request.resolver_match.namespace == 'bulk_alt_text' or request.resolver_match.namespace == 'serp_analysis' %} active{% endif %}" data-sidebar-group="seo" title="SEO" aria-label="SEO menu">
 <i class="ki-outline ki-ranking fs-2"></i>
 </button>
 <button type="button" class="seo-rail-link" data-sidebar-group="analytics" title="Analytics" aria-label="Analytics menu">
@@ -215,15 +215,15 @@
 <div class="menu-item"><a class="menu-link{% if request.resolver_match.namespace == 'content_gap' and request.resolver_match.url_name == 'history' or request.resolver_match.namespace == 'content_gap' and request.resolver_match.url_name == 'analysis-detail' %} active{% endif %}" href="{% url 'content_gap:history' %}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">History &amp; Wireframes</span></a></div>
 </div>
 </div>
-<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+<div data-kt-menu-trigger="click" class="menu-item menu-accordion{% if request.resolver_match.namespace == 'bulk_alt_text' %} here show{% endif %}">
 <span class="menu-link">
 <span class="menu-icon"><i class="ki-duotone ki-black-right fs-2"></i></span>
 <span class="menu-title">Bulk Alt Text</span>
 <span class="menu-arrow"></span>
 </span>
 <div class="menu-sub menu-sub-accordion">
-<div class="menu-item"><a class="menu-link" href="#"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Generate</span></a></div>
-<div class="menu-item"><a class="menu-link" href="#"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">History</span></a></div>
+<div class="menu-item"><a class="menu-link{% if request.resolver_match.namespace == 'bulk_alt_text' and request.resolver_match.url_name == 'generate' %} active{% endif %}" href="{% url 'bulk_alt_text:generate' %}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Generate</span></a></div>
+<div class="menu-item"><a class="menu-link{% if request.resolver_match.namespace == 'bulk_alt_text' and request.resolver_match.url_name == 'history' or request.resolver_match.namespace == 'bulk_alt_text' and request.resolver_match.url_name == 'detail' %} active{% endif %}" href="{% url 'bulk_alt_text:history' %}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">History</span></a></div>
 </div>
 </div>
 </div>

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Bulk Alt Text History | Wisoft Co-Worker{% endblock %}
+{% block extra_css_scripts %}
+<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+{% block header %}
+{% url 'bulk_alt_text:generate' as generate_url %}
+{% include 'includes/header.html' with page_title='Bulk Alt Text History' parent_title='Bulk Alt Text' action_url=generate_url action_label='Generate' %}
+{% endblock %}
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+<div class="container-xxl" id="kt_content_container">
+{% include 'bulk_alt_text/includes/messages.html' %}
+<div class="card">
+<div class="card-header border-0 pt-6">
+<div class="card-title">
+<div class="d-flex align-items-center position-relative my-1">
+<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+<input type="text" id="kt_datatable_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search History" />
+</div>
+</div>
+</div>
+<div class="card-body pt-1">
+<div class="table-responsive">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_datatable">
+<thead>
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+<th class="w-50px">#</th>
+<th>Page URL</th>
+<th>Total Images</th>
+<th>Missing Alt</th>
+<th>Status</th>
+<th>Scanned At</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody class="fw-semibold text-gray-700">
+{% for analysis in analyses %}
+<tr data-record-row="true">
+<td>{{ forloop.counter }}</td>
+<td><a href="{{ analysis.page_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ analysis.page_url }}</a></td>
+<td><span class="badge badge-light-primary fs-5">{{ analysis.total_images }}</span></td>
+<td><span class="badge badge-light-warning fs-5">{{ analysis.missing_alt_count }}</span></td>
+<td><span class="badge badge-light-{% if analysis.status == 'completed' %}success{% elif analysis.status == 'failed' %}danger{% else %}primary{% endif %} fs-6">{{ analysis.get_status_display }}</span></td>
+<td>{{ analysis.started_at|date:"d M Y, g:i A" }}</td>
+<td>
+<div class="d-flex gap-2">
+<a href="{% url 'bulk_alt_text:detail' analysis.id %}" class="btn btn-sm btn-primary">View</a>
+<form method="post" action="{% url 'bulk_alt_text:delete' analysis.id %}" name="form_delete" class="form_delete_class">
+{% csrf_token %}
+<input type="hidden" name="next" value="{% url 'bulk_alt_text:history' %}" />
+<button type="submit" class="btn btn-sm btn-danger">Delete</button>
+</form>
+</div>
+</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="7" class="text-center text-muted py-10">No bulk alt text analyses yet.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+{% endblock %}
+{% block extra_js_scripts %}
+<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<script>
+$(function () {
+/* <================= DataTable =================> */
+var $datatable = $("#kt_datatable");
+if ($datatable.length && $datatable.find("[data-record-row='true']").length) {
+var datatable = $datatable.DataTable({
+info: false,
+order: []
+});
+
+$("#kt_datatable_search").on("keyup", function () {
+datatable.search(this.value).draw();
+});
+}
+});
+</script>
+{% endblock %}
