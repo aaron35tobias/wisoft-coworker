@@ -128,6 +128,7 @@ def billing_view(request):
     if usage_data:
         if usage_data['usage_percent'] >= 100:
             limit_exceeded = True
+            request.session['limit_exceeded'] = True
             
             # Send email alert if not already sent in this session
             if not request.session.get('billing_alert_sent', False):

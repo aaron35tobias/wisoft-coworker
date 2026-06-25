@@ -424,6 +424,65 @@
             <!--begin::Wrapper-->
             <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper">
                 {% block header %}{% endblock %}
+
+                {% if global_limit_exceeded %}
+                <!-- Small Header Alert -->
+                <div id="header-limit-alert" class="alert alert-danger d-flex align-items-center p-4 mb-0 rounded-0 d-none justify-content-center" style="z-index: 1000; position: relative;">
+                    <i class="ki-duotone ki-warning fs-2hx text-danger me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+                    <div class="d-flex flex-column">
+                        <h4 class="mb-1 text-danger">Action Required: API Limit Exceeded</h4>
+                        <span class="text-gray-800">Your AI API usage for <strong>{{ api_provider }}</strong> has exceeded the limit. Please <a href="{{ api_upgrade_url }}" class="fw-bold text-danger text-decoration-underline" target="_blank">upgrade your plan</a> to restore access.</span>
+                    </div>
+                </div>
+
+                <!-- Full Page Modal -->
+                <div class="modal fade" id="global_limit_modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                    <div class="modal-dialog modal-fullscreen">
+                        <div class="modal-content bg-light">
+                            <div class="modal-body d-flex flex-column align-items-center justify-content-center text-center">
+                                <i class="ki-duotone ki-information-5 fs-5x text-danger mb-5">
+                                    <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+                                </i>
+                                <h1 class="fw-bold text-danger mb-4">Action Required: API Limit Exceeded</h1>
+                                <p class="text-gray-600 fs-4 mb-8" style="max-width: 600px;">
+                                    Your AI API token usage for <strong>{{ api_provider }}</strong> has exceeded the allowed limits.
+                                    You must upgrade your plan or add more credits to continue using AI features in Wisoft Co-Worker.
+                                </p>
+                                <div class="d-flex gap-4">
+                                    <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal" onclick="dismissGlobalAlert()">Dismiss for now</button>
+                                    <a href="{{ api_upgrade_url }}" class="btn btn-primary btn-lg" target="_blank">Upgrade Plan</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    function dismissGlobalAlert() {
+                        localStorage.setItem('limit_alert_dismissed', 'true');
+                        var headerAlert = document.getElementById('header-limit-alert');
+                        if (headerAlert) {
+                            headerAlert.classList.remove('d-none');
+                        }
+                    }
+
+                    document.addEventListener("DOMContentLoaded", function () {
+                        if (localStorage.getItem('limit_alert_dismissed') !== 'true') {
+                            var modalElement = document.getElementById('global_limit_modal');
+                            if (modalElement) {
+                                var myModal = new bootstrap.Modal(modalElement);
+                                myModal.show();
+                            }
+                        } else {
+                            var headerAlert = document.getElementById('header-limit-alert');
+                            if (headerAlert) {
+                                headerAlert.classList.remove('d-none');
+                            }
+                        }
+                    });
+                </script>
+                {% endif %}
+
                 {% if messages %}
                 <div class="container-xxl pt-4">
                     {% for message in messages %}
