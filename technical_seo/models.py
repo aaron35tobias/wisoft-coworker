@@ -15,7 +15,7 @@ class TechnicalSEOWebsite(models.Model):
     date_modified = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'page_speed_and_cwv_technicalseowebsite'
+        db_table = 'technical_seo_technicalseowebsite'
         ordering = ['-date_added']
         indexes = [
             models.Index(fields=['added_by', '-date_added']),
@@ -71,7 +71,7 @@ class TechnicalSEOAudit(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = 'page_speed_and_cwv_technicalseoaudit'
+        db_table = 'technical_seo_technicalseoaudit'
         ordering = ['-started_at']
         indexes = [
             models.Index(fields=['website', '-started_at']),
@@ -109,7 +109,7 @@ class TechnicalSEOPage(models.Model):
     scanned_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'page_speed_and_cwv_technicalseopage'
+        db_table = 'technical_seo_technicalseopage'
         ordering = ['depth', 'url']
         indexes = [
             models.Index(fields=['audit', 'status_code']),
@@ -164,7 +164,7 @@ class TechnicalSEOIssue(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'page_speed_and_cwv_technicalseoissue'
+        db_table = 'technical_seo_technicalseoissue'
         ordering = ['severity', 'issue_type', 'created_at']
         indexes = [
             models.Index(fields=['audit', 'severity']),
