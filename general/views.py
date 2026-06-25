@@ -6,7 +6,7 @@ from django.conf import settings
 import anthropic
 
 from technical_seo.models import TechnicalSEOAudit
-from page_speed_and_cwv.models import WebsiteSpeedReport
+from page_speed_and_cwv.models import WebsiteSpeedReport, Website
 
 
 def _domain(url):
@@ -50,22 +50,29 @@ def _build_technical_seo(user):
 
 
 def _build_page_speed(user):
-    """Latest Page Speed report, if the user has run one."""
-    speed = (
+    """Most recent Page Speed website + its latest report (if it's been analyzed)."""
+    website = (
+        Website.objects
+        .filter(added_by=user, is_active=True)
+        .order_by('-date_added')
+        .first()
+    )
+    if not website:
+        return None
+
+    report = (
         WebsiteSpeedReport.objects
-        .filter(website__added_by=user)
-        .select_related('website')
+        .filter(website=website)
         .order_by('-scanned_at')
         .first()
     )
-    if not speed:
-        return None
     return {
-        'domain': _domain(speed.website.website_url),
-        'performance': speed.performance_score,
-        'seo': speed.seo_score,
-        'lcp': speed.largest_contentful_paint,
-        'cls': speed.cumulative_layout_shift,
+        'domain': _domain(website.website_url),
+        'has_report': report is not None,
+        'performance': report.performance_score if report else None,
+        'seo': report.seo_score if report else None,
+        'lcp': report.largest_contentful_paint if report else None,
+        'cls': report.cumulative_layout_shift if report else None,
     }
 
 
