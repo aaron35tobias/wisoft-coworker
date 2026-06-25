@@ -50,7 +50,11 @@ def _build_technical_seo(user):
 
 
 def _build_page_speed(user):
-    """Most recent Page Speed website + its latest report (if it's been analyzed)."""
+    """Most recent Page Speed website + a summary of its latest scan.
+
+    Mirrors the Reports table: scanned-at, mobile/desktop performance score,
+    and which devices were scanned.
+    """
     website = (
         Website.objects
         .filter(added_by=user, is_active=True)
@@ -60,22 +64,36 @@ def _build_page_speed(user):
     if not website:
         return None
 
-    report = (
-        WebsiteSpeedReport.objects
-        .filter(website=website)
-        .order_by('-scanned_at')
-        .first()
+    scan = (
+        website.speed_report_ai_indexes
+        .prefetch_related('reports')
+        .first()  # ordered by -scanned_at
     )
-    return {
+
+    data = {
         'domain': _domain(website.website_url),
-        'has_report': report is not None,
-        'performance': report.performance_score if report else None,
-        'accessibility': report.accessibility_score if report else None,
-        'best_practices': report.best_practices_score if report else None,
-        'seo': report.seo_score if report else None,
-        'lcp': report.largest_contentful_paint if report else None,
-        'cls': report.cumulative_layout_shift if report else None,
+        'has_report': scan is not None,
+        'scanned_at': None,
+        'mobile_score': None,
+        'desktop_score': None,
+        'devices': [],
     }
+    if scan:
+        reports = list(scan.reports.all())
+        mobile = next((r for r in reports if r.device_type == WebsiteSpeedReport.DEVICE_MOBILE), None)
+        desktop = next((r for r in reports if r.device_type == WebsiteSpeedReport.DEVICE_DESKTOP), None)
+        devices = []
+        if mobile:
+            devices.append('Mobile')
+        if desktop:
+            devices.append('Desktop')
+        data.update({
+            'scanned_at': scan.scanned_at,
+            'mobile_score': mobile.performance_score if mobile else None,
+            'desktop_score': desktop.performance_score if desktop else None,
+            'devices': devices,
+        })
+    return data
 
 
 @login_required(login_url='sign-in')
