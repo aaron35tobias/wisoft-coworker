@@ -18,7 +18,11 @@ urlpatterns = [
     path('websites/pages/list/', views.list_pages_view, name='page-list'),
     path('websites/pages/create/', views.create_page_view, name='page-create'),
     path('websites/pages/update/', views.update_page_view, name='page-update'),
+    path('websites/pages/delete-selected/', views.bulk_delete_pages_view, name='page-bulk-delete'),
     path('websites/pages/<int:page_id>/delete/', views.delete_page_view, name='page-delete'),
     path('websites/pages/validate/', views.validate_page_view, name='page-validate'),
     path('websites/pages/discover/', views.discover_pages_view, name='page-discover'),
+    path('websites/pages/discovered/delete-selected/', views.bulk_delete_discovered_pages_view, name='page-discovered-bulk-delete'),
+    path('websites/pages/discovered/<int:discovered_page_id>/select/', views.select_discovered_page_view, name='page-discovered-select'),
+    path('websites/pages/discovered/select/', views.bulk_select_discovered_pages_view, name='page-discovered-bulk-select'),
 ]

@@ -183,10 +183,17 @@ def list_pages_view(request):
     if website_id:
         website = get_object_or_404(Website, id=website_id, added_by=request.user)
 
+    pages = website.pages.all() if website else []
+    discovered_pages = list(website.page_discoveries.all().order_by('id')) if website else []
+    saved_page_urls = {page.page_url.lower().rstrip('/') for page in pages}
+
+    for discovered_page in discovered_pages:
+        discovered_page.is_saved = discovered_page.page_url.lower().rstrip('/') in saved_page_urls
+
     context = {
         'website': website,
-        'pages': website.pages.all() if website else [],
-        'discovered_pages': website.page_discoveries.all() if website else [],
+        'pages': pages,
+        'discovered_pages': discovered_pages,
         'back_to_websites_url': reverse('page_speed_and_cwv:website-list'),
     }
     return render(request, 'page_speed_and_cwv/list_pages.html', context)
@@ -281,6 +288,102 @@ def delete_page_view(request, page_id):
         return redirect(page_list_redirect(website_id))
 
     return redirect(page_list_redirect(page.website.id))
+
+@login_required(login_url='sign-in')
+def bulk_delete_pages_view(request):
+    if request.method != 'POST':
+        return redirect('page_speed_and_cwv:website-list')
+
+    page_ids = request.POST.getlist('page_ids[]') or request.POST.getlist('page_ids')
+    pages = WebsitePage.objects.filter(id__in=page_ids, website__added_by=request.user)
+    deleted_pages = list(pages.values('id', 'page_url'))
+    pages.delete()
+
+    return JsonResponse({
+        'success': True,
+        'deleted_page_ids': [page['id'] for page in deleted_pages],
+        'deleted_page_urls': [page['page_url'] for page in deleted_pages],
+    })
+
+@login_required(login_url='sign-in')
+def select_discovered_page_view(request, discovered_page_id):
+    discovered_page = get_object_or_404(WebsitePageDiscovery.objects.select_related('website'), id=discovered_page_id, created_by=request.user, website__added_by=request.user)
+
+    if request.method != 'POST':
+        return redirect(page_list_redirect(discovered_page.website.id))
+
+    existing_page = WebsitePage.objects.filter(website=discovered_page.website, page_url__iexact=discovered_page.page_url).first()
+
+    if existing_page:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'already_saved': True, 'message': 'This page is already saved.'})
+        messages.error(request, 'This page has already been added.')
+        return redirect(page_list_redirect(existing_page.website.id))
+
+    page = WebsitePage.objects.create(website=discovered_page.website, page_url=discovered_page.page_url, is_active=True)
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'already_saved': False,
+            'message': 'Page saved successfully.',
+            'page': {
+                'id': page.id,
+                'page_url': page.page_url,
+                'is_active': page.is_active,
+                'delete_url': reverse('page_speed_and_cwv:page-delete', args=[page.id]),
+            },
+        })
+
+    messages.success(request, 'Record inserted successfully.')
+    return redirect(page_list_redirect(page.website.id))
+
+@login_required(login_url='sign-in')
+def bulk_select_discovered_pages_view(request):
+    if request.method != 'POST':
+        return redirect('page_speed_and_cwv:website-list')
+
+    discovered_page_ids = request.POST.getlist('discovered_page_ids[]') or request.POST.getlist('discovered_page_ids')
+    discovered_pages = WebsitePageDiscovery.objects.select_related('website').filter(id__in=discovered_page_ids, created_by=request.user, website__added_by=request.user)
+
+    created_pages = []
+    saved_discovered_ids = []
+
+    for discovered_page in discovered_pages:
+        if WebsitePage.objects.filter(website=discovered_page.website, page_url__iexact=discovered_page.page_url).exists():
+            saved_discovered_ids.append(discovered_page.id)
+            continue
+
+        page = WebsitePage.objects.create(website=discovered_page.website, page_url=discovered_page.page_url, is_active=True)
+        saved_discovered_ids.append(discovered_page.id)
+        created_pages.append({
+            'id': page.id,
+            'page_url': page.page_url,
+            'is_active': page.is_active,
+            'delete_url': reverse('page_speed_and_cwv:page-delete', args=[page.id]),
+        })
+
+    return JsonResponse({
+        'success': True,
+        'created_count': len(created_pages),
+        'saved_discovered_ids': saved_discovered_ids,
+        'pages': created_pages,
+    })
+
+@login_required(login_url='sign-in')
+def bulk_delete_discovered_pages_view(request):
+    if request.method != 'POST':
+        return redirect('page_speed_and_cwv:website-list')
+
+    discovered_page_ids = request.POST.getlist('discovered_page_ids[]') or request.POST.getlist('discovered_page_ids')
+    discovered_pages = WebsitePageDiscovery.objects.filter(id__in=discovered_page_ids, created_by=request.user, website__added_by=request.user)
+    deleted_page_ids = list(discovered_pages.values_list('id', flat=True))
+    discovered_pages.delete()
+
+    return JsonResponse({
+        'success': True,
+        'deleted_discovered_page_ids': deleted_page_ids,
+    })
 
 @login_required(login_url='sign-in')
 def discover_pages_view(request):
