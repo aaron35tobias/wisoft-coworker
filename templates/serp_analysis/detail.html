@@ -105,6 +105,29 @@
 [data-bs-theme="dark"] .serp-pill-link {
     background: rgba(255, 255, 255, 0.04);
 }
+
+.serp-ai-summary-scroll {
+    max-height: 360px;
+    overflow: auto;
+    padding-right: 0.5rem;
+}
+
+.serp-ai-full-response {
+    max-height: 70vh;
+    overflow: auto;
+    white-space: pre-line;
+    line-height: 1.65;
+    font-size: 0.95rem;
+    padding: 1.25rem;
+    border-radius: 0.85rem;
+    background: #f8f9fa;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+[data-bs-theme="dark"] .serp-ai-full-response {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
     </style>
 {% endblock %}
 {% block header %}
@@ -264,43 +287,82 @@
                     </div>
                     <div class="card-body">
                         {% if analysis.ai_summary %}
-                            {% if ai_summary_sections %}
-                                <div class="accordion accordion-icon-toggle"
-                                     id="kt_serp_ai_summary_accordion">
-                                    {% for section in ai_summary_sections %}
-                                        <div class="mb-5">
-                                            <div class="d-flex align-items-center cursor-pointer"
-                                                 data-bs-toggle="collapse"
-                                                 data-bs-target="#kt_serp_ai_section_{{ forloop.counter }}">
-                                                <span class="accordion-icon"><i class="ki-duotone ki-right fs-4"></i></span>
-                                                <div class="fs-5 fw-bold text-gray-800 ms-3">{{ section.title }}</div>
+                            <div class="serp-ai-summary-scroll">
+                                {% if ai_summary_sections %}
+                                    <div class="accordion accordion-icon-toggle"
+                                         id="kt_serp_ai_summary_accordion">
+                                        {% for section in ai_summary_sections %}
+                                            <div class="mb-5">
+                                                <div class="d-flex align-items-center cursor-pointer"
+                                                     data-bs-toggle="collapse"
+                                                     data-bs-target="#kt_serp_ai_section_{{ forloop.counter }}">
+                                                    <span class="accordion-icon"><i class="ki-duotone ki-right fs-4"></i></span>
+                                                    <div class="fs-5 fw-bold text-gray-800 ms-3">{{ section.title }}</div>
+                                                </div>
+                                                <div id="kt_serp_ai_section_{{ forloop.counter }}"
+                                                     class="collapse{% if forloop.first %} show{% endif %}"
+                                                     data-bs-parent="#kt_serp_ai_summary_accordion">
+                                                    <div class="pt-3 ps-9 text-gray-700 lh-lg">{{ section.body|linebreaksbr }}</div>
+                                                </div>
                                             </div>
-                                            <div id="kt_serp_ai_section_{{ forloop.counter }}"
-                                                 class="collapse{% if forloop.first %} show{% endif %}"
-                                                 data-bs-parent="#kt_serp_ai_summary_accordion">
-                                                <div class="pt-3 ps-9 text-gray-700 lh-lg">{{ section.body|linebreaksbr }}</div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="fs-6 text-gray-800 lh-lg">{{ analysis.ai_summary|truncatechars:900|linebreaksbr }}</div>
-                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="fs-6 text-gray-800 lh-lg">{{ analysis.ai_summary|truncatechars:900|linebreaksbr }}</div>
+                                {% endif %}
+                            </div>
                             <div class="separator my-5"></div>
-                            <button class="btn btn-sm btn-light-primary"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#kt_serp_ai_full_response">View Full AI Response</button>
-                            <div class="collapse mt-5" id="kt_serp_ai_full_response">
-                                <div class="notice d-flex bg-light rounded border border-dashed rounded-3 p-5">
-                                    <div class="text-gray-700 overflow-auto mh-400px lh-lg">{{ analysis.ai_summary|linebreaksbr }}</div>
-                                </div>
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                <div class="text-muted fs-7">Open the complete raw AI output in a larger reading view.</div>
+                                <button class="btn btn-sm btn-light-primary"
+                                        type="button"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#kt_serp_ai_full_response_modal">
+                                    <i class="ki-duotone ki-eye fs-3">
+                                        <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+                                    </i>
+                                    View Full Response
+                                </button>
                             </div>
                         {% else %}
                             <div class="text-muted">No AI summary available.</div>
                         {% endif %}
                     </div>
                 </div>
+                {% if analysis.ai_summary %}
+                    <div class="modal fade"
+                         id="kt_serp_ai_full_response_modal"
+                         tabindex="-1"
+                         aria-hidden="true">
+                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <div>
+                                        <h3 class="modal-title fw-bold text-gray-900">Full AI Response</h3>
+                                        <div class="text-muted fs-7">
+                                            {{ analysis.keyword }}
+                                            {% if analysis.ai_model %} | {{ analysis.ai_model }}{% endif %}
+                                        </div>
+                                    </div>
+                                    <button type="button"
+                                            class="btn btn-icon btn-sm btn-active-light-primary"
+                                            data-bs-dismiss="modal"
+                                            aria-label="Close">
+                                        <i class="ki-duotone ki-cross fs-2">
+                                            <span class="path1"></span><span class="path2"></span>
+                                        </i>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="serp-ai-full-response text-gray-800">{{ analysis.ai_summary }}</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
                 <div class="card mb-5">
                     <div class="card-header">
                         <h3 class="card-title fw-bold text-gray-900">Own vs Competitor Scorecard</h3>
