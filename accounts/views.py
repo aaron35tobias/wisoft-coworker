@@ -105,6 +105,12 @@ def logout_view(request):
 
 
 @login_required(login_url='sign-in')
+def profile_view(request):
+    user = request.user
+    return render(request, 'accounts/profile.html', {'user': user})
+
+
+@login_required(login_url='sign-in')
 def settings_view(request):
     user = request.user
     if request.method == 'POST':
@@ -114,19 +120,15 @@ def settings_view(request):
         
         if action == 'update_username':
             new_username = request.POST.get('username', '').strip()
-            current_password = request.POST.get('current_password', '')
             
-            if not current_password:
-                errors['username_current_password'] = 'Current password is required.'
-            elif not user.check_password(current_password):
-                errors['username_current_password'] = 'Incorrect password.'
-                
             if not new_username:
                 errors['username'] = 'Username is required.'
-            elif new_username != user.username and User.objects.filter(username=new_username).exists():
+            elif new_username == user.username:
+                errors['username'] = 'New username must be different from your current username.'
+            elif User.objects.filter(username=new_username).exists():
                 errors['username'] = 'Username is already taken.'
                 
-            if not errors and new_username != user.username:
+            if not errors:
                 user.username = new_username
                 user.save()
                 success_message = 'Username updated successfully.'

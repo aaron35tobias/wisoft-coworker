@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - Wisoft Co-Worker{% endblock %}
+
+{% block header %}
+{% include 'includes/header.html' with page_title='My Profile' %}
+{% endblock %}
+
+{% block content %}
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <!--begin::Container-->
+    <div class="container-xxl" id="kt_content_container">
+
+        <!--begin::Profile Picture Card-->
+        <div class="card mb-5 mb-xl-10">
+            <div class="card-header border-0 d-flex align-items-center justify-content-between">
+                <div class="card-title m-0">
+                    <h3 class="fw-bold m-0">Profile Information</h3>
+                </div>
+                <a href="{% url 'settings' %}" class="btn btn-primary btn-sm">Edit Settings</a>
+            </div>
+            <div class="card-body pt-9 pb-0">
+                <div class="d-flex flex-column align-items-center mb-12">
+                    <div class="mb-4">
+                        <div class="symbol symbol-150px symbol-circle mb-4">
+                            <img id="profile_picture_preview"
+                                src="{% if request.user.profile.profile_picture %}{{ request.user.profile.profile_picture.url }}{% else %}{% static 'assets/media/avatars/300-1.jpg' %}{% endif %}"
+                                alt="image"
+                                style="object-fit: cover; width: 150px; height: 150px; border: 3px solid #eee; border-radius: 50%;" />
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-gray-900 fw-bold fs-3 mb-3">{{ user.get_full_name|default:user.username }}</h3>
+                        {% if user.profile %}
+                        <div class="text-muted fw-semibold fs-6 mb-1">{{ user.email }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!--begin::Details Grid-->
+                <div class="row g-6 mb-11">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="text-center">
+                            <div class="fw-semibold text-gray-600 text-uppercase fs-8 mb-3">Username</div>
+                            <div class="text-gray-900 fw-bold fs-6">{{ user.username }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="text-center">
+                            <div class="fw-semibold text-gray-600 text-uppercase fs-8 mb-3">Email</div>
+                            <div class="text-gray-900 fw-bold fs-6">{{ user.email }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="text-center">
+                            <div class="fw-semibold text-gray-600 text-uppercase fs-8 mb-3">Account Status</div>
+                            <div class="text-gray-900 fw-bold fs-6">
+                                {% if user.is_active %}
+                                <span class="badge badge-light-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-light-warning">Pending</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="text-center">
+                            <div class="fw-semibold text-gray-600 text-uppercase fs-8 mb-3">Account Type</div>
+                            <div class="text-gray-900 fw-bold fs-6">
+                                {% if user.is_superuser %}
+                                <span class="badge badge-light-primary">Admin</span>
+                                {% else %}
+                                <span class="badge badge-light-info">User</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-6 mb-8">
+                    <div class="col-md-6 col-lg-3 offset-lg-3">
+                        <div class="text-center">
+                            <div class="fw-semibold text-gray-600 text-uppercase fs-8 mb-3">Member Since</div>
+                            <div class="text-gray-900 fw-bold fs-6">{{ user.date_joined|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="text-center">
+                            <div class="fw-semibold text-gray-600 text-uppercase fs-8 mb-3">Last Login</div>
+                            <div class="text-gray-900 fw-bold fs-6">
+                                {% if user.last_login %}
+                                {{ user.last_login|date:"M d, Y \a\t g:i A" }}
+                                {% else %}
+                                Never
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--end::Details Grid-->
+            </div>
+        </div>
+        <!--end::Profile Picture Card-->
+
+    </div>
+    <!--end::Container-->
+</div>
+<!--end::Content-->
+
+{% endblock %}
