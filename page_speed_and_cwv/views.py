@@ -5,7 +5,6 @@ from django.core.validators import URLValidator
 from django.http import JsonResponse
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect, render
-
 from urllib.parse import urljoin, urlparse, urldefrag
 from urllib.request import Request, urlopen
 import re
