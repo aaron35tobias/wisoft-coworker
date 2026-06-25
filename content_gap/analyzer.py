@@ -73,27 +73,34 @@ class ContentSnapshotParser(HTMLParser):
         self._active_tag = None
         self._buffer = []
         self._ignored_depth = 0
+        self._body_depth = 0
+
+    def _inside_body(self):
+        return self._body_depth > 0
 
     def handle_starttag(self, tag, attrs):
         tag = tag.lower()
         attrs_dict = {name.lower(): (value or '') for name, value in attrs}
 
+        if tag == 'body':
+            self._body_depth += 1
+
         if tag in {'script', 'style', 'noscript', 'svg'}:
             self._ignored_depth += 1
             return
 
-        if tag == 'img':
+        if tag == 'img' and self._inside_body():
             self.image_count += 1
 
-        if tag == 'video':
+        if tag == 'video' and self._inside_body():
             self.video_count += 1
 
-        if tag == 'iframe':
+        if tag == 'iframe' and self._inside_body():
             src = attrs_dict.get('src', '').lower()
             if any(provider in src for provider in ('youtube.com', 'youtu.be', 'vimeo.com', 'wistia.com')):
                 self.video_count += 1
 
-        if tag == 'a':
+        if tag == 'a' and self._inside_body():
             href = attrs_dict.get('href', '').strip()
             if href and not href.lower().startswith(('mailto:', 'tel:', 'javascript:')):
                 href_without_fragment = href.split('#', 1)[0].strip()
@@ -112,7 +119,7 @@ class ContentSnapshotParser(HTMLParser):
                             self.external_links_count += 1
                             self.external_links.append(normalized_link)
 
-        if tag in {'title', 'h1', 'h2', 'h3'}:
+        if tag == 'title' or (tag in {'h1', 'h2', 'h3'} and self._inside_body()):
             self._active_tag = tag
             self._buffer = []
 
@@ -127,6 +134,8 @@ class ContentSnapshotParser(HTMLParser):
             return
         if self._active_tag:
             self._buffer.append(data)
+        if not self._inside_body():
+            return
         cleaned = ' '.join(data.split())
         if cleaned:
             self.body_parts.append(cleaned)
@@ -136,6 +145,8 @@ class ContentSnapshotParser(HTMLParser):
         if tag in {'script', 'style', 'noscript', 'svg'} and self._ignored_depth:
             self._ignored_depth -= 1
             return
+        if tag == 'body' and self._body_depth:
+            self._body_depth -= 1
         if tag != self._active_tag:
             return
 

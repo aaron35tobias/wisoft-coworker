@@ -64,8 +64,8 @@ class KeywordPageParser(HTMLParser):
         self.meta_description = ''
         self.headings = {'h1': [], 'h2': [], 'h3': []}
         self.links = []
-        self.internal_links = []
-        self.external_links = []
+        # self.internal_links = []
+        # self.external_links = []
         self.body_parts = []
         self._active_tag = None
         self._buffer = []
@@ -95,10 +95,10 @@ class KeywordPageParser(HTMLParser):
                 self._seen_links.add(link)
                 self.links.append(link)
                 parsed_link = urlparse(link)
-                if parsed_link.netloc.lower() == self.base_netloc:
-                    self.internal_links.append(link)
-                else:
-                    self.external_links.append(link)
+                # if parsed_link.netloc.lower() == self.base_netloc:
+                #     self.internal_links.append(link)
+                # else:
+                #     self.external_links.append(link)
 
     def handle_data(self, data):
         if self._ignored_depth:
@@ -283,10 +283,10 @@ def save_crawled_keyword_page(run, url, result, parser, text):
             'content_type': result['content_type'],
             'load_time_ms': result['load_time_ms'],
             'truncated': result['truncated'],
-            'internal_links': parser.internal_links[:100] if parser else [],
-            'external_links': parser.external_links[:100] if parser else [],
-            'internal_links_count': len(parser.internal_links) if parser else 0,
-            'external_links_count': len(parser.external_links) if parser else 0,
+            # 'internal_links': parser.internal_links[:100] if parser else [],
+            # 'external_links': parser.external_links[:100] if parser else [],
+            # 'internal_links_count': len(parser.internal_links) if parser else 0,
+            # 'external_links_count': len(parser.external_links) if parser else 0,
         },
     )
 

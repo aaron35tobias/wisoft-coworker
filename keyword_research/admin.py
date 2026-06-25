@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import (
+    KeywordCartItem,
     KeywordCluster,
     KeywordIdea,
     KeywordPlannerMetric,
@@ -46,3 +47,10 @@ class KeywordClusterAdmin(admin.ModelAdmin):
 class KeywordPlannerMetricAdmin(admin.ModelAdmin):
     list_display = ('keyword', 'avg_monthly_searches', 'competition', 'run')
     search_fields = ('keyword',)
+
+
+@admin.register(KeywordCartItem)
+class KeywordCartItemAdmin(admin.ModelAdmin):
+    list_display = ('keyword', 'source', 'run', 'user', 'created_at')
+    list_filter = ('source', 'created_at')
+    search_fields = ('keyword', 'user__username', 'user__email')

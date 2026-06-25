@@ -1,36 +1,94 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}SERP Analysis History | Wisoft Co-Worker{% endblock %}
-
 {% block extra_css_scripts %}
-<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
+          rel="stylesheet"
+          type="text/css" />
 {% endblock %}
-
 {% block header %}
-{% url 'serp_analysis:analysis' as run_url %}
-{% include 'includes/header.html' with page_title='SERP Analysis History' parent_title='SERP Analysis' action_url=run_url action_label='Run Analysis' %}
+    {% url 'serp_analysis:analysis' as run_url %}
+    {% include 'includes/header.html' with page_title='SERP Analysis History' parent_title='SERP Analysis' action_url=run_url action_label='Run Analysis' %}
 {% endblock %}
-
 {% block content %}
-<div class="content d-flex flex-column flex-column-fluid" id="kt_content"><div class="container-xxl" id="kt_content_container">
-<div class="card"><div class="card-header border-0 pt-6"><div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100"><div class="d-flex align-items-center position-relative my-1"><i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i><input type="text" id="kt_serp_history_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search History" /></div></div></div><div class="card-body pt-0">
-<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_serp_history_table"><thead><tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary"><th>#</th><th>Keyword</th><th>Location</th><th>Status</th><th>Competitors</th><th>Opportunities</th><th>Findings</th><th>Started</th><th>Actions</th></tr></thead><tbody class="fw-semibold text-gray-700">
-{% for analysis in analyses %}
-<tr data-serp-row="true"><td>{{ forloop.counter }}</td><td class="text-gray-900">{{ analysis.keyword }}</td><td>{{ analysis.location|default:"-" }}</td><td>{% if analysis.status == 'completed' %}<span class="badge badge-light-success">Completed</span>{% elif analysis.status == 'failed' %}<span class="badge badge-light-danger">Failed</span>{% else %}<span class="badge badge-light-primary">Running</span>{% endif %}</td><td>{{ analysis.competitor_count }}</td><td><span class="badge badge-light-warning">{{ analysis.serp_opportunities|length }}</span></td><td><span class="badge badge-light-info">{{ analysis.technical_findings|length }}</span></td><td>{{ analysis.started_at|date:"d M Y, g:i A" }}</td><td><div class="d-flex gap-2"><a href="{% url 'serp_analysis:detail' analysis.id %}" class="btn btn-sm btn-primary">View</a><form method="post" action="{% url 'serp_analysis:delete' analysis.id %}" class="js-delete-serp-form">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}" /><button type="submit" class="btn btn-sm btn-danger">Delete</button></form></div></td></tr>
-{% empty %}
-<tr><td colspan="9" class="text-center text-muted py-10">No SERP analysis history yet.</td></tr>
-{% endfor %}
-</tbody></table>
-</div></div>
-</div></div>
+    <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+        <div class="container-xxl" id="kt_content_container">
+            <div class="card">
+                <div class="card-header border-0 pt-6">
+                    <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+                        <div class="d-flex align-items-center position-relative my-1">
+                            <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+                            <input type="text"
+                                   id="kt_serp_history_search"
+                                   class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                   placeholder="Search History" />
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"
+                           id="kt_serp_history_table">
+                        <thead>
+                            <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                <th>#</th>
+                                <th>Keyword</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Competitors</th>
+                                <th>Opportunities</th>
+                                <th>Findings</th>
+                                <th>Started</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fw-semibold text-gray-700">
+                            {% for analysis in analyses %}
+                                <tr data-serp-row="true">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td class="text-gray-900">{{ analysis.keyword }}</td>
+                                    <td>{{ analysis.location|default:"-" }}</td>
+                                    <td>
+                                        {% if analysis.status == 'completed' %}
+                                            <span class="badge badge-light-success">Completed</span>
+                                        {% elif analysis.status == 'failed' %}
+                                            <span class="badge badge-light-danger">Failed</span>
+                                        {% else %}
+                                            <span class="badge badge-light-primary">Running</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ analysis.competitor_count }}</td>
+                                    <td><span class="badge badge-light-warning">{{ analysis.serp_opportunities|length }}</span></td>
+                                    <td><span class="badge badge-light-info">{{ analysis.technical_findings|length }}</span></td>
+                                    <td>{{ analysis.started_at|date:"d M Y, g:i A" }}</td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="{% url 'serp_analysis:detail' analysis.id %}"
+                                               class="btn btn-sm btn-primary">View</a>
+                                            <form method="post"
+                                                  action="{% url 'serp_analysis:delete' analysis.id %}"
+                                                  class="js-delete-serp-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-10">No SERP analysis history yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
-
 {% block extra_js_scripts %}
-<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
-<script>
+    <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+    <script>
 jQuery(function(){var tableElement=document.querySelector("#kt_serp_history_table");if(tableElement&&tableElement.querySelector("[data-serp-row='true']")){var table=jQuery(tableElement).DataTable({pageLength:10,lengthMenu:[[10,25,50,100,-1],[10,25,50,100,"All"]],dom:"rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>",order:[[7,"desc"]],columnDefs:[{orderable:false,targets:[0,8]}]});jQuery("#kt_serp_history_search").on("keyup",function(){table.search(this.value).draw();});}jQuery(document).on("submit",".js-delete-serp-form",function(event){if(!window.confirm("Delete this SERP analysis?")){event.preventDefault();}});});
-</script>
+    </script>
 {% endblock %}
-
-

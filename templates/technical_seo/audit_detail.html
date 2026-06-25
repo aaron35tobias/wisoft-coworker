@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}Technical SEO Audit Detail | Wisoft Co-Worker{% endblock %}
-
 {% block extra_css_scripts %}
-<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
-<style>
+    <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
+          rel="stylesheet"
+          type="text/css" />
+    <style>
 .ai-summary-card {
 max-height: 360px;
 overflow: auto;
@@ -63,416 +63,628 @@ white-space: pre-line;
     max-width: 420px;
     width: calc(100% - 32px);
 }
-</style>
-{% endblock %}
+.audit-overview-card {
+    border: 0;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, #f8fbff 0%, #eef5ff 100%);
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    position: relative;
+}
 
+[data-bs-theme="dark"] .audit-overview-card {
+    background: linear-gradient(135deg, #151923 0%, #1e2533 100%);
+}
+
+.audit-overview-card::after {
+    content: "";
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    right: -100px;
+    top: -100px;
+    border-radius: 50%;
+    background: rgba(0, 158, 247, 0.12);
+}
+
+.audit-overview-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 158, 247, 0.12);
+}
+
+.audit-metric-card {
+    border: 0;
+    border-radius: 1.15rem;
+    background: #ffffff;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+    transition: all 0.2s ease;
+}
+
+[data-bs-theme="dark"] .audit-metric-card {
+    background: #1b1e2a;
+}
+
+.audit-metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+}
+
+.audit-metric-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.audit-metric-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.audit-pill-link {
+    display: inline-block;
+    max-width: 100%;
+    padding: 0.55rem 0.8rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.68);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+[data-bs-theme="dark"] .audit-pill-link {
+    background: rgba(255, 255, 255, 0.04);
+}
+    </style>
+{% endblock %}
 {% block header %}
-{% include 'includes/header.html' with page_title='Technical SEO Audit Detail' parent_title='SEO Co-Worker' action_url=back_to_audits_url action_label='Back to Audits' %}
+    {% include 'includes/header.html' with page_title='Technical SEO Audit Detail' parent_title='SEO Co-Worker' action_url=back_to_audits_url action_label='Back to Audits' %}
 {% endblock %}
-
 {% block content %}
-{% if audit.status == 'running' %}
-<div class="audit-loading-overlay" id="kt_audit_loading_overlay" style="display:flex;">
-    <div class="card shadow-sm audit-loading-panel">
-        <div class="card-body p-8 text-center">
-            <div class="spinner-border text-primary mb-5" role="status"></div>
-            <h3 class="fw-bold text-gray-900 mb-3">Running Technical SEO Audit</h3>
-            <div class="text-muted fs-6 mb-5">
-                Crawling pages, detecting SEO issues, and preparing AI recommendations.
-            </div>
-
-            <div class="mb-3 text-muted fs-7">
-                Pages crawled: <span id="audit_pages_crawled">{{ audit.pages_crawled }}</span>
-                |
-                Issues found: <span id="audit_issues_found">{{ audit.issues_found }}</span>
-            </div>
-
-            <div class="progress h-8px bg-light-primary">
-                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
-                     role="progressbar"
-                     style="width: 100%">
+    {% if audit.status == 'running' %}
+        <div class="audit-loading-overlay"
+             id="kt_audit_loading_overlay"
+             style="display:flex">
+            <div class="card shadow-sm audit-loading-panel">
+                <div class="card-body p-8 text-center">
+                    <div class="spinner-border text-primary mb-5" role="status"></div>
+                    <h3 class="fw-bold text-gray-900 mb-3">Running Technical SEO Audit</h3>
+                    <div class="text-muted fs-6 mb-5">Crawling pages, detecting SEO issues, and preparing AI recommendations.</div>
+                    <div class="mb-3 text-muted fs-7">
+                        Pages crawled: <span id="audit_pages_crawled">{{ audit.pages_crawled }}</span>
+                        |
+                        Issues found: <span id="audit_issues_found">{{ audit.issues_found }}</span>
+                    </div>
+                    <div class="progress h-8px bg-light-primary">
+                        <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+                             role="progressbar"
+                             style="width: 100%"></div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-{% else %}
-<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
-<div class="container-xxl" id="kt_content_container">
+    {% else %}
+        <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+            <div class="container-xxl" id="kt_content_container">
+        <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
 
-<div class="row g-5 g-xl-10 mb-5 mb-xl-10">
-<div class="col-md-12">
-<div class="card card-flush">
-<div class="card-body py-8">
-<div class="d-flex align-items-start justify-content-between flex-wrap gap-4">
-<div>
-<h2 class="fw-bold text-gray-900 mb-1"><a href="{{ audit.website.website_url }}" target="_blank" rel="noopener">{{ audit.website.website_url }}</a></h2>
-<div class="text-muted fs-7">Started {{ audit.started_at|date:"d M Y, g:i A" }}{% if audit.completed_at %} · Completed {{ audit.completed_at|date:"d M Y, g:i A" }}{% endif %}</div>
-</div>
-<div>
-{% if audit.status == 'completed' %}
-<span class="badge badge-light-success fs-7">Completed</span>
-{% elif audit.status == 'failed' %}
-<span class="badge badge-light-danger fs-7">Failed</span>
-{% else %}
-<span class="badge badge-light-primary fs-7">Running</span>
-{% endif %}
-<form method="post" action="{% url 'technical_seo:audit-delete' audit.id %}" class="d-inline ms-2 js-delete-audit-form">
-{% csrf_token %}
-<input type="hidden" name="next" value="{% url 'technical_seo:history' %}" />
-<button type="submit" class="btn btn-sm btn-light-danger">Delete</button>
-</form>
-</div>
-</div>
-{% if audit.error_message %}
-<div class="alert alert-danger mt-6 mb-0">{{ audit.error_message }}</div>
-{% endif %}
-</div>
-</div>
-</div>
-</div>
+            <div class="col-xl-6">
+                <div class="card audit-overview-card h-100">
+                    <div class="card-body p-8 position-relative">
+                        <div class="d-flex align-items-start justify-content-between gap-4 mb-6">
+                            <div class="d-flex align-items-center gap-4 min-w-0">
+                                <div class="audit-overview-icon flex-shrink-0">
+                                    <i class="ki-duotone ki-shield-tick fs-2x text-primary">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-muted fs-7 text-uppercase fw-bold">Technical SEO Audit</div>
+                                    <h2 class="fw-bold text-gray-900 mb-0 text-break">
+                                        <a href="{{ audit.website.website_url }}" target="_blank" rel="noopener" class="text-gray-900 text-hover-primary">
+                                            {{ audit.website.website_url }}
+                                        </a>
+                                    </h2>
+                                </div>
+                            </div>
 
-{% if audit.status == 'running' %}
-<div class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6 mb-5">
-<div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
-<div class="d-flex align-items-center">
-<span class="spinner-border spinner-border-sm text-primary me-4"></span>
-<div>
-<h4 class="text-gray-900 fw-bold mb-1">Audit is running</h4>
-<div class="fs-7 text-gray-700">Crawling pages, checking technical SEO signals, and preparing AI recommendations. This page refreshes automatically.</div>
-</div>
-</div>
-</div>
-</div>
-{% endif %}
+                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                {% if audit.status == 'completed' %}
+                                    <span class="badge badge-light-success fs-7">Completed</span>
+                                {% elif audit.status == 'failed' %}
+                                    <span class="badge badge-light-danger fs-7">Failed</span>
+                                {% else %}
+                                    <span class="badge badge-light-primary fs-7">Running</span>
+                                {% endif %}
+                            </div>
+                        </div>
 
-<div class="row g-5 g-xl-10 mb-5 mb-xl-10">
-<div class="col-md-2">
-<div class="card card-flush h-100">
-<div class="card-body">
-<div class="text-muted fw-semibold">Pages</div>
-<div class="fs-2hx fw-bold text-gray-900">{{ audit.pages_crawled }}</div>
-</div>
-</div>
-</div>
-<div class="col-md-2">
-<div class="card card-flush h-100">
-<div class="card-body">
-<div class="text-muted fw-semibold">Issues</div>
-<div class="fs-2hx fw-bold text-gray-900">{{ audit.issues_found }}</div>
-</div>
-</div>
-</div>
-<div class="col-md-2">
-<div class="card card-flush h-100">
-<div class="card-body">
-<div class="text-muted fw-semibold">Critical</div>
-<div class="fs-2hx fw-bold text-danger">{{ audit.critical_issues }}</div>
-</div>
-</div>
-</div>
-<div class="col-md-2">
-<div class="card card-flush h-100">
-<div class="card-body">
-<div class="text-muted fw-semibold">High</div>
-<div class="fs-2hx fw-bold text-warning">{{ audit.high_issues }}</div>
-</div>
-</div>
-</div>
-<div class="col-md-2">
-<div class="card card-flush h-100">
-<div class="card-body">
-<div class="text-muted fw-semibold">Medium</div>
-<div class="fs-2hx fw-bold text-primary">{{ audit.medium_issues }}</div>
-</div>
-</div>
-</div>
-<div class="col-md-2">
-<div class="card card-flush h-100">
-<div class="card-body">
-<div class="text-muted fw-semibold">Low</div>
-<div class="fs-2hx fw-bold text-gray-700">{{ audit.low_issues }}</div>
-</div>
-</div>
-</div>
-</div>
+                        <div class="d-flex flex-wrap gap-3 mb-6">
+                            <div class="badge badge-light fw-semibold">
+                                Started {{ audit.started_at|date:"d M Y, g:i A" }}
+                            </div>
+                            {% if audit.completed_at %}
+                                <div class="badge badge-light-success fw-semibold">
+                                    Completed {{ audit.completed_at|date:"d M Y, g:i A" }}
+                                </div>
+                            {% endif %}
+                        </div>
 
-<div class="row g-5 g-xl-10 mb-5 mb-xl-10">
-<div class="col-xl-7">
-<div class="card card-flush h-100">
-<div class="card-header align-items-center">
-<div class="card-title">
-<h3 class="fw-bold text-gray-900 m-0">AI Recommendations</h3>
-</div>
-<div class="card-toolbar">
-{% if audit.ai_model %}
-<span class="badge badge-light-primary">{{ audit.ai_model }}</span>
-{% endif %}
-</div>
-</div>
-<div class="card-body ai-summary-card">
-{% if audit.ai_summary %}
-{% if ai_summary_sections %}
-<div class="accordion accordion-icon-toggle" id="kt_ai_recommendations_accordion">
-{% for section in ai_summary_sections %}
-<div class="mb-5">
-<div class="d-flex align-items-center cursor-pointer" data-bs-toggle="collapse" data-bs-target="#kt_ai_section_{{ forloop.counter }}">
-<span class="accordion-icon">
-<i class="ki-duotone ki-right fs-4"></i>
-</span>
-<div class="fs-5 fw-bold text-gray-800 ms-3">{{ section.title }}</div>
-</div>
-<div id="kt_ai_section_{{ forloop.counter }}" class="collapse{% if forloop.first %} show{% endif %}" data-bs-parent="#kt_ai_recommendations_accordion">
-<div class="pt-3 ps-9 text-gray-700 ai-section-body">{{ section.body }}</div>
-</div>
-</div>
-{% endfor %}
-</div>
-{% else %}
-<div class="fs-6 text-gray-800 ai-section-body">{{ audit.ai_summary|truncatechars:900 }}</div>
-{% endif %}
-<div class="separator my-5"></div>
-<button class="btn btn-sm btn-light-primary" type="button" data-bs-toggle="collapse" data-bs-target="#kt_ai_full_response">
-View Full AI Response
-</button>
-<div class="collapse mt-5" id="kt_ai_full_response">
-<div class="notice d-flex bg-light rounded border border-dashed rounded-3 p-5">
-<div class="text-gray-700 ai-full-response">{{ audit.ai_summary }}</div>
-</div>
-</div>
-{% else %}
-<div class="text-muted">No AI summary is available yet.</div>
-{% endif %}
-{% if audit.ai_error %}
-<div class="alert alert-warning mt-6 mb-0">{{ audit.ai_error }}</div>
-{% endif %}
-</div>
-</div>
-</div>
-<div class="col-xl-5">
-<div class="card card-flush h-100">
-<div class="card-header">
-<h3 class="card-title fw-bold text-gray-900">Top Issue Types</h3>
-</div>
-<div class="card-body">
-{% for row in issue_type_counts %}
-<div class="d-flex justify-content-between border-bottom border-gray-200 pb-3 mb-3">
-<span class="text-gray-700">{{ row.label }}</span>
-<span class="fw-bold">{{ row.total }}</span>
-</div>
-{% empty %}
-<div class="text-muted">No issue types found.</div>
-{% endfor %}
-</div>
-</div>
-</div>
-</div>
+                        <div class="mb-6">
+                            <div class="text-muted fs-8 text-uppercase fw-bold mb-2">Website URL</div>
+                            <a href="{{ audit.website.website_url }}" target="_blank" rel="noopener" class="audit-pill-link text-gray-800 text-hover-primary text-break">
+                                {{ audit.website.website_url }}
+                            </a>
+                        </div>
 
-<div class="card mb-5 mb-xl-10">
-<div class="card-header border-0 pt-6">
-<div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
-<div class="d-flex align-items-center gap-4 flex-wrap">
-<h3 class="fw-bold m-0">Google URL Inspection</h3>
-<div class="d-flex align-items-center position-relative my-1">
-<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
-<span class="path1"></span>
-<span class="path2"></span>
-</i>
-<input type="text" id="kt_gsc_inspection_table_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search URL Inspection" />
-</div>
-</div>
-<form method="get" class="d-flex gap-2 align-items-center">
-{% if severity_filter %}<input type="hidden" name="severity" value="{{ severity_filter }}" />{% endif %}
-<select name="gsc_verdict" class="form-select form-select-solid w-200px">
-<option value="">All Verdicts</option>
-{% for verdict in gsc_verdicts %}
-<option value="{{ verdict }}" {% if gsc_filters.verdict == verdict %}selected{% endif %}>{{ verdict|title }}</option>
-{% endfor %}
-</select>
-<button type="submit" class="btn btn-sm btn-light-primary">Filter</button>
-</form>
-</div>
-</div>
-<div class="card-body pt-0">
-<div class="table-responsive">
-<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6 audit-detail-table" id="kt_gsc_inspection_table">
-<thead>
-<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
-<th class="min-w-280px">URL</th>
-<th class="w-120px">Verdict</th>
-<th class="min-w-180px">Coverage</th>
-<th class="w-130px">Indexing</th>
-<th class="w-120px">Robots</th>
-<th class="w-120px">Fetch</th>
-<th class="min-w-220px">Canonical</th>
-<th class="min-w-180px">Last Crawl / Error</th>
-<th class="w-70px text-end">More</th>
-</tr>
-</thead>
-<tbody class="fw-semibold text-gray-700">
-{% for item in gsc_inspections %}
-<tr data-gsc-inspection-row="true">
-<td><a href="{{ item.inspection_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary audit-url-text" title="{{ item.inspection_url }}">{{ item.inspection_url }}</a></td>
-<td>{% if item.verdict %}<span class="badge badge-light-{% if item.verdict == 'PASS' %}success{% elif item.verdict == 'FAIL' %}danger{% else %}warning{% endif %}">{{ item.verdict }}</span>{% else %}<span class="text-muted">-</span>{% endif %}</td>
-<td><span class="audit-clamped-text" title="{{ item.coverage_state }}">{{ item.coverage_state|default:"-" }}</span></td>
-<td>{{ item.indexing_state|default:"-" }}</td>
-<td>{{ item.robots_txt_state|default:"-" }}</td>
-<td>{{ item.page_fetch_state|default:"-" }}</td>
-<td><span class="audit-clamped-text" title="{{ item.google_canonical|default:item.user_canonical }}">{{ item.google_canonical|default:item.user_canonical|default:"-" }}</span></td>
-<td>{% if item.error_message %}<span class="text-danger audit-clamped-text" title="{{ item.error_message }}">{{ item.error_message }}</span>{% elif item.last_crawl_time %}{{ item.last_crawl_time|date:"d M Y, g:i A" }}{% else %}-{% endif %}</td>
-<td class="text-end">
-<button type="button" class="btn btn-sm btn-icon btn-light js-toggle-gsc-inspection-detail"
-data-url="{{ item.inspection_url }}"
-data-verdict="{{ item.verdict }}"
-data-coverage="{{ item.coverage_state }}"
-data-indexing="{{ item.indexing_state }}"
-data-robots="{{ item.robots_txt_state }}"
-data-fetch="{{ item.page_fetch_state }}"
-data-google-canonical="{{ item.google_canonical }}"
-data-user-canonical="{{ item.user_canonical }}"
-data-mobile="{{ item.mobile_usability_verdict }}"
-data-rich="{{ item.rich_results_verdict }}"
-data-error="{{ item.error_message }}">
-<i class="ki-duotone ki-down fs-3"></i>
-</button>
-</td>
-</tr>
-{% empty %}
-<tr>
-<td colspan="9" class="text-center text-muted py-10">No URL Inspection rows are available for this audit.</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-</div>
-</div>
+                        {% if audit.error_message %}
+                            <div class="alert alert-danger mb-6">{{ audit.error_message }}</div>
+                        {% endif %}
 
-<div class="card mb-5 mb-xl-10">
-<div class="card-header border-0 pt-6">
-<div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
-<div class="d-flex align-items-center position-relative my-1">
-<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
-<span class="path1"></span>
-<span class="path2"></span>
-</i>
-<input type="text" id="kt_seo_issues_table_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Issues" />
-</div>
-<div class="d-flex gap-2 flex-wrap">
-<a class="btn btn-sm {% if not severity_filter %}btn-primary{% else %}btn-light{% endif %}" href="{% url 'technical_seo:audit-detail' audit.id %}">All</a>
-{% for value, label in severity_choices %}
-<a class="btn btn-sm {% if severity_filter == value %}btn-primary{% else %}btn-light{% endif %}" href="{% url 'technical_seo:audit-detail' audit.id %}?severity={{ value }}">{{ label }}</a>
-{% endfor %}
-</div>
-</div>
-</div>
-<div class="card-body pt-0">
-<div class="table-responsive">
-<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6 audit-detail-table" id="kt_seo_issues_table">
-<thead>
-<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
-<th class="w-95px">Severity</th>
-<th class="min-w-180px">Issue</th>
-<th class="min-w-260px">Page</th>
-<th class="min-w-220px">Evidence</th>
-<th class="min-w-240px">Corrective Action</th>
-<th class="w-70px text-end">More</th>
-</tr>
-</thead>
-<tbody class="fw-semibold text-gray-700">
-{% for issue in issues %}
-<tr data-issue-row="true">
-<td>
-{% if issue.severity == 'critical' %}
-<span class="badge badge-light-danger">Critical</span>
-{% elif issue.severity == 'high' %}
-<span class="badge badge-light-warning">High</span>
-{% elif issue.severity == 'medium' %}
-<span class="badge badge-light-primary">Medium</span>
-{% else %}
-<span class="badge badge-light-secondary">Low</span>
-{% endif %}
-</td>
-<td>
-<div class="fw-bold text-gray-900">{{ issue.title }}</div>
-<div class="text-muted fs-7">{{ issue.issue_type }}</div>
-</td>
-<td>
-{% if issue.page %}
-<a href="{{ issue.page.url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary audit-url-text" title="{{ issue.page.url }}">{{ issue.page.url }}</a>
-{% else %}
-<span class="text-muted">-</span>
-{% endif %}
-</td>
-<td><span class="audit-clamped-text" title="{{ issue.evidence }}">{{ issue.evidence }}</span></td>
-<td><span class="audit-clamped-text" title="{{ issue.recommendation }}">{{ issue.recommendation }}</span></td>
-<td class="text-end">
-<button type="button" class="btn btn-sm btn-icon btn-light js-toggle-issue-detail" data-page="{% if issue.page %}{{ issue.page.url }}{% else %}-{% endif %}" data-evidence="{{ issue.evidence }}" data-recommendation="{{ issue.recommendation }}">
-<i class="ki-duotone ki-down fs-3"></i>
-</button>
-</td>
-</tr>
-{% empty %}
-<tr>
-<td colspan="6" class="text-center text-muted py-10">No issues match this filter.</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-</div>
-</div>
+                        <form method="post"
+                            action="{% url 'technical_seo:audit-delete' audit.id %}"
+                            class="js-delete-audit-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'technical_seo:history' %}" />
+                            <button type="submit" class="btn btn-sm btn-light-danger">
+                                Delete Audit
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
-<div class="card">
-<div class="card-header border-0 pt-6">
-<div class="card-title">
-<h3 class="fw-bold m-0">Crawled Pages</h3>
-</div>
-</div>
-<div class="card-body pt-0">
-<div class="table-responsive">
-<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6 audit-detail-table" id="kt_seo_pages_table">
-<thead>
-<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
-<th class="min-w-320px">URL</th>
-<th class="w-90px">Status</th>
-<th class="w-80px">Depth</th>
-<th class="min-w-240px">Title</th>
-<th class="w-70px">H1</th>
-<th class="w-130px">Missing Alt</th>
-<th class="w-90px">Load</th>
-</tr>
-</thead>
-<tbody class="fw-semibold text-gray-700">
-{% for page in pages %}
-<tr data-page-row="true">
-<td><a href="{{ page.url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary audit-url-text" title="{{ page.url }}">{{ page.url }}</a></td>
-<td>{{ page.status_code|default:"-" }}</td>
-<td>{{ page.depth }}</td>
-<td><span class="audit-clamped-text" title="{{ page.title|default:"-" }}">{{ page.title|default:"-" }}</span></td>
-<td>{{ page.h1_count }}</td>
-<td>{{ page.images_missing_alt_count }}</td>
-<td>{% if page.load_time_ms %}{{ page.load_time_ms }}ms{% else %}-{% endif %}</td>
-</tr>
-{% empty %}
-<tr>
-<td colspan="7" class="text-center text-muted py-10">No pages were crawled.</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-</div>
-</div>
+            <div class="col-xl-6">
+                <div class="row g-5 h-100">
 
-</div>
-</div>
-{% endif %}
+                    <div class="col-md-4">
+                        <div class="card audit-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="audit-metric-icon bg-light-primary mb-5">
+                                    <i class="ki-duotone ki-document fs-2x text-primary">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="audit-metric-value text-gray-900">{{ audit.pages_crawled }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Pages</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card audit-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="audit-metric-icon bg-light-warning mb-5">
+                                    <i class="ki-duotone ki-information-5 fs-2x text-warning">
+                                        <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+                                    </i>
+                                </div>
+                                <div class="audit-metric-value text-gray-900">{{ audit.issues_found }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Issues</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card audit-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="audit-metric-icon bg-light-danger mb-5">
+                                    <i class="ki-duotone ki-cross-circle fs-2x text-danger">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="audit-metric-value text-danger">{{ audit.critical_issues }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Critical</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card audit-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="audit-metric-icon bg-light-warning mb-5">
+                                    <i class="ki-duotone ki-arrow-up fs-2x text-warning">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="audit-metric-value text-warning">{{ audit.high_issues }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">High</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card audit-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="audit-metric-icon bg-light-primary mb-5">
+                                    <i class="ki-duotone ki-chart-simple fs-2x text-primary">
+                                        <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span>
+                                    </i>
+                                </div>
+                                <div class="audit-metric-value text-primary">{{ audit.medium_issues }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Medium</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card audit-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="audit-metric-icon bg-light-success mb-5">
+                                    <i class="ki-duotone ki-check-circle fs-2x text-success">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="audit-metric-value text-success">{{ audit.low_issues }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Low</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+                <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+                    <div class="col-xl-7">
+                        <div class="card card-flush h-100">
+                            <div class="card-header align-items-center">
+                                <div class="card-title">
+                                    <h3 class="fw-bold text-gray-900 m-0">AI Recommendations</h3>
+                                </div>
+                                <div class="card-toolbar">
+                                    {% if audit.ai_model %}
+                                        <span class="badge badge-light-primary">{{ audit.ai_model }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="card-body ai-summary-card">
+                                {% if audit.ai_summary %}
+                                    {% if ai_summary_sections %}
+                                        <div class="accordion accordion-icon-toggle"
+                                             id="kt_ai_recommendations_accordion">
+                                            {% for section in ai_summary_sections %}
+                                                <div class="mb-5">
+                                                    <div class="d-flex align-items-center cursor-pointer"
+                                                         data-bs-toggle="collapse"
+                                                         data-bs-target="#kt_ai_section_{{ forloop.counter }}">
+                                                        <span class="accordion-icon">
+                                                            <i class="ki-duotone ki-right fs-4"></i>
+                                                        </span>
+                                                        <div class="fs-5 fw-bold text-gray-800 ms-3">{{ section.title }}</div>
+                                                    </div>
+                                                    <div id="kt_ai_section_{{ forloop.counter }}"
+                                                         class="collapse{% if forloop.first %} show{% endif %}"
+                                                         data-bs-parent="#kt_ai_recommendations_accordion">
+                                                        <div class="pt-3 ps-9 text-gray-700 ai-section-body">{{ section.body }}</div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="fs-6 text-gray-800 ai-section-body">{{ audit.ai_summary|truncatechars:900 }}</div>
+                                    {% endif %}
+                                    <div class="separator my-5"></div>
+                                    <button class="btn btn-sm btn-light-primary"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#kt_ai_full_response">View Full AI Response</button>
+                                    <div class="collapse mt-5" id="kt_ai_full_response">
+                                        <div class="notice d-flex bg-light rounded border border-dashed rounded-3 p-5">
+                                            <div class="text-gray-700 ai-full-response">{{ audit.ai_summary }}</div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="text-muted">No AI summary is available yet.</div>
+                                {% endif %}
+                                {% if audit.ai_error %}
+                                    <div class="alert alert-warning mt-6 mb-0">{{ audit.ai_error }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-5">
+                        <div class="card card-flush h-100">
+                            <div class="card-header">
+                                <h3 class="card-title fw-bold text-gray-900">Top Issue Types</h3>
+                            </div>
+                            <div class="card-body">
+                                {% for row in issue_type_counts %}
+                                    <div class="d-flex justify-content-between border-bottom border-gray-200 pb-3 mb-3">
+                                        <span class="text-gray-700">{{ row.label }}</span>
+                                        <span class="fw-bold">{{ row.total }}</span>
+                                    </div>
+                                {% empty %}
+                                    <div class="text-muted">No issue types found.</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-5 mb-xl-10">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+                            <div class="d-flex align-items-center gap-4 flex-wrap">
+                                <h3 class="fw-bold m-0">Google URL Inspection</h3>
+                                <div class="d-flex align-items-center position-relative my-1">
+                                    <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+                                    <input type="text"
+                                           id="kt_gsc_inspection_table_search"
+                                           class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                           placeholder="Search URL Inspection" />
+                                </div>
+                            </div>
+                            <form method="get" class="d-flex gap-2 align-items-center">
+                                {% if severity_filter %}<input type="hidden" name="severity" value="{{ severity_filter }}" />{% endif %}
+                                {% if issue_type_filter %}<input type="hidden" name="issue_type" value="{{ issue_type_filter }}" />{% endif %}
+                                <select name="gsc_verdict" class="form-select form-select-solid w-200px">
+                                    <option value="">All Verdicts</option>
+                                    {% for verdict in gsc_verdicts %}
+                                        <option value="{{ verdict }}"
+                                                {% if gsc_filters.verdict == verdict %}selected{% endif %}>{{ verdict|title }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-light-primary">Filter</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="table-responsive">
+                            <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6 audit-detail-table"
+                                   id="kt_gsc_inspection_table">
+                                <thead>
+                                    <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                        <th class="min-w-280px">URL</th>
+                                        <th class="w-120px">Verdict</th>
+                                        <th class="min-w-180px">Coverage</th>
+                                        <th class="w-130px">Indexing</th>
+                                        <th class="w-120px">Robots</th>
+                                        <th class="w-120px">Fetch</th>
+                                        <th class="min-w-220px">Canonical</th>
+                                        <th class="min-w-180px">Last Crawl / Error</th>
+                                        <th class="w-70px text-end">More</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-700">
+                                    {% for item in gsc_inspections %}
+                                        <tr data-gsc-inspection-row="true">
+                                            <td><a href="{{ item.inspection_url }}"
+   target="_blank"
+   rel="noopener"
+   class="text-gray-800 text-hover-primary audit-url-text"
+   title="{{ item.inspection_url }}">{{ item.inspection_url }}</a></td>
+                                            <td>
+                                                {% if item.verdict %}
+                                                    <span class="badge badge-light-{% if item.verdict == 'PASS' %}success{% elif item.verdict == 'FAIL' %}danger{% else %}warning{% endif %}">{{ item.verdict }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td><span class="audit-clamped-text" title="{{ item.coverage_state }}">{{ item.coverage_state|default:"-" }}</span></td>
+                                            <td>{{ item.indexing_state|default:"-" }}</td>
+                                            <td>{{ item.robots_txt_state|default:"-" }}</td>
+                                            <td>{{ item.page_fetch_state|default:"-" }}</td>
+                                            <td><span class="audit-clamped-text"
+      title="{{ item.google_canonical|default:item.user_canonical }}">{{ item.google_canonical|default:item.user_canonical|default:"-" }}</span></td>
+                                            <td>
+                                                {% if item.error_message %}
+                                                    <span class="text-danger audit-clamped-text"
+                                                          title="{{ item.error_message }}">{{ item.error_message }}</span>
+                                                {% elif item.last_crawl_time %}
+                                                    {{ item.last_crawl_time|date:"d M Y, g:i A" }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                <button type="button"
+                                                        class="btn btn-sm btn-icon btn-light js-toggle-gsc-inspection-detail"
+                                                        data-url="{{ item.inspection_url }}"
+                                                        data-verdict="{{ item.verdict }}"
+                                                        data-coverage="{{ item.coverage_state }}"
+                                                        data-indexing="{{ item.indexing_state }}"
+                                                        data-robots="{{ item.robots_txt_state }}"
+                                                        data-fetch="{{ item.page_fetch_state }}"
+                                                        data-google-canonical="{{ item.google_canonical }}"
+                                                        data-user-canonical="{{ item.user_canonical }}"
+                                                        data-mobile="{{ item.mobile_usability_verdict }}"
+                                                        data-rich="{{ item.rich_results_verdict }}"
+                                                        data-error="{{ item.error_message }}">
+                                                    <i class="ki-duotone ki-down fs-3"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="9" class="text-center text-muted py-10">No URL Inspection rows are available for this audit.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-5 mb-xl-10">
+                   <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <div class="d-flex align-items-center position-relative my-1">
+                                    <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+                                    <input type="text"
+                                        id="kt_seo_issues_table_search"
+                                        class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                        placeholder="Search Issues" />
+                                </div>
+
+                                <form method="get" class="d-flex align-items-center gap-2 my-1">
+                                    {% if severity_filter %}<input type="hidden" name="severity" value="{{ severity_filter }}" />{% endif %}
+                                    {% if gsc_filters.verdict %}<input type="hidden" name="gsc_verdict" value="{{ gsc_filters.verdict }}" />{% endif %}
+
+                                    <div class="position-relative">
+                                        <i class="ki-duotone ki-filter fs-3 text-gray-500 position-absolute top-50 translate-middle-y ms-4">
+                                            <span class="path1"></span>
+                                            <span class="path2"></span>
+                                        </i>
+                                        <select name="issue_type"
+                                                class="form-select form-select-solid border border-gray-400 w-225px ps-12"
+                                                onchange="this.form.submit()">
+                                            <option value="">All issue types</option>
+                                            {% for row in issue_type_counts %}
+                                                <option value="{{ row.issue_type }}" {% if issue_type_filter == row.issue_type %}selected{% endif %}>
+                                                    {{ row.label }} ({{ row.total }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a class="btn btn-sm {% if not severity_filter %}btn-primary{% else %}btn-light{% endif %}"
+                                href="{% url 'technical_seo:audit-detail' audit.id %}{% if issue_type_filter or gsc_filters.verdict %}?{% if issue_type_filter %}issue_type={{ issue_type_filter|urlencode }}{% endif %}{% if issue_type_filter and gsc_filters.verdict %}&{% endif %}{% if gsc_filters.verdict %}gsc_verdict={{ gsc_filters.verdict|urlencode }}{% endif %}{% endif %}">All</a>
+                                {% for value, label in severity_choices %}
+                                    <a class="btn btn-sm {% if severity_filter == value %}btn-primary{% else %}btn-light{% endif %}"
+                                    href="{% url 'technical_seo:audit-detail' audit.id %}?severity={{ value }}{% if issue_type_filter %}&issue_type={{ issue_type_filter|urlencode }}{% endif %}{% if gsc_filters.verdict %}&gsc_verdict={{ gsc_filters.verdict|urlencode }}{% endif %}">{{ label }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="table-responsive">
+                            <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6 audit-detail-table"
+                                   id="kt_seo_issues_table">
+                                <thead>
+                                    <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                        <th class="w-95px">Severity</th>
+                                        <th class="min-w-180px">Issue</th>
+                                        <th class="min-w-260px">Page</th>
+                                        <th class="min-w-220px">Evidence</th>
+                                        <th class="min-w-240px">Corrective Action</th>
+                                        <th class="w-70px text-end">More</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-700">
+                                    {% for issue in issues %}
+                                        <tr data-issue-row="true">
+                                            <td>
+                                                {% if issue.severity == 'critical' %}
+                                                    <span class="badge badge-light-danger">Critical</span>
+                                                {% elif issue.severity == 'high' %}
+                                                    <span class="badge badge-light-warning">High</span>
+                                                {% elif issue.severity == 'medium' %}
+                                                    <span class="badge badge-light-primary">Medium</span>
+                                                {% else %}
+                                                    <span class="badge badge-light-secondary">Low</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-gray-900">{{ issue.title }}</div>
+                                                <div class="text-muted fs-7">{{ issue.issue_type }}</div>
+                                            </td>
+                                            <td>
+                                                {% if issue.page %}
+                                                    <a href="{{ issue.page.url }}"
+                                                       target="_blank"
+                                                       rel="noopener"
+                                                       class="text-gray-800 text-hover-primary audit-url-text"
+                                                       title="{{ issue.page.url }}">{{ issue.page.url }}</a>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td><span class="audit-clamped-text" title="{{ issue.evidence }}">{{ issue.evidence }}</span></td>
+                                            <td><span class="audit-clamped-text" title="{{ issue.recommendation }}">{{ issue.recommendation }}</span></td>
+                                            <td class="text-end">
+                                                <button type="button"
+                                                        class="btn btn-sm btn-icon btn-light js-toggle-issue-detail"
+                                                        data-page="{% if issue.page %}{{ issue.page.url }}{% else %}-{% endif %}"
+                                                        data-evidence="{{ issue.evidence }}"
+                                                        data-recommendation="{{ issue.recommendation }}">
+                                                    <i class="ki-duotone ki-down fs-3"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-10">No issues match this filter.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title">
+                            <h3 class="fw-bold m-0">Crawled Pages</h3>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="table-responsive">
+                            <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6 audit-detail-table"
+                                   id="kt_seo_pages_table">
+                                <thead>
+                                    <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                        <th class="min-w-320px">URL</th>
+                                        <th class="w-90px">Status</th>
+                                        <th class="w-80px">Depth</th>
+                                        <th class="min-w-240px">Title</th>
+                                        <th class="w-70px">H1</th>
+                                        <th class="w-130px">Missing Alt</th>
+                                        <th class="w-90px">Load</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-700">
+                                    {% for page in pages %}
+                                        <tr data-page-row="true">
+                                            <td><a href="{{ page.url }}"
+   target="_blank"
+   rel="noopener"
+   class="text-gray-800 text-hover-primary audit-url-text"
+   title="{{ page.url }}">{{ page.url }}</a></td>
+                                            <td>{{ page.status_code|default:"-" }}</td>
+                                            <td>{{ page.depth }}</td>
+                                            <td><span class="audit-clamped-text" title="{{ page.title|default:"-" }}">{{ page.title|default:"-" }}</span></td>
+                                            <td>{{ page.h1_count }}</td>
+                                            <td>{{ page.images_missing_alt_count }}</td>
+                                            <td>
+                                                {% if page.load_time_ms %}
+                                                    {{ page.load_time_ms }}ms
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-10">No pages were crawled.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
-
 {% block extra_js_scripts %}
-<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
-<script>
+    <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+    <script>
 jQuery(function () {
 {% if audit.status == 'running' %}
 
@@ -516,29 +728,7 @@ pageLength: 10,
 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
 autoWidth: false,
 scrollX: true,
-dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>",
-order: [],
-columnDefs: [
-{ orderable: false, targets: [3, 4, 5] },
-{ searchable: false, targets: 5 }
-]
-});
-jQuery("#kt_seo_issues_table_search").on("keyup", function () {
-issuesTable.search(this.value).draw();
-});
-
-jQuery(document).on("click", ".js-toggle-issue-detail", function () {
-var row = issuesTable.row(jQuery(this).closest("tr"));
-if (row.child.isShown()) {
-row.child.hide();
-return;
-}
-
-var page = this.dataset.page || "-";
-var evidence = this.dataset.evidence || "-";
-var recommendation = this.dataset.recommendation || "-";
-row.child(
-'<div class="bg-light rounded p-5">' +
+dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>", order: [], columnDefs: [ { orderable: false, targets: [3, 4, 5] }, { searchable: false, targets: 5 } ] }); jQuery("#kt_seo_issues_table_search").on("keyup", function () { issuesTable.search(this.value).draw(); });  jQuery(document).on("click", ".js-toggle-issue-detail", function () { var row = issuesTable.row(jQuery(this).closest("tr")); if (row.child.isShown()) { row.child.hide(); return; }  var page = this.dataset.page || "-"; var evidence = this.dataset.evidence || "-"; var recommendation = this.dataset.recommendation || "-"; row.child( '<div class="bg-light rounded p-5">' +
 '<div class="mb-4"><div class="text-muted fs-8 text-uppercase fw-bold mb-1">Page</div><div class="js-issue-detail-page"></div></div>' +
 '<div class="row g-5">' +
 '<div class="col-md-6"><div class="text-muted fs-8 text-uppercase fw-bold mb-1">Evidence</div><div class="text-gray-800 audit-expanded-body"></div></div>' +
@@ -569,51 +759,7 @@ pageLength: 10,
 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
 autoWidth: false,
 scrollX: true,
-dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>",
-order: [[2, "asc"]]
-});
-}
-
-var gscInspectionTableElement = document.querySelector("#kt_gsc_inspection_table");
-if (gscInspectionTableElement && gscInspectionTableElement.querySelector("[data-gsc-inspection-row='true']")) {
-var gscInspectionTable = jQuery(gscInspectionTableElement).DataTable({
-pageLength: 10,
-lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-autoWidth: false,
-scrollX: true,
-dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>",
-order: [[0, "asc"]],
-columnDefs: [
-{ orderable: false, searchable: false, targets: 8 }
-]
-});
-jQuery("#kt_gsc_inspection_table_search").on("keyup", function () {
-gscInspectionTable.search(this.value).draw();
-});
-
-jQuery(document).on("click", ".js-toggle-gsc-inspection-detail", function () {
-var row = gscInspectionTable.row(jQuery(this).closest("tr"));
-if (row.child.isShown()) {
-row.child.hide();
-return;
-}
-
-var url = this.dataset.url || "-";
-var fields = [
-["URL", url],
-["Verdict", this.dataset.verdict || "-"],
-["Coverage", this.dataset.coverage || "-"],
-["Indexing State", this.dataset.indexing || "-"],
-["Robots.txt State", this.dataset.robots || "-"],
-["Page Fetch State", this.dataset.fetch || "-"],
-["Google Canonical", this.dataset.googleCanonical || "-"],
-["User Canonical", this.dataset.userCanonical || "-"],
-["Mobile Usability", this.dataset.mobile || "-"],
-["Rich Results", this.dataset.rich || "-"],
-["Error", this.dataset.error || "-"]
-];
-var detailsHtml = fields.map(function (field) {
-return '<div class="col-md-6 mb-4"><div class="text-muted fs-8 text-uppercase fw-bold mb-1">' + field[0] + '</div><div class="text-gray-800 audit-expanded-body js-gsc-detail-field"></div></div>';
+dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>", order: [[2, "asc"]] }); }  var gscInspectionTableElement = document.querySelector("#kt_gsc_inspection_table"); if (gscInspectionTableElement && gscInspectionTableElement.querySelector("[data-gsc-inspection-row='true']")) { var gscInspectionTable = jQuery(gscInspectionTableElement).DataTable({ pageLength: 10, lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], autoWidth: false, scrollX: true, dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>", order: [[0, "asc"]], columnDefs: [ { orderable: false, searchable: false, targets: 8 } ] }); jQuery("#kt_gsc_inspection_table_search").on("keyup", function () { gscInspectionTable.search(this.value).draw(); });  jQuery(document).on("click", ".js-toggle-gsc-inspection-detail", function () { var row = gscInspectionTable.row(jQuery(this).closest("tr")); if (row.child.isShown()) { row.child.hide(); return; }  var url = this.dataset.url || "-"; var fields = [ ["URL", url], ["Verdict", this.dataset.verdict || "-"], ["Coverage", this.dataset.coverage || "-"], ["Indexing State", this.dataset.indexing || "-"], ["Robots.txt State", this.dataset.robots || "-"], ["Page Fetch State", this.dataset.fetch || "-"], ["Google Canonical", this.dataset.googleCanonical || "-"], ["User Canonical", this.dataset.userCanonical || "-"], ["Mobile Usability", this.dataset.mobile || "-"], ["Rich Results", this.dataset.rich || "-"], ["Error", this.dataset.error || "-"] ]; var detailsHtml = fields.map(function (field) { return '<div class="col-md-6 mb-4"><div class="text-muted fs-8 text-uppercase fw-bold mb-1">' + field[0] + '</div><div class="text-gray-800 audit-expanded-body js-gsc-detail-field"></div></div>';
 }).join("");
 row.child(
 '<div class="bg-light rounded p-5">' +
@@ -627,6 +773,5 @@ jQuery(this).text(fields[index][1]);
 });
 }
 });
-</script>
+    </script>
 {% endblock %}
-

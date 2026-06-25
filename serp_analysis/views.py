@@ -95,7 +95,7 @@ def average_metric(snapshots, key):
     values = [snapshot.get(key) or 0 for snapshot in snapshots]
     if not values:
         return 0
-    return round(sum(values) / len(values), 1)
+    return round(sum(values) / len(values))
 
 
 def yes_no_average(snapshots, key):
@@ -110,10 +110,10 @@ def average_score(snapshots, key):
         (snapshot.get('scores') or {}).get(key)
         for snapshot in snapshots
     ]
-    values = [value for value in values if isinstance(value, (int, float))]
+    values = [int(value) for value in values if isinstance(value, (int, float))]
     if not values:
         return 0
-    return round(sum(values) / len(values), 1)
+    return round(sum(values) / len(values))
 
 
 def score_status(own_score, competitor_score):
@@ -129,13 +129,13 @@ def build_scorecard_rows(analysis):
     competitors = analysis.competitor_snapshots or []
     rows = []
     for key, label in SCORE_LABELS:
-        own_score = own_scores.get(key, 0)
+        own_score = int(own_scores.get(key, 0) or 0)
         competitor_score = average_score(competitors, key)
         rows.append({
             'metric': label,
             'own': own_score,
             'competitors': competitor_score,
-            'gap': round(own_score - competitor_score, 1),
+            'gap': own_score - competitor_score,
             'status': score_status(own_score, competitor_score),
         })
     return rows
