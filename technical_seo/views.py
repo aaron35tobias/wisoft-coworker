@@ -209,6 +209,10 @@ def audit_detail_view(request, audit_id):
     if severity_filter:
         issues = issues.filter(severity=severity_filter)
 
+    issue_type_filter = request.GET.get('issue_type', '').strip()
+    if issue_type_filter:
+        issues = issues.filter(issue_type=issue_type_filter)
+
     gsc_inspection_verdict = request.GET.get('gsc_verdict', '').strip()
     if gsc_inspection_verdict:
         gsc_inspections = gsc_inspections.filter(verdict=gsc_inspection_verdict)
@@ -227,6 +231,7 @@ def audit_detail_view(request, audit_id):
         'severity_filter': severity_filter,
         'severity_choices': TechnicalSEOIssue.SEVERITY_CHOICES,
         'back_to_audits_url': reverse('technical_seo:history'),
+        'issue_type_filter': issue_type_filter,
     }
     return render(request, 'technical_seo/audit_detail.html', context)
 

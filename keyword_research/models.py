@@ -187,3 +187,40 @@ class KeywordPlannerMetric(models.Model):
 
     def __str__(self):
         return self.keyword
+
+
+class KeywordCartItem(models.Model):
+    SOURCE_AI = 'ai'
+    SOURCE_GOOGLE = 'google'
+
+    SOURCE_CHOICES = [
+        (SOURCE_AI, 'AI Keyword Ideas'),
+        (SOURCE_GOOGLE, 'Google Keyword Planner'),
+    ]
+
+    run = models.ForeignKey(
+        KeywordResearchRun,
+        on_delete=models.CASCADE,
+        related_name='cart_items',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='keyword_cart_items',
+    )
+    keyword = models.CharField(max_length=255)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['keyword']
+        constraints = [
+            models.UniqueConstraint(fields=['run', 'user', 'keyword'], name='unique_keyword_cart_item'),
+        ]
+        indexes = [
+            models.Index(fields=['run', 'user'], name='keyword_res_run_id_7d4d6b_idx'),
+            models.Index(fields=['keyword'], name='keyword_res_keyword_0f783b_idx'),
+        ]
+
+    def __str__(self):
+        return self.keyword

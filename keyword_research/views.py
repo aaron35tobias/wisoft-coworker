@@ -6,9 +6,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import JsonResponse
 from django.urls import reverse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
-from .models import KeywordResearchProject, KeywordResearchRun
+from .models import KeywordCartItem, KeywordResearchProject, KeywordResearchRun
 from .tasks import run_keyword_research_task
 from wisoft_co_worker.task_utils import enqueue_background_task
 
@@ -137,12 +137,77 @@ def detail_view(request, run_id):
         project__added_by=request.user,
     )
     planner_metrics = [decorate_planner_metric(metric) for metric in run.planner_metrics.all()]
+    cart_items = list(run.cart_items.filter(user=request.user))
     return render(request, 'keyword_research/detail.html', {
         'run': run,
         'keyword_ideas': run.keyword_ideas.all(),
         'clusters': run.clusters.all(),
         'planner_metrics': planner_metrics,
         'pages': run.pages.all(),
+        'cart_items': cart_items,
+        'cart_keyword_values': [item.keyword.lower() for item in cart_items],
+    })
+
+
+@login_required(login_url='sign-in')
+@require_POST
+def add_cart_keyword_view(request, run_id):
+    run = get_object_or_404(
+        KeywordResearchRun,
+        id=run_id,
+        project__added_by=request.user,
+    )
+    keyword = request.POST.get('keyword', '').strip()
+    source = request.POST.get('source', '').strip()
+    if not keyword:
+        return JsonResponse({'success': False, 'error': 'Keyword is required.'}, status=400)
+
+    item = KeywordCartItem.objects.filter(
+        run=run,
+        user=request.user,
+        keyword__iexact=keyword,
+    ).first()
+    if item is None:
+        item = KeywordCartItem.objects.create(
+            run=run,
+            user=request.user,
+            keyword=keyword[:255],
+            source=source[:20],
+        )
+    elif source and not item.source:
+        item.source = source[:20]
+        item.save(update_fields=['source'])
+
+    return JsonResponse({
+        'success': True,
+        'keyword': item.keyword,
+        'source': item.source,
+        'cart_count': run.cart_items.filter(user=request.user).count(),
+    })
+
+
+@login_required(login_url='sign-in')
+@require_POST
+def remove_cart_keyword_view(request, run_id):
+    run = get_object_or_404(
+        KeywordResearchRun,
+        id=run_id,
+        project__added_by=request.user,
+    )
+    keyword = request.POST.get('keyword', '').strip()
+    if not keyword:
+        return JsonResponse({'success': False, 'error': 'Keyword is required.'}, status=400)
+
+    KeywordCartItem.objects.filter(
+        run=run,
+        user=request.user,
+        keyword__iexact=keyword,
+    ).delete()
+
+    return JsonResponse({
+        'success': True,
+        'keyword': keyword,
+        'cart_count': run.cart_items.filter(user=request.user).count(),
     })
 
 

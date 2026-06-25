@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}Content Gap Detail | Wisoft Co-Worker{% endblock %}
-
 {% block extra_css_scripts %}
-<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
-<style>
+    <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
+          rel="stylesheet"
+          type="text/css" />
+    <style>
 .content-gap-loading-overlay {
     align-items: center;
     background: rgba(255, 255, 255, 0.92);
@@ -27,404 +27,570 @@
     max-width: 450px;
     width: calc(100% - 32px);
 }
-</style>
-{% endblock %}
+.content-gap-overview-card {
+    border: 0;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, #f8fbff 0%, #eef5ff 100%);
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    position: relative;
+}
 
+[data-bs-theme="dark"] .content-gap-overview-card {
+    background: linear-gradient(135deg, #151923 0%, #1e2533 100%);
+}
+
+.content-gap-overview-card::after {
+    content: "";
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    right: -100px;
+    top: -100px;
+    border-radius: 50%;
+    background: rgba(80, 205, 137, 0.13);
+}
+
+.content-gap-overview-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(80, 205, 137, 0.13);
+}
+
+.content-gap-metric-card {
+    border: 0;
+    border-radius: 1.15rem;
+    background: #ffffff;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+    transition: all 0.2s ease;
+}
+
+[data-bs-theme="dark"] .content-gap-metric-card {
+    background: #1b1e2a;
+}
+
+.content-gap-metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+}
+
+.content-gap-metric-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.content-gap-metric-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.content-gap-pill-link {
+    display: inline-block;
+    max-width: 100%;
+    padding: 0.55rem 0.8rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.68);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+[data-bs-theme="dark"] .content-gap-pill-link {
+    background: rgba(255, 255, 255, 0.04);
+}
+    </style>
+{% endblock %}
 {% block header %}
-{% include 'includes/header.html' with page_title='Content Gap Detail' parent_title='Content Gaps' action_url=back_to_history_url action_label='History' %}
+    {% include 'includes/header.html' with page_title='Content Gap Detail' parent_title='Content Gaps' action_url=back_to_history_url action_label='History' %}
 {% endblock %}
-
 {% block content %}
-{% if analysis.status == 'running' %}
-<div class="content-gap-loading-overlay" id="kt_content_gap_loading_overlay" style="display:flex;">
-    <div class="card shadow-sm content-gap-loading-panel">
-        <div class="card-body p-8 text-center">
-            <div class="spinner-border text-primary mb-5" role="status"></div>
-
-            <h3 class="fw-bold text-gray-900 mb-3">Running Content Gap Analysis</h3>
-
-            <div class="text-muted fs-6 mb-5">
-                Fetching your page, comparing competitor coverage, and preparing AI recommendations.
-            </div>
-
-            <div class="mb-3 text-muted fs-7">
-                Competitors: <span id="content_gap_competitor_count">{{ analysis.competitor_count }}</span>
-                |
-                Gaps: <span id="content_gap_count">{{ analysis.content_gaps|length }}</span>
-                |
-                Keywords: <span id="content_gap_keyword_count">{{ analysis.keyword_opportunities|length }}</span>
-            </div>
-
-            <div class="progress h-8px bg-light-primary">
-                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
-                     role="progressbar"
-                     style="width: 100%">
+    {% if analysis.status == 'running' %}
+        <div class="content-gap-loading-overlay"
+             id="kt_content_gap_loading_overlay"
+             style="display:flex">
+            <div class="card shadow-sm content-gap-loading-panel">
+                <div class="card-body p-8 text-center">
+                    <div class="spinner-border text-primary mb-5" role="status"></div>
+                    <h3 class="fw-bold text-gray-900 mb-3">Running Content Gap Analysis</h3>
+                    <div class="text-muted fs-6 mb-5">
+                        Fetching your page, comparing competitor coverage, and preparing AI recommendations.
+                    </div>
+                    <div class="mb-3 text-muted fs-7">
+                        Competitors: <span id="content_gap_competitor_count">{{ analysis.competitor_count }}</span>
+                        |
+                        Gaps: <span id="content_gap_count">{{ analysis.content_gaps|length }}</span>
+                        |
+                        Keywords: <span id="content_gap_keyword_count">{{ analysis.keyword_opportunities|length }}</span>
+                    </div>
+                    <div class="progress h-8px bg-light-primary">
+                        <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+                             role="progressbar"
+                             style="width: 100%"></div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-{% else %}
-<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
-<div class="container-xxl" id="kt_content_container">
+    {% else %}
+        <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+            <div class="container-xxl" id="kt_content_container">
+        <div class="row g-5 mb-5">
 
-<div class="card mb-5">
-<div class="card-body p-8">
-<div class="d-flex align-items-start justify-content-between flex-wrap gap-4">
-<div class="min-w-0">
-<div class="d-flex align-items-center gap-3 mb-3">
-{% if analysis.status == 'completed' %}
-<span class="badge badge-light-success">Completed</span>
-{% elif analysis.status == 'failed' %}
-<span class="badge badge-light-danger">Failed</span>
-{% else %}
-<span class="badge badge-light-primary">Running</span>
-{% endif %}
-<span class="text-muted">{{ analysis.started_at|date:"d M Y, g:i A" }}</span>
-</div>
-<h2 class="fw-bold text-gray-900 mb-2 text-break">{{ analysis.own_url }}</h2>
-<div class="text-muted">
-{{ analysis.project.target_topic|default:"No target topic" }}{% if analysis.project.target_market %} · {{ analysis.project.target_market }}{% endif %}
-</div>
-</div>
-<form method="post" action="{% url 'content_gap:analysis-delete' analysis.id %}" class="js-delete-analysis-form">
-{% csrf_token %}
-<input type="hidden" name="next" value="{% url 'content_gap:history' %}" />
-<button type="submit" class="btn btn-sm btn-light-danger">Delete</button>
-</form>
-</div>
-</div>
-</div>
+            <div class="col-xl-6">
+                <div class="card content-gap-overview-card h-100">
+                    <div class="card-body p-8 position-relative">
+                        <div class="d-flex align-items-start justify-content-between gap-4 mb-6">
+                            <div class="d-flex align-items-center gap-4 min-w-0">
+                                <div class="content-gap-overview-icon flex-shrink-0">
+                                    <i class="ki-duotone ki-chart-pie-4 fs-2x text-success">
+                                        <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+                                    </i>
+                                </div>
 
-{% if analysis.status == 'running' %}
-<div class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6 mb-5">
-<div class="d-flex align-items-center">
-<span class="spinner-border spinner-border-sm text-primary me-4"></span>
-<div>
-<h4 class="text-gray-900 fw-bold mb-1">Analysis is running</h4>
-<div class="fs-7 text-gray-700">Fetching pages, comparing competitor coverage, and preparing AI recommendations. This page refreshes automatically.</div>
-</div>
-</div>
-</div>
-{% endif %}
+                                <div class="min-w-0">
+                                    <div class="text-muted fs-7 text-uppercase fw-bold">Content Gap Analysis</div>
+                                    <h2 class="fw-bold text-gray-900 mb-0 text-break">
+                                        <a href="{{ analysis.own_url }}" target="_blank" rel="noopener" class="text-gray-900 text-hover-primary">
+                                            {{ analysis.own_url }}
+                                        </a>
+                                    </h2>
+                                </div>
+                            </div>
 
-{% if analysis.status == 'failed' %}
-<div class="alert alert-danger d-flex align-items-center p-5 mb-5">
-<div class="d-flex flex-column">
-<h4 class="mb-1 text-danger">Analysis failed</h4>
-<span>{{ analysis.error_message|default:"The analysis could not be completed." }}</span>
-</div>
-</div>
-{% endif %}
+                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                {% if analysis.status == 'completed' %}
+                                    <span class="badge badge-light-success">Completed</span>
+                                {% elif analysis.status == 'failed' %}
+                                    <span class="badge badge-light-danger">Failed</span>
+                                {% else %}
+                                    <span class="badge badge-light-primary">Running</span>
+                                {% endif %}
+                            </div>
+                        </div>
 
-{% if analysis.display_ai_error %}
-<div class="alert alert-warning d-flex align-items-center p-5 mb-5">
-<div class="d-flex flex-column">
-<h4 class="mb-1 text-warning">AI note</h4>
-<span>{{ analysis.display_ai_error }}</span>
-</div>
-</div>
-{% endif %}
+                        <div class="d-flex flex-wrap gap-3 mb-6">
+                            <div class="badge badge-light fw-semibold">
+                                Started {{ analysis.started_at|date:"d M Y, g:i A" }}
+                            </div>
 
-<div class="row g-5 mb-5">
-<div class="col-md-3">
-<div class="card card-flush h-100">
-<div class="card-body">
-<div class="text-muted fs-7 text-uppercase fw-bold mb-2">Competitors</div>
-<div class="fs-2 fw-bold text-gray-900">{{ analysis.competitor_count }}</div>
-</div>
-</div>
-</div>
-<div class="col-md-3">
-<div class="card card-flush h-100">
-<div class="card-body">
-<div class="text-muted fs-7 text-uppercase fw-bold mb-2">Content Gaps</div>
-<div class="fs-2 fw-bold text-gray-900">{{ analysis.content_gaps|length }}</div>
-</div>
-</div>
-</div>
-<div class="col-md-3">
-<div class="card card-flush h-100">
-<div class="card-body">
-<div class="text-muted fs-7 text-uppercase fw-bold mb-2">Keywords</div>
-<div class="fs-2 fw-bold text-gray-900">{{ analysis.keyword_opportunities|length }}</div>
-</div>
-</div>
-</div>
-<div class="col-md-3">
-<div class="card card-flush h-100">
-<div class="card-body">
-<div class="text-muted fs-7 text-uppercase fw-bold mb-2">Own Word Count</div>
-<div class="fs-2 fw-bold text-gray-900">{{ analysis.own_page_snapshot.word_count|default:"0" }}</div>
-</div>
-</div>
-</div>
-</div>
+                            {% if analysis.project.target_topic %}
+                                <div class="badge badge-light-success fw-semibold">
+                                    {{ analysis.project.target_topic }}
+                                </div>
+                            {% endif %}
 
-<div class="card mb-5">
-<div class="card-header">
-<h3 class="card-title fw-bold text-gray-900">AI Summary</h3>
-</div>
-<div class="card-body">
-<div class="text-gray-700 fs-6">{{ analysis.display_ai_summary|linebreaksbr }}</div>
-</div>
-</div>
+                            {% if analysis.project.target_market %}
+                                <div class="badge badge-light-primary fw-semibold">
+                                    {{ analysis.project.target_market }}
+                                </div>
+                            {% endif %}
+                        </div>
 
-<div class="card mb-5">
-<div class="card-header border-0 pt-6">
-<div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
-<h3 class="fw-bold m-0">Content Gaps</h3>
-<div class="d-flex align-items-center position-relative my-1">
-<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
-<input type="text" id="kt_content_gaps_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Gaps" />
-</div>
-</div>
-</div>
-<div class="card-body pt-0">
-<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_content_gaps_table">
-<thead>
-<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
-<th>Priority</th>
-<th>Topic</th>
-<th>Why It Matters</th>
-<th>Competitors</th>
-<th>Recommendation</th>
-</tr>
-</thead>
-<tbody class="fw-semibold text-gray-700">
-{% for gap in analysis.content_gaps %}
-<tr data-gap-row="true">
-<td><span class="badge badge-light-{% if gap.priority == 'High' %}danger{% elif gap.priority == 'Medium' %}warning{% else %}primary{% endif %}">{{ gap.priority|default:"Medium" }}</span></td>
-<td class="text-gray-900">{{ gap.topic|default:"-" }}</td>
-<td>{{ gap.why_it_matters|default:"-" }}</td>
-<td>{{ gap.competitors_covering|default:"-" }}</td>
-<td>{{ gap.recommendation|default:"-" }}</td>
-</tr>
-{% empty %}
-<tr><td colspan="5" class="text-center text-muted py-10">No content gaps were saved for this analysis.</td></tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-</div>
+                        <div class="mb-6">
+                            <div class="text-muted fs-8 text-uppercase fw-bold mb-2">Own Page URL</div>
+                            <a href="{{ analysis.own_url }}" target="_blank" rel="noopener" class="content-gap-pill-link text-gray-800 text-hover-primary text-break">
+                                {{ analysis.own_url }}
+                            </a>
+                        </div>
 
-<div class="row g-5 mb-5">
-<div class="col-xl-6">
-<div class="card h-100">
-<div class="card-header border-0 pt-6">
-<h3 class="card-title fw-bold text-gray-900">Keyword Opportunities</h3>
-</div>
-<div class="card-body pt-0">
-<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_keyword_opportunities_table">
-<thead>
-<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
-<th>Keyword</th>
-<th>Intent</th>
-<th>Opportunity</th>
-</tr>
-</thead>
-<tbody class="fw-semibold text-gray-700">
-{% for keyword in analysis.keyword_opportunities %}
-<tr data-keyword-row="true">
-<td class="text-gray-900">{{ keyword.keyword|default:"-" }}</td>
-<td><span class="badge badge-light-info">{{ keyword.intent|default:"-" }}</span></td>
-<td>{{ keyword.opportunity|default:"-" }}</td>
-</tr>
-{% empty %}
-<tr><td colspan="3" class="text-center text-muted py-10">No keyword opportunities were saved.</td></tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-</div>
-</div>
+                        {% if analysis.status == 'failed' %}
+                            <div class="alert alert-danger mb-5">
+                                <h4 class="mb-1 text-danger">Analysis failed</h4>
+                                <span>{{ analysis.error_message|default:"The analysis could not be completed." }}</span>
+                            </div>
+                        {% endif %}
 
-<div class="col-xl-6">
-<div class="card h-100">
-<div class="card-header border-0 pt-6">
-<h3 class="card-title fw-bold text-gray-900">Execution Plan</h3>
-</div>
-<div class="card-body pt-0">
-<div class="timeline-label">
-{% for step in analysis.execution_plan %}
-<div class="timeline-item">
-<div class="timeline-label fw-bold text-gray-800 fs-6">{{ forloop.counter }}</div>
-<div class="timeline-badge"><i class="fa fa-genderless text-primary fs-1"></i></div>
-<div class="timeline-content fw-semibold text-gray-700 ps-3">{{ step }}</div>
-</div>
-{% empty %}
-<div class="text-muted py-10 text-center">No execution plan was saved.</div>
-{% endfor %}
-</div>
-</div>
-</div>
-</div>
-</div>
+                        {% if analysis.display_ai_error %}
+                            <div class="alert alert-warning mb-5">
+                                <h4 class="mb-1 text-warning">AI note</h4>
+                                <span>{{ analysis.display_ai_error }}</span>
+                            </div>
+                        {% endif %}
 
-<div class="row g-5 mb-5">
-<div class="col-xl-6">
-<div class="card h-100">
-<div class="card-header">
-<h3 class="card-title fw-bold text-gray-900">Recommended Sections</h3>
-</div>
-<div class="card-body">
-{% for section in analysis.recommended_sections %}
-<div class="d-flex justify-content-between border-bottom border-gray-200 pb-4 mb-4">
-<div class="pe-4">
-<div class="fw-bold text-gray-900">{{ section.section|default:"-" }}</div>
-<div class="text-muted fs-7">{{ section.purpose|default:"-" }}</div>
-<div class="text-muted fs-8 mt-2">{{ section.source_competitors|default:"Derived from competitor comparison" }}</div>
-</div>
-<span class="badge badge-light-{% if section.priority == 'High' %}danger{% elif section.priority == 'Medium' %}warning{% else %}primary{% endif %} h-25px">{{ section.priority|default:"Medium" }}</span>
-</div>
-{% empty %}
-<div class="text-muted text-center py-10">No recommended sections were saved.</div>
-{% endfor %}
-</div>
-</div>
-</div>
+                        <form method="post"
+                            action="{% url 'content_gap:analysis-delete' analysis.id %}"
+                            class="js-delete-analysis-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'content_gap:history' %}" />
+                            <button type="submit" class="btn btn-sm btn-light-danger">
+                                Delete Analysis
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
-<div class="col-xl-6">
-<div class="card h-100">
-<div class="card-header">
-<h3 class="card-title fw-bold text-gray-900">{{ analysis.wireframe.title|default:"Page Wireframe" }}</h3>
-</div>
-<div class="card-body">
-{% for section in analysis.wireframe.sections %}
-<div class="mb-6">
-<div class="fw-bold text-gray-900 mb-1">{{ forloop.counter }}. {{ section.name|default:"Section" }}</div>
-<div class="text-muted fs-7 mb-2">{{ section.goal|default:"-" }}</div>
-{% if section.elements %}
-<div class="d-flex flex-wrap gap-2">
-{% for element in section.elements %}
-<span class="badge badge-light">{{ element }}</span>
-{% endfor %}
-</div>
-{% endif %}
-</div>
-{% empty %}
-<div class="text-muted text-center py-10">No wireframe was saved.</div>
-{% endfor %}
-</div>
-</div>
-</div>
-</div>
+            <div class="col-xl-6">
+                <div class="row g-5 h-100">
 
-<div class="card">
-<div class="card-header">
-<h3 class="card-title fw-bold text-gray-900">Page Snapshots</h3>
-</div>
-<div class="card-body">
-<div class="table-responsive">
-<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6">
-<thead>
-<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
-<th>Type</th>
-<th>URL</th>
-<th>Status</th>
-<th>Title</th>
-<th>H1</th>
-<th>Words</th>
-<th>Images</th>
-<th>Videos</th>
-<th>Internal Links</th>
-</tr>
-</thead>
-<tbody class="fw-semibold text-gray-700">
-<tr>
-<td><span class="badge badge-light-primary">Own</span></td>
-<td class="text-break min-w-200px"><a href="{{ analysis.own_page_snapshot.url }}" target="_blank" rel="noopener">{{ analysis.own_page_snapshot.url }}</a></td>
-<td>{{ analysis.own_page_snapshot.status_code|default:"-" }}</td>
-<td>{{ analysis.own_page_snapshot.title|default:"-"|truncatechars:80 }}</td>
-<td>{{ analysis.own_page_snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
-<td>{{ analysis.own_page_snapshot.word_count|default:"0" }}</td>
-<td><span class="badge badge-light-info">{{ analysis.own_page_snapshot.image_count|default:"0" }}</span></td>
-<td><span class="badge badge-light-primary">{{ analysis.own_page_snapshot.video_count|default:"0" }}</span></td>
-<td><button type="button" class="btn btn-sm btn-light-success" data-bs-toggle="modal" data-bs-target="#kt_content_gap_internal_links_own">{{ analysis.own_page_snapshot.internal_links_count|default:"0" }}</button></td>
-</tr>
-{% for snapshot in analysis.competitor_snapshots %}
-<tr>
-<td><span class="badge badge-light">Competitor</span></td>
-<td class="text-break min-w-200px"><a href="{{ snapshot.url }}" target="_blank" rel="noopener">{{ snapshot.url }}</a></td>
-<td>{{ snapshot.status_code|default:"-" }}</td>
-<td>{{ snapshot.title|default:"-"|truncatechars:80 }}</td>
-<td>{{ snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
-<td>{{ snapshot.word_count|default:"0" }}</td>
-<td><span class="badge badge-light-info">{{ snapshot.image_count|default:"0" }}</span></td>
-<td><span class="badge badge-light-primary">{{ snapshot.video_count|default:"0" }}</span></td>
-<td><button type="button" class="btn btn-sm btn-light-success" data-bs-toggle="modal" data-bs-target="#kt_content_gap_internal_links_{{ forloop.counter }}">{{ snapshot.internal_links_count|default:"0" }}</button></td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-<div class="modal fade" tabindex="-1" id="kt_content_gap_internal_links_own">
-<div class="modal-dialog modal-dialog-scrollable">
-<div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Internal Links</h5>
-<div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
-<i class="ki-duotone ki-cross fs-2x"><span class="path1"></span><span class="path2"></span></i>
-</div>
-</div>
-<div class="modal-body">
-<div class="text-muted fs-7 mb-4 text-break">{{ analysis.own_page_snapshot.url }}</div>
-{% if analysis.own_page_snapshot.internal_links %}
-<div class="d-flex flex-column gap-3">
-{% for link in analysis.own_page_snapshot.internal_links %}
-<a href="{{ link }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary text-break">{{ link }}</a>
-{% endfor %}
-</div>
-{% else %}
-<div class="text-muted">Internal link URLs were not captured for this analysis. Run the content gap analysis again to save the link list.</div>
-{% endif %}
-</div>
-<div class="modal-footer">
-<button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-</div>
-</div>
-</div>
-</div>
-{% for snapshot in analysis.competitor_snapshots %}
-<div class="modal fade" tabindex="-1" id="kt_content_gap_internal_links_{{ forloop.counter }}">
-<div class="modal-dialog modal-dialog-scrollable">
-<div class="modal-content">
-<div class="modal-header">
-<h5 class="modal-title">Internal Links</h5>
-<div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
-<i class="ki-duotone ki-cross fs-2x"><span class="path1"></span><span class="path2"></span></i>
-</div>
-</div>
-<div class="modal-body">
-<div class="text-muted fs-7 mb-4 text-break">{{ snapshot.url }}</div>
-{% if snapshot.internal_links %}
-<div class="d-flex flex-column gap-3">
-{% for link in snapshot.internal_links %}
-<a href="{{ link }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary text-break">{{ link }}</a>
-{% endfor %}
-</div>
-{% else %}
-<div class="text-muted">Internal link URLs were not captured for this analysis. Run the content gap analysis again to save the link list.</div>
-{% endif %}
-</div>
-<div class="modal-footer">
-<button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-</div>
-</div>
-</div>
-</div>
-{% endfor %}
-</div>
-</div>
+                    <div class="col-md-6">
+                        <div class="card content-gap-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="content-gap-metric-icon bg-light-primary mb-5">
+                                    <i class="ki-duotone ki-profile-user fs-2x text-primary">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="content-gap-metric-value text-gray-900">{{ analysis.competitor_count }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Competitors</div>
+                            </div>
+                        </div>
+                    </div>
 
-</div>
-</div>
-{% endif %}
+                    <div class="col-md-6">
+                        <div class="card content-gap-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="content-gap-metric-icon bg-light-success mb-5">
+                                    <i class="ki-duotone ki-chart-line-up fs-2x text-success">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="content-gap-metric-value text-success">{{ analysis.content_gaps|length }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Content Gaps</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card content-gap-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="content-gap-metric-icon bg-light-warning mb-5">
+                                    <i class="ki-duotone ki-magnifier fs-2x text-warning">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="content-gap-metric-value text-warning">{{ analysis.keyword_opportunities|length }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Keywords</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card content-gap-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="content-gap-metric-icon bg-light-info mb-5">
+                                    <i class="ki-duotone ki-document fs-2x text-info">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="content-gap-metric-value text-info">{{ analysis.own_page_snapshot.word_count|default:"0" }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Own Word Count</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+                <div class="card mb-5">
+                    <div class="card-header">
+                        <h3 class="card-title fw-bold text-gray-900">AI Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-gray-700 fs-6">{{ analysis.display_ai_summary|linebreaksbr }}</div>
+                    </div>
+                </div>
+                <div class="card mb-5">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+                            <h3 class="fw-bold m-0">Content Gaps</h3>
+                            <div class="d-flex align-items-center position-relative my-1">
+                                <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+                                <input type="text"
+                                       id="kt_content_gaps_search"
+                                       class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                       placeholder="Search Gaps" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"
+                               id="kt_content_gaps_table">
+                            <thead>
+                                <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                    <th>Priority</th>
+                                    <th>Topic</th>
+                                    <th>Why It Matters</th>
+                                    <th>Competitors</th>
+                                    <th>Recommendation</th>
+                                </tr>
+                            </thead>
+                            <tbody class="fw-semibold text-gray-700">
+                                {% for gap in analysis.content_gaps %}
+                                    <tr data-gap-row="true">
+                                        <td><span class="badge badge-light-{% if gap.priority == 'High' %}danger{% elif gap.priority == 'Medium' %}warning{% else %}primary{% endif %}">{{ gap.priority|default:"Medium" }}</span></td>
+                                        <td class="text-gray-900">{{ gap.topic|default:"-" }}</td>
+                                        <td>{{ gap.why_it_matters|default:"-" }}</td>
+                                        <td>{{ gap.competitors_covering|default:"-" }}</td>
+                                        <td>{{ gap.recommendation|default:"-" }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-10">No content gaps were saved for this analysis.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row g-5 mb-5">
+                    <div class="col-xl-6">
+                        <div class="card h-100">
+                            <div class="card-header border-0 pt-6">
+                                <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+                                    <h3 class="fw-bold m-0">Keyword Opportunities</h3>
+                                    <div class="d-flex align-items-center position-relative my-1">
+                                        <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+                                        <input type="text"
+                                               id="kt_keyword_opportunities_search"
+                                               class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                               placeholder="Search Keywords" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body pt-0">
+                                <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"
+                                       id="kt_keyword_opportunities_table">
+                                    <thead>
+                                        <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                            <th>Keyword</th>
+                                            <th>Intent</th>
+                                            <th>Opportunity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="fw-semibold text-gray-700">
+                                        {% for keyword in analysis.keyword_opportunities %}
+                                            <tr data-keyword-row="true">
+                                                <td class="text-gray-900">{{ keyword.keyword|default:"-" }}</td>
+                                                <td><span class="badge badge-light-info">{{ keyword.intent|default:"-" }}</span></td>
+                                                <td>{{ keyword.opportunity|default:"-" }}</td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted py-10">No keyword opportunities were saved.</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <div class="card h-100">
+                            <div class="card-header border-0 pt-6">
+                                <h3 class="card-title fw-bold text-gray-900">Execution Plan</h3>
+                            </div>
+                            <div class="card-body pt-0">
+                                <div class="timeline-label">
+                                    {% for step in analysis.execution_plan %}
+                                        <div class="timeline-item">
+                                            <div class="timeline-label fw-bold text-gray-800 fs-6">{{ forloop.counter }}</div>
+                                            <div class="timeline-badge">
+                                                <i class="fa fa-genderless text-primary fs-1"></i>
+                                            </div>
+                                            <div class="timeline-content fw-semibold text-gray-700 ps-3">{{ step }}</div>
+                                        </div>
+                                    {% empty %}
+                                        <div class="text-muted py-10 text-center">No execution plan was saved.</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-5 mb-5">
+                    <div class="col-xl-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h3 class="card-title fw-bold text-gray-900">Recommended Sections</h3>
+                            </div>
+                            <div class="card-body">
+                                {% for section in analysis.recommended_sections %}
+                                    <div class="d-flex justify-content-between border-bottom border-gray-200 pb-4 mb-4">
+                                        <div class="pe-4">
+                                            <div class="fw-bold text-gray-900">{{ section.section|default:"-" }}</div>
+                                            <div class="text-muted fs-7">{{ section.purpose|default:"-" }}</div>
+                                            <div class="text-muted fs-8 mt-2">{{ section.source_competitors|default:"Derived from competitor comparison" }}</div>
+                                        </div>
+                                        <span class="badge badge-light-{% if section.priority == 'High' %}danger{% elif section.priority == 'Medium' %}warning{% else %}primary{% endif %} h-25px">{{ section.priority|default:"Medium" }}</span>
+                                    </div>
+                                {% empty %}
+                                    <div class="text-muted text-center py-10">No recommended sections were saved.</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h3 class="card-title fw-bold text-gray-900">{{ analysis.wireframe.title|default:"Page Wireframe" }}</h3>
+                            </div>
+                            <div class="card-body">
+                                {% for section in analysis.wireframe.sections %}
+                                    <div class="mb-6">
+                                        <div class="fw-bold text-gray-900 mb-1">{{ forloop.counter }}. {{ section.name|default:"Section" }}</div>
+                                        <div class="text-muted fs-7 mb-2">{{ section.goal|default:"-" }}</div>
+                                        {% if section.elements %}
+                                            <div class="d-flex flex-wrap gap-2">
+                                                {% for element in section.elements %}
+                                                    <span class="badge badge-light">{{ element }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% empty %}
+                                    <div class="text-muted text-center py-10">No wireframe was saved.</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title fw-bold text-gray-900">Page Snapshots</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6">
+                                <thead>
+                                    <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                        <th>Type</th>
+                                        <th>URL</th>
+                                        <th>Status</th>
+                                        <th>Title</th>
+                                        <th>H1</th>
+                                        <th>Words</th>
+                                        <th>Images</th>
+                                        <th>Videos</th>
+                                        <th>Internal Links</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-700">
+                                    <tr>
+                                        <td><span class="badge badge-light-primary">Own</span></td>
+                                        <td class="text-break min-w-200px"><a href="{{ analysis.own_page_snapshot.url }}"
+   target="_blank"
+   rel="noopener">{{ analysis.own_page_snapshot.url }}</a></td>
+                                        <td>{{ analysis.own_page_snapshot.status_code|default:"-" }}</td>
+                                        <td>{{ analysis.own_page_snapshot.title|default:"-"|truncatechars:80 }}</td>
+                                        <td>{{ analysis.own_page_snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
+                                        <td>{{ analysis.own_page_snapshot.word_count|default:"0" }}</td>
+                                        <td><span class="badge badge-light-info">{{ analysis.own_page_snapshot.image_count|default:"0" }}</span></td>
+                                        <td><span class="badge badge-light-primary">{{ analysis.own_page_snapshot.video_count|default:"0" }}</span></td>
+                                        <td>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-light-success"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#kt_content_gap_internal_links_own">{{ analysis.own_page_snapshot.internal_links_count|default:"0" }}</button>
+                                        </td>
+                                    </tr>
+                                    {% for snapshot in analysis.competitor_snapshots %}
+                                        <tr>
+                                            <td><span class="badge badge-light">Competitor</span></td>
+                                            <td class="text-break min-w-200px"><a href="{{ snapshot.url }}" target="_blank" rel="noopener">{{ snapshot.url }}</a></td>
+                                            <td>{{ snapshot.status_code|default:"-" }}</td>
+                                            <td>{{ snapshot.title|default:"-"|truncatechars:80 }}</td>
+                                            <td>{{ snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
+                                            <td>{{ snapshot.word_count|default:"0" }}</td>
+                                            <td><span class="badge badge-light-info">{{ snapshot.image_count|default:"0" }}</span></td>
+                                            <td><span class="badge badge-light-primary">{{ snapshot.video_count|default:"0" }}</span></td>
+                                            <td>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-light-success"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#kt_content_gap_internal_links_{{ forloop.counter }}">{{ snapshot.internal_links_count|default:"0" }}</button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal fade"
+                             tabindex="-1"
+                             id="kt_content_gap_internal_links_own">
+                            <div class="modal-dialog modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Internal Links</h5>
+                                        <div class="btn btn-icon btn-sm btn-active-light-primary ms-2"
+                                             data-bs-dismiss="modal"
+                                             aria-label="Close">
+                                            <i class="ki-duotone ki-cross fs-2x"><span class="path1"></span><span class="path2"></span></i>
+                                        </div>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="text-muted fs-7 mb-4 text-break">{{ analysis.own_page_snapshot.url }}</div>
+                                        {% if analysis.own_page_snapshot.internal_links %}
+                                            <div class="d-flex flex-column gap-3">
+                                                {% for link in analysis.own_page_snapshot.internal_links %}
+                                                    <a href="{{ link }}"
+                                                       target="_blank"
+                                                       rel="noopener"
+                                                       class="text-gray-800 text-hover-primary text-break">{{ link }}</a>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="text-muted">Internal link URLs were not captured for this analysis. Run the content gap analysis again to save the link list.</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% for snapshot in analysis.competitor_snapshots %}
+                            <div class="modal fade"
+                                 tabindex="-1"
+                                 id="kt_content_gap_internal_links_{{ forloop.counter }}">
+                                <div class="modal-dialog modal-dialog-scrollable">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Internal Links</h5>
+                                            <div class="btn btn-icon btn-sm btn-active-light-primary ms-2"
+                                                 data-bs-dismiss="modal"
+                                                 aria-label="Close">
+                                                <i class="ki-duotone ki-cross fs-2x"><span class="path1"></span><span class="path2"></span></i>
+                                            </div>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="text-muted fs-7 mb-4 text-break">{{ snapshot.url }}</div>
+                                            {% if snapshot.internal_links %}
+                                                <div class="d-flex flex-column gap-3">
+                                                    {% for link in snapshot.internal_links %}
+                                                        <a href="{{ link }}"
+                                                           target="_blank"
+                                                           rel="noopener"
+                                                           class="text-gray-800 text-hover-primary text-break">{{ link }}</a>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <div class="text-muted">Internal link URLs were not captured for this analysis. Run the content gap analysis again to save the link list.</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
-
 {% block extra_js_scripts %}
-<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
-<script>
+    <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+    <script>
 jQuery(function () {
 {% if analysis.status == 'running' %}
 function checkContentGapStatus() {
@@ -476,10 +642,14 @@ gapsTable.search(this.value).draw();
 
 var keywordTableElement = document.querySelector("#kt_keyword_opportunities_table");
 if (keywordTableElement && keywordTableElement.querySelector("[data-keyword-row='true']")) {
-jQuery(keywordTableElement).DataTable({
+var keywordTable = jQuery(keywordTableElement).DataTable({
 pageLength: 5,
 lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
 dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>"
+});
+
+jQuery("#kt_keyword_opportunities_search").on("keyup", function () {
+keywordTable.search(this.value).draw();
 });
 }
 
@@ -489,6 +659,5 @@ event.preventDefault();
 }
 });
 });
-</script>
+    </script>
 {% endblock %}
-
