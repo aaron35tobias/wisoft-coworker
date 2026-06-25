@@ -33,16 +33,20 @@
 </div>
 {% if speed %}
 <div class="fs-1 fw-bold text-gray-900 text-truncate mb-1">{{ speed.domain }}</div>
-<div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-3">{% if speed.has_report %}Latest analysis{% else %}Not analyzed yet{% endif %}</div>
-<div class="row g-3 mb-3">
-<div class="col-4"><div class="text-gray-500 fw-semibold fs-8 text-uppercase">LCP</div><div class="fs-3 fw-bold {% if speed.has_report %}text-success{% else %}text-gray-400{% endif %}">{{ speed.lcp|default_if_none:"—" }}</div></div>
-<div class="col-4"><div class="text-gray-500 fw-semibold fs-8 text-uppercase">CLS</div><div class="fs-3 fw-bold {% if speed.has_report %}text-success{% else %}text-gray-400{% endif %}">{{ speed.cls|default_if_none:"—" }}</div></div>
-<div class="col-4"><div class="text-gray-500 fw-semibold fs-8 text-uppercase">Perf</div><div class="fs-3 fw-bold {% if speed.has_report %}text-gray-900{% else %}text-gray-400{% endif %}">{{ speed.performance|default_if_none:"—" }}</div></div>
+<div class="fw-semibold fs-8 text-uppercase mb-4 {% if speed.has_report %}text-success{% else %}text-gray-500{% endif %}">{% if speed.has_report %}Latest analysis{% else %}Not analyzed yet{% endif %}</div>
+<div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-2">Lighthouse Scores</div>
+<div class="row g-2 mb-3">
+<div class="col-3"><div class="fs-3 fw-bold {% if speed.has_report %}text-gray-900{% else %}text-gray-400{% endif %} lh-1">{{ speed.performance|default_if_none:"—" }}</div><div class="text-gray-500 fw-semibold fs-8">Perf</div></div>
+<div class="col-3"><div class="fs-3 fw-bold {% if speed.has_report %}text-gray-900{% else %}text-gray-400{% endif %} lh-1">{{ speed.accessibility|default_if_none:"—" }}</div><div class="text-gray-500 fw-semibold fs-8">A11y</div></div>
+<div class="col-3"><div class="fs-3 fw-bold {% if speed.has_report %}text-gray-900{% else %}text-gray-400{% endif %} lh-1">{{ speed.best_practices|default_if_none:"—" }}</div><div class="text-gray-500 fw-semibold fs-8">Best</div></div>
+<div class="col-3"><div class="fs-3 fw-bold {% if speed.has_report %}text-gray-900{% else %}text-gray-400{% endif %} lh-1">{{ speed.seo|default_if_none:"—" }}</div><div class="text-gray-500 fw-semibold fs-8">SEO</div></div>
 </div>
-{% if speed.has_report %}
-<div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-1">Performance</div>
-<div id="ps_perf_chart" class="mb-4"></div>
-{% endif %}
+<div class="separator separator-dashed mb-3"></div>
+<div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-2">Core Web Vitals</div>
+<div class="row g-2 mb-3">
+<div class="col-6"><div class="fs-3 fw-bold {% if speed.has_report %}text-success{% else %}text-gray-400{% endif %} lh-1">{{ speed.lcp|default_if_none:"—" }}</div><div class="text-gray-500 fw-semibold fs-8">LCP</div></div>
+<div class="col-6"><div class="fs-3 fw-bold {% if speed.has_report %}text-success{% else %}text-gray-400{% endif %} lh-1">{{ speed.cls|default_if_none:"—" }}</div><div class="text-gray-500 fw-semibold fs-8">CLS</div></div>
+</div>
 {% else %}
 <div class="d-flex flex-column flex-grow-1 justify-content-center align-items-center text-center py-5">
 <span class="text-gray-600 fw-semibold fs-7">No website added yet</span>
@@ -1079,18 +1083,6 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     if (typeof ApexCharts === "undefined") return;
-
-    var perfEl = document.querySelector("#ps_perf_chart");
-    if (perfEl) {
-        new ApexCharts(perfEl, {
-            chart: { type: "area", height: 80, sparkline: { enabled: true } },
-            series: [{ name: "Performance", data: [70, 74, 71, 80, 78, 85, 88, 92] }],
-            stroke: { curve: "smooth", width: 2 },
-            colors: ["#009EF7"],
-            fill: { type: "gradient", gradient: { opacityFrom: 0.4, opacityTo: 0 } },
-            tooltip: { enabled: false }
-        }).render();
-    }
 
     {% if tech %}
     var gaugeEl = document.querySelector("#tech_health_gauge");

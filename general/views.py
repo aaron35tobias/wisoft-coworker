@@ -70,6 +70,8 @@ def _build_page_speed(user):
         'domain': _domain(website.website_url),
         'has_report': report is not None,
         'performance': report.performance_score if report else None,
+        'accessibility': report.accessibility_score if report else None,
+        'best_practices': report.best_practices_score if report else None,
         'seo': report.seo_score if report else None,
         'lcp': report.largest_contentful_paint if report else None,
         'cls': report.cumulative_layout_shift if report else None,
