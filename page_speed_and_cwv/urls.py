@@ -16,8 +16,9 @@ urlpatterns = [
     path('websites/<int:website_id>/overview/<int:report_index_id>/', views.report_detail_view, name='website-overview-detail'),
 
     path('websites/pages/list/', views.list_pages_view, name='page-list'),
-    path('websites/pages/validate/', views.validate_page_view, name='page-validate'),
     path('websites/pages/create/', views.create_page_view, name='page-create'),
     path('websites/pages/update/', views.update_page_view, name='page-update'),
     path('websites/pages/<int:page_id>/delete/', views.delete_page_view, name='page-delete'),
+    path('websites/pages/validate/', views.validate_page_view, name='page-validate'),
+    path('websites/pages/discover/', views.discover_pages_view, name='page-discover'),
 ]

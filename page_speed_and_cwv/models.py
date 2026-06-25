@@ -39,6 +39,70 @@ class WebsitePage(models.Model):
     def __str__(self):
         return self.page_url
 
+class WebsitePageDiscoveryRun(models.Model):
+    website = models.ForeignKey(
+        Website,
+        on_delete=models.CASCADE,
+        related_name='page_discovery_runs',
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='page_speed_page_discovery_runs',
+    )
+    source_summary = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text='Summary of sources used, for example sitemap, robots, homepage.',
+    )
+    error_message = models.TextField(blank=True)
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date_added']
+        indexes = [
+            models.Index(fields=['website', '-date_added']),
+        ]
+
+    def __str__(self):
+        return f'{self.website} - {self.date_added:%Y-%m-%d %H:%M}'
+
+class WebsitePageDiscovery(models.Model):
+    discovery_run = models.ForeignKey(
+        WebsitePageDiscoveryRun,
+        on_delete=models.CASCADE,
+        related_name='discovered_pages',
+    )
+    website = models.ForeignKey(
+        Website,
+        on_delete=models.CASCADE,
+        related_name='page_discoveries',
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='page_speed_page_discoveries',
+    )
+    page_url = models.URLField(max_length=500)
+    source = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='Discovery source, for example sitemap, robots, or homepage.',
+    )
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date_added']
+        indexes = [
+            models.Index(fields=['website', '-date_added']),
+            models.Index(fields=['website', 'page_url']),
+        ]
+
+    def __str__(self):
+        return self.page_url
+
 class WebsiteSpeedReportAiIndex(models.Model):
     website = models.ForeignKey(
         Website,

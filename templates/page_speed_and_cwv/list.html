@@ -64,7 +64,7 @@ Please review the form and try again.
 <span class="path1"></span>
 <span class="path2"></span>
 </i>
-<input type="text" id="kt_websites_table_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Records" />
+<input type="text" id="kt_datatable_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Records" />
 </div>
 <!--end::Search-->
 </div>
@@ -86,7 +86,7 @@ Please review the form and try again.
 <div class="card-body pt-1">
 <div class="table-responsive">
 <!--begin::Table-->
-<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_websites_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_datatable">
 <thead>
 <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th class="w-50px table-sort-asc">#</th>
@@ -265,7 +265,7 @@ var $formEdit = $("#form_update");
 var $formCreateSubmit = $("#form_create_submit");
 var $formUpdateSubmit = $("#form_update_submit");
 /* <================= DataTable =================> */
-var websitesTableElement = document.querySelector("#kt_websites_table");
+var websitesTableElement = document.querySelector("#kt_datatable");
 if (websitesTableElement && websitesTableElement.querySelector("[data-website-row='true']")) {
 var websitesTable = $(websitesTableElement).DataTable({
 info: false,
@@ -274,7 +274,7 @@ columnDefs: [
 { orderable: false, targets: 1 }
 ]
 });
-$("#kt_websites_table_search").on("keyup", function () {
+$("#kt_datatable_search").on("keyup", function () {
 websitesTable.search(this.value).draw();
 });
 }
