@@ -6,7 +6,7 @@ from django.conf import settings
 import anthropic
 
 from technical_seo.models import TechnicalSEOAudit
-from page_speed_and_cwv.models import WebsiteSpeedReport
+from page_speed_and_cwv.models import WebsiteSpeedReport, Website
 
 
 def _domain(url):
@@ -50,23 +50,50 @@ def _build_technical_seo(user):
 
 
 def _build_page_speed(user):
-    """Latest Page Speed report, if the user has run one."""
-    speed = (
-        WebsiteSpeedReport.objects
-        .filter(website__added_by=user)
-        .select_related('website')
-        .order_by('-scanned_at')
+    """Most recent Page Speed website + a summary of its latest scan.
+
+    Mirrors the Reports table: scanned-at, mobile/desktop performance score,
+    and which devices were scanned.
+    """
+    website = (
+        Website.objects
+        .filter(added_by=user, is_active=True)
+        .order_by('-date_added')
         .first()
     )
-    if not speed:
+    if not website:
         return None
-    return {
-        'domain': _domain(speed.website.website_url),
-        'performance': speed.performance_score,
-        'seo': speed.seo_score,
-        'lcp': speed.largest_contentful_paint,
-        'cls': speed.cumulative_layout_shift,
+
+    scan = (
+        website.speed_report_ai_indexes
+        .prefetch_related('reports')
+        .first()  # ordered by -scanned_at
+    )
+
+    data = {
+        'domain': _domain(website.website_url),
+        'has_report': scan is not None,
+        'scanned_at': None,
+        'mobile_score': None,
+        'desktop_score': None,
+        'devices': [],
     }
+    if scan:
+        reports = list(scan.reports.all())
+        mobile = next((r for r in reports if r.device_type == WebsiteSpeedReport.DEVICE_MOBILE), None)
+        desktop = next((r for r in reports if r.device_type == WebsiteSpeedReport.DEVICE_DESKTOP), None)
+        devices = []
+        if mobile:
+            devices.append('Mobile')
+        if desktop:
+            devices.append('Desktop')
+        data.update({
+            'scanned_at': scan.scanned_at,
+            'mobile_score': mobile.performance_score if mobile else None,
+            'desktop_score': desktop.performance_score if desktop else None,
+            'devices': devices,
+        })
+    return data
 
 
 @login_required(login_url='sign-in')
