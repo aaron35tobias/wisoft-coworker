@@ -10,6 +10,41 @@
 {% block content %}
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 <div class="container-xxl" id="kt_content_container">
+{% if messages %}
+{% for message in messages %}
+<div class="d-flex justify-content-center mb-6">
+<div class="notice d-flex bg-light-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}primary{% else %}{{ message.tags }}{% endif %} rounded border-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}primary{% else %}{{ message.tags }}{% endif %} border border-dashed w-lg-500px p-4" role="alert">
+<i class="ki-duotone {% if message.tags == 'error' %}ki-cross-circle fs-2tx text-danger{% elif message.tags == 'success' %}ki-check-circle fs-2tx text-primary{% else %}ki-information-5 fs-2tx text-{{ message.tags }}{% endif %} me-4 align-self-center">
+<span class="path1"></span>
+<span class="path2"></span>
+{% if message.tags != 'error' and message.tags != 'success' %}
+<span class="path3"></span>
+{% endif %}
+</i>
+<div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
+<div class="mb-0 fw-semibold">
+<h4 class="text-gray-900 fw-bold fs-6 mb-1">
+{% if message.tags == 'error' %}
+Action failed
+{% elif message.tags == 'success' %}
+Action completed
+{% else %}
+{{ message.tags|title }}
+{% endif %}
+</h4>
+<div class="fs-7 text-gray-700">
+{% if message.tags == 'error' %}
+{{ message }}
+{% else %}
+{{ message }}
+{% endif %}
+</div>
+</div>
+</div>
+</div>
+</div>
+{% endfor %}
+{% endif %}
 <div class="card">
 <div class="card-header border-0 pt-6">
 <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
@@ -21,8 +56,24 @@
 <input type="text" id="kt_reports_table_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Overview" />
 </div>
 {% if website %}
+<div class="d-flex align-items-center gap-4">
 <div class="fw-bold fs-4 text-end">
 SITE: <a href="{{ website.website_url }}" target="_blank" rel="noopener" class="text-primary text-hover-gray-900">{{ website.website_url }}</a>
+</div>
+<form method="post" action="{% url 'page_speed_and_cwv:website-overview-run-scan' website.id %}" id="form_run_scan" name="form_run_scan">
+{% csrf_token %}
+<button type="submit" class="btn btn-sm btn-dark btn-active-color-primary fs-6" id="button_run_scan">
+<span class="indicator-label d-flex align-items-center">
+<i class="ki-duotone ki-rocket fs-2 me-2">
+<span class="path1"></span>
+<span class="path2"></span>
+</i>
+Run Scan
+</span>
+<span class="indicator-progress">Please wait...
+<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+</button>
+</form>
 </div>
 {% endif %}
 </div>
@@ -32,11 +83,11 @@ SITE: <a href="{{ website.website_url }}" target="_blank" rel="noopener" class="
 <thead>
 <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th class="w-50px">#</th>
-<th>Website</th>
+<th>Page URL</th>
 <th>Scanned At</th>
+<th>Scan ID</th>
 <th>Mobile Score</th>
 <th>Desktop Score</th>
-<th>Devices</th>
 <th>Actions</th>
 </tr>
 </thead>
@@ -45,26 +96,33 @@ SITE: <a href="{{ website.website_url }}" target="_blank" rel="noopener" class="
 <tr data-report-row="true">
 <td>{{ forloop.counter }}</td>
 <td>
+{% if report_index.page %}
+<a href="{{ report_index.page.page_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ report_index.page.page_url }}</a>
+{% else %}
 <a href="{{ report_index.website.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ report_index.website.website_url }}</a>
+{% endif %}
 </td>
 <td>{{ report_index.scanned_at|date:"d M Y, g:i A" }}</td>
 <td>
-{% if report_index.mobile_report %}
-<span class="badge badge-light-primary">{{ report_index.mobile_report.performance_score|default:"-" }}</span>
+{% if report_index.scan_group_token %}
+<span class="badge badge-light-dark">{{ report_index.scan_group_token }}</span>
 {% else %}
 <span class="text-muted">-</span>
+{% endif %}
+</td>
+<td>
+{% if report_index.mobile_report %}
+<span class="badge badge-light-primary fw-bolder fs-5">{{ report_index.mobile_report.performance_score|default:"-" }}</span>
+{% else %}
+<span class="text-muted fw-bolder fs-5">-</span>
 {% endif %}
 </td>
 <td>
 {% if report_index.desktop_report %}
-<span class="badge badge-light-info">{{ report_index.desktop_report.performance_score|default:"-" }}</span>
+<span class="badge badge-light-info fs-5">{{ report_index.desktop_report.performance_score|default:"-" }}</span>
 {% else %}
-<span class="text-muted">-</span>
+<span class="text-muted fs-5">-</span>
 {% endif %}
-</td>
-<td>
-{% if report_index.mobile_report %}<span class="badge badge-light-primary me-2">Mobile</span>{% endif %}
-{% if report_index.desktop_report %}<span class="badge badge-light-info">Desktop</span>{% endif %}
 </td>
 <td>
 <a href="{% url 'page_speed_and_cwv:website-overview-detail' report_index.website.id report_index.id %}" class="btn btn-sm btn-primary">View</a>
@@ -85,20 +143,24 @@ SITE: <a href="{{ website.website_url }}" target="_blank" rel="noopener" class="
 {% block extra_js_scripts %}
 <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
 <script>
-jQuery(function () {
+$(function () {
 var reportsTableElement = document.querySelector("#kt_reports_table");
 if (reportsTableElement && reportsTableElement.querySelector("[data-report-row='true']")) {
-var reportsTable = jQuery(reportsTableElement).DataTable({
+var reportsTable = $(reportsTableElement).DataTable({
 info: false,
 order: [[2, "desc"]],
 columnDefs: [
 { orderable: false, targets: [0, 6] }
 ]
 });
-jQuery("#kt_reports_table_search").on("keyup", function () {
+$("#kt_reports_table_search").on("keyup", function () {
 reportsTable.search(this.value).draw();
 });
 }
+
+$("#form_run_scan").on("submit", function () {
+$("#button_run_scan").attr("data-kt-indicator", "on").prop("disabled", true);
+});
 });
 </script>
 {% endblock %}

@@ -1,6 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.core.validators import URLValidator
 from django.http import JsonResponse
 from django.urls import reverse
@@ -127,7 +129,7 @@ def delete_view(request, website_id):
 @login_required(login_url='sign-in')
 def reports_view(request, website_id=None):
     website = None
-    report_indexes = WebsiteSpeedReportAiIndex.objects.filter(website__added_by=request.user).select_related('website').prefetch_related('reports')
+    report_indexes = WebsiteSpeedReportAiIndex.objects.filter(website__added_by=request.user).select_related('website', 'page').prefetch_related('reports')
 
     if website_id is not None:
         website = get_object_or_404(Website, id=website_id, added_by=request.user)
@@ -149,7 +151,24 @@ def reports_view(request, website_id=None):
         'report_indexes': report_indexes,
         'back_to_websites_url': reverse('page_speed_and_cwv:website-list') if website else '',
     }
-    return render(request, 'page_speed_and_cwv/reports.html', context)
+    return render(request, 'page_speed_and_cwv/overview.html', context)
+
+@login_required(login_url='sign-in')
+def run_website_scan_view(request, website_id):
+    website = get_object_or_404(Website, id=website_id, added_by=request.user)
+
+    if request.method != 'POST':
+        return redirect('page_speed_and_cwv:website-overview', website_id=website.id)
+
+    try:
+        call_command('fetch_pagespeed_reports', website_id=website.id, strategy='both')
+        messages.success(request, 'PageSpeed scan completed successfully.')
+    except CommandError as error:
+        messages.error(request, str(error))
+    except Exception as error:
+        messages.error(request, f'PageSpeed scan failed: {error}')
+
+    return redirect('page_speed_and_cwv:website-overview', website_id=website.id)
 
 @login_required(login_url='sign-in')
 def report_detail_view(request, website_id, report_index_id):

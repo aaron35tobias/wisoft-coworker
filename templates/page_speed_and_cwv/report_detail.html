@@ -106,7 +106,7 @@
 <td>{{ report.seo_score|default:"-" }}</td>
 <td>{{ report.speed_index|default:"-" }}s</td>
 <td>{{ report.time_to_first_byte|default:"-" }}s</td>
-<td>{{ report.scanned_at|date:"d M Y, g:i A" }}</td>
+<td>{{ report_index.scanned_at|date:"d M Y, g:i A" }}</td>
 </tr>
 {% endfor %}
 </tbody>
