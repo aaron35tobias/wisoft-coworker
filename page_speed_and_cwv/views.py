@@ -18,6 +18,7 @@ from .models import (
     WebsitePageDiscovery,
     WebsitePageDiscoveryRun,
     WebsiteSpeedReport,
+    WebsiteSpeedReportAiEvaluation,
     WebsiteSpeedReportAiIndex,
 )
 
@@ -129,26 +130,36 @@ def delete_view(request, website_id):
 @login_required(login_url='sign-in')
 def reports_view(request, website_id=None):
     website = None
-    report_indexes = WebsiteSpeedReportAiIndex.objects.filter(website__added_by=request.user).select_related('website', 'page').prefetch_related('reports')
+    pages = WebsitePage.objects.filter(website__added_by=request.user).select_related('website')
 
     if website_id is not None:
         website = get_object_or_404(Website, id=website_id, added_by=request.user)
-        report_indexes = report_indexes.filter(website=website)
+        pages = pages.filter(website=website)
 
-    for report_index in report_indexes:
-        reports = list(report_index.reports.all())
-        report_index.mobile_report = next(
-            (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_MOBILE),
-            None,
-        )
-        report_index.desktop_report = next(
-            (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_DESKTOP),
-            None,
-        )
+    page_summaries = []
+    for page in pages:
+        latest_report_index = WebsiteSpeedReportAiIndex.objects.filter(page=page).prefetch_related('reports').first()
+        page.latest_report_index = latest_report_index
+        page.latest_mobile_report = None
+        page.latest_desktop_report = None
+
+        if latest_report_index:
+            reports = list(latest_report_index.reports.all())
+            page.latest_mobile_report = next(
+                (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_MOBILE),
+                None,
+            )
+            page.latest_desktop_report = next(
+                (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_DESKTOP),
+                None,
+            )
+
+        page.total_scan_runs = WebsiteSpeedReportAiIndex.objects.filter(page=page).count()
+        page_summaries.append(page)
 
     context = {
         'website': website,
-        'report_indexes': report_indexes,
+        'page_summaries': page_summaries,
         'back_to_websites_url': reverse('page_speed_and_cwv:website-list') if website else '',
     }
     return render(request, 'page_speed_and_cwv/overview.html', context)
@@ -169,6 +180,33 @@ def run_website_scan_view(request, website_id):
         messages.error(request, f'PageSpeed scan failed: {error}')
 
     return redirect('page_speed_and_cwv:website-overview', website_id=website.id)
+
+@login_required(login_url='sign-in')
+def page_report_history_view(request, website_id, page_id):
+    website = get_object_or_404(Website, id=website_id, added_by=request.user)
+    page = get_object_or_404(WebsitePage, id=page_id, website=website)
+    report_indexes = WebsiteSpeedReportAiIndex.objects.filter(website=website, page=page).select_related('website', 'page').prefetch_related('reports')
+    latest_ai_evaluation = WebsiteSpeedReportAiEvaluation.objects.filter(website=website, page=page).select_related('latest_report_index', 'previous_report_index').first()
+
+    for report_index in report_indexes:
+        reports = list(report_index.reports.all())
+        report_index.mobile_report = next(
+            (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_MOBILE),
+            None,
+        )
+        report_index.desktop_report = next(
+            (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_DESKTOP),
+            None,
+        )
+
+    context = {
+        'website': website,
+        'page': page,
+        'report_indexes': report_indexes,
+        'latest_ai_evaluation': latest_ai_evaluation,
+        'back_to_overview_url': reverse('page_speed_and_cwv:website-overview', args=[website.id]),
+    }
+    return render(request, 'page_speed_and_cwv/overview_page_history.html', context)
 
 @login_required(login_url='sign-in')
 def report_detail_view(request, website_id, report_index_id):

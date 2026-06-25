@@ -120,3 +120,30 @@ class WebsiteSpeedReport(models.Model):
 
     def __str__(self):
         return f'{self.page or self.website} - {self.device_type} - {self.scanned_at:%Y-%m-%d %H:%M}'
+
+class WebsiteSpeedReportAiEvaluation(models.Model):
+    website = models.ForeignKey(Website,on_delete=models.CASCADE,related_name='speed_report_ai_evaluations')
+    page = models.ForeignKey(WebsitePage,on_delete=models.CASCADE,related_name='speed_report_ai_evaluations')
+    latest_report_index = models.ForeignKey(WebsiteSpeedReportAiIndex,on_delete=models.CASCADE,related_name='latest_ai_evaluations')
+    previous_report_index = models.ForeignKey(WebsiteSpeedReportAiIndex,on_delete=models.SET_NULL,related_name='previous_ai_evaluations',null=True,blank=True)
+    ai_model = models.CharField(max_length=100,blank=True)
+    summary = models.TextField(blank=True)
+    improvements_json = models.JSONField(default=list,blank=True)
+    declines_json = models.JSONField(default=list,blank=True)
+    warnings_json = models.JSONField(default=list,blank=True)
+    recommendations_json = models.JSONField(default=list,blank=True)
+    raw_ai_response_json = models.JSONField(default=dict,blank=True)
+    ai_error = models.TextField(blank=True)
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date_added']
+        indexes = [
+            models.Index(fields=['website', '-date_added']),
+            models.Index(fields=['page', '-date_added']),
+            models.Index(fields=['latest_report_index']),
+        ]
+
+    def __str__(self):
+        return f'{self.page} - {self.latest_report_index} - {self.date_added:%Y-%m-%d %H:%M}'

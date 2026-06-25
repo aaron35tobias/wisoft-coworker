@@ -84,53 +84,49 @@ Run Scan
 <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th class="w-50px">#</th>
 <th>Page URL</th>
-<th>Scanned At</th>
-<th>Scan ID</th>
-<th>Mobile Score</th>
-<th>Desktop Score</th>
+<th>Last Scan</th>
+<th>Total Runs</th>
+<th>Latest Mobile</th>
+<th>Latest Desktop</th>
 <th>Actions</th>
 </tr>
 </thead>
 <tbody class="fw-semibold text-gray-700">
-{% for report_index in report_indexes %}
+{% for page in page_summaries %}
 <tr data-report-row="true">
 <td>{{ forloop.counter }}</td>
 <td>
-{% if report_index.page %}
-<a href="{{ report_index.page.page_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ report_index.page.page_url }}</a>
-{% else %}
-<a href="{{ report_index.website.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ report_index.website.website_url }}</a>
-{% endif %}
-</td>
-<td>{{ report_index.scanned_at|date:"d M Y, g:i A" }}</td>
-<td>
-{% if report_index.scan_group_token %}
-<span class="badge badge-light-dark">{{ report_index.scan_group_token }}</span>
-{% else %}
-<span class="text-muted">-</span>
-{% endif %}
+<a href="{{ page.page_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ page.page_url }}</a>
 </td>
 <td>
-{% if report_index.mobile_report %}
-<span class="badge badge-light-primary fw-bolder fs-5">{{ report_index.mobile_report.performance_score|default:"-" }}</span>
+{% if page.latest_report_index %}
+{{ page.latest_report_index.scanned_at|date:"d M Y, g:i A" }}
+{% else %}
+<span class="text-muted">Not scanned</span>
+{% endif %}
+</td>
+<td><span class="badge badge-light-primary fw-bolder fs-5">{{ page.total_scan_runs }}</span></td>
+<td>
+{% if page.latest_mobile_report %}
+<span class="badge badge-light-primary fw-bolder fs-5">{{ page.latest_mobile_report.performance_score|default:"-" }}</span>
 {% else %}
 <span class="text-muted fw-bolder fs-5">-</span>
 {% endif %}
 </td>
 <td>
-{% if report_index.desktop_report %}
-<span class="badge badge-light-info fs-5">{{ report_index.desktop_report.performance_score|default:"-" }}</span>
+{% if page.latest_desktop_report %}
+<span class="badge badge-light-info fs-5">{{ page.latest_desktop_report.performance_score|default:"-" }}</span>
 {% else %}
 <span class="text-muted fs-5">-</span>
 {% endif %}
 </td>
 <td>
-<a href="{% url 'page_speed_and_cwv:website-overview-detail' report_index.website.id report_index.id %}" class="btn btn-sm btn-primary">View</a>
+<a href="{% url 'page_speed_and_cwv:website-overview-page-history' page.website.id page.id %}" class="btn btn-sm btn-primary">View</a>
 </td>
 </tr>
 {% empty %}
 <tr>
-<td colspan="7" class="text-center text-muted py-10">No reports available yet. Run the PageSpeed fetch command first.</td>
+<td colspan="7" class="text-center text-muted py-10">No pages available yet. Add pages before running reports.</td>
 </tr>
 {% endfor %}
 </tbody>
@@ -150,7 +146,7 @@ var reportsTable = $(reportsTableElement).DataTable({
 info: false,
 order: [[2, "desc"]],
 columnDefs: [
-{ orderable: false, targets: [0, 6] }
+{ orderable: false, targets: [0, 5] }
 ]
 });
 $("#kt_reports_table_search").on("keyup", function () {

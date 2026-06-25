@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Page Report History | Wisoft Co-Worker{% endblock %}
+{% block extra_css_scripts %}
+<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+{% block header %}
+{% include 'includes/header.html' with page_title='Page Report History' parent_title='Page Speed & CWV' action_url=back_to_overview_url action_label='Back to Overview' %}
+{% endblock %}
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+<div class="container-xxl" id="kt_content_container">
+<div class="row g-5 mb-5">
+<div class="col-md-6">
+<div class="card">
+<div class="card-body pt-6 pb-6">
+<div class="fw-bold fs-4 text-gray-700">
+WEBSITE:
+<a href="{{ website.website_url }}" target="_blank" rel="noopener" class="text-primary text-hover-gray-900">{{ website.website_url }}</a>
+</div>
+</div>
+</div>
+</div>
+<div class="col-md-6">
+<div class="card">
+<div class="card-body pt-6 pb-6">
+<div class="fw-bold fs-4 text-gray-700">
+PAGE:
+<a href="{{ page.page_url }}" target="_blank" rel="noopener" class="text-primary text-hover-gray-900">{{ page.page_url }}</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-body">
+<ul class="nav nav-custom nav-tabs nav-line-tabs nav-line-tabs-2x border-0 fs-4 fw-semibold mb-8" role="tablist">
+<li class="nav-item" role="presentation">
+<a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#tab_desktop" role="tab" aria-selected="true">Desktop</a>
+</li>
+<li class="nav-item" role="presentation">
+<a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#tab_mobile" role="tab" aria-selected="false">Mobile</a>
+</li>
+<li class="nav-item" role="presentation">
+<a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#tab_summary" role="tab" aria-selected="false">Summary</a>
+</li>
+</ul>
+
+<div class="tab-content">
+<div class="tab-pane fade show active" id="tab_desktop" role="tabpanel">
+<div class="d-flex align-items-center position-relative my-1 mb-5">
+<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
+<span class="path1"></span>
+<span class="path2"></span>
+</i>
+<input type="text" id="input_desktop_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Desktop" />
+</div>
+<div class="table-responsive">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle text-nowrap w-100 gs-5 fs-6" id="kt_datatable_desktop">
+<thead>
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+<th class="w-50px">#</th>
+<th>Scan ID</th>
+<th>Scanned At</th>
+<th>Performance</th>
+<th>Accessibility</th>
+<th>Best Practices</th>
+<th>SEO</th>
+<th>FCP</th>
+<th>LCP</th>
+<th>INP</th>
+<th>CLS</th>
+<th>TBT</th>
+<th>Speed Index</th>
+<th>TTFB</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody class="fw-semibold text-gray-700">
+{% for report_index in report_indexes %}
+<tr data-desktop-row="true">
+<td>{{ forloop.counter }}</td>
+<td>{% if report_index.scan_group_token %}<span class="badge badge-light-dark">{{ report_index.scan_group_token }}</span>{% else %}<span class="text-muted">-</span>{% endif %}</td>
+<td>{{ report_index.scanned_at|date:"d M Y, g:i A" }}</td>
+{% if report_index.desktop_report %}
+<td><span class="badge badge-light-primary fs-5">{{ report_index.desktop_report.performance_score|default:"-" }}</span></td>
+<td><span class="badge badge-light-success fs-5">{{ report_index.desktop_report.accessibility_score|default:"-" }}</span></td>
+<td><span class="badge badge-light-info fs-5">{{ report_index.desktop_report.best_practices_score|default:"-" }}</span></td>
+<td><span class="badge badge-light-warning fs-5">{{ report_index.desktop_report.seo_score|default:"-" }}</span></td>
+<td>{{ report_index.desktop_report.first_contentful_paint|default:"-" }}s</td>
+<td>{{ report_index.desktop_report.largest_contentful_paint|default:"-" }}s</td>
+<td>{{ report_index.desktop_report.interaction_to_next_paint|default:"-" }}ms</td>
+<td>{{ report_index.desktop_report.cumulative_layout_shift|default:"-" }}</td>
+<td>{{ report_index.desktop_report.total_blocking_time|default:"-" }}ms</td>
+<td>{{ report_index.desktop_report.speed_index|default:"-" }}s</td>
+<td>{{ report_index.desktop_report.time_to_first_byte|default:"-" }}s</td>
+{% else %}
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+{% endif %}
+<td>
+<a href="{% url 'page_speed_and_cwv:website-overview-detail' report_index.website.id report_index.id %}" class="btn btn-sm btn-primary">View</a>
+</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="15" class="text-center text-muted py-10">No desktop reports found for this page.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="tab-pane fade" id="tab_mobile" role="tabpanel">
+<div class="d-flex align-items-center position-relative my-1 mb-5">
+<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
+<span class="path1"></span>
+<span class="path2"></span>
+</i>
+<input type="text" id="input_mobile_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Mobile" />
+</div>
+<div class="table-responsive">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle text-nowrap w-100 gs-5 fs-6" id="kt_datatable_mobile">
+<thead>
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+<th class="w-50px">#</th>
+<th>Scan ID</th>
+<th>Scanned At</th>
+<th>Performance</th>
+<th>Accessibility</th>
+<th>Best Practices</th>
+<th>SEO</th>
+<th>FCP</th>
+<th>LCP</th>
+<th>INP</th>
+<th>CLS</th>
+<th>TBT</th>
+<th>Speed Index</th>
+<th>TTFB</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody class="fw-semibold text-gray-700">
+{% for report_index in report_indexes %}
+<tr data-mobile-row="true">
+<td>{{ forloop.counter }}</td>
+<td>{% if report_index.scan_group_token %}<span class="badge badge-light-dark">{{ report_index.scan_group_token }}</span>{% else %}<span class="text-muted">-</span>{% endif %}</td>
+<td>{{ report_index.scanned_at|date:"d M Y, g:i A" }}</td>
+{% if report_index.mobile_report %}
+<td><span class="badge badge-light-primary fs-5">{{ report_index.mobile_report.performance_score|default:"-" }}</span></td>
+<td><span class="badge badge-light-success fs-5">{{ report_index.mobile_report.accessibility_score|default:"-" }}</span></td>
+<td><span class="badge badge-light-info fs-5">{{ report_index.mobile_report.best_practices_score|default:"-" }}</span></td>
+<td><span class="badge badge-light-warning fs-5">{{ report_index.mobile_report.seo_score|default:"-" }}</span></td>
+<td>{{ report_index.mobile_report.first_contentful_paint|default:"-" }}s</td>
+<td>{{ report_index.mobile_report.largest_contentful_paint|default:"-" }}s</td>
+<td>{{ report_index.mobile_report.interaction_to_next_paint|default:"-" }}ms</td>
+<td>{{ report_index.mobile_report.cumulative_layout_shift|default:"-" }}</td>
+<td>{{ report_index.mobile_report.total_blocking_time|default:"-" }}ms</td>
+<td>{{ report_index.mobile_report.speed_index|default:"-" }}s</td>
+<td>{{ report_index.mobile_report.time_to_first_byte|default:"-" }}s</td>
+{% else %}
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+<td><span class="text-muted">-</span></td>
+{% endif %}
+<td>
+<a href="{% url 'page_speed_and_cwv:website-overview-detail' report_index.website.id report_index.id %}" class="btn btn-sm btn-primary">View</a>
+</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="15" class="text-center text-muted py-10">No mobile reports found for this page.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="tab-pane fade" id="tab_summary" role="tabpanel">
+<div class="card bg-light-primary border border-primary border-dashed mb-6">
+<div class="card-body">
+<div class="d-flex align-items-center mb-4">
+<i class="ki-duotone ki-message-text-2 fs-2x text-primary me-4">
+<span class="path1"></span>
+<span class="path2"></span>
+<span class="path3"></span>
+</i>
+<div>
+<h3 class="fw-bold text-gray-900 mb-1">AI Evaluation</h3>
+{% if latest_ai_evaluation %}
+<div class="text-gray-700 fs-7">
+Latest scan:
+{% if latest_ai_evaluation.latest_report_index.scan_group_token %}
+{{ latest_ai_evaluation.latest_report_index.scan_group_token }}
+{% else %}
+-
+{% endif %}
+</div>
+{% endif %}
+</div>
+</div>
+
+{% if latest_ai_evaluation %}
+{% if latest_ai_evaluation.ai_error %}
+<div class="text-danger fw-semibold">{{ latest_ai_evaluation.ai_error }}</div>
+{% else %}
+<div class="fs-6 text-gray-800 mb-5">{{ latest_ai_evaluation.summary }}</div>
+<div class="row g-5">
+<div class="col-lg-3">
+<div class="fw-bold text-gray-900 mb-2">Improvements</div>
+<ul class="mb-0 ps-5">
+{% for item in latest_ai_evaluation.improvements_json %}
+<li class="text-gray-700 mb-1">{{ item }}</li>
+{% empty %}
+<li class="text-muted">No improvements reported.</li>
+{% endfor %}
+</ul>
+</div>
+<div class="col-lg-3">
+<div class="fw-bold text-gray-900 mb-2">Declines</div>
+<ul class="mb-0 ps-5">
+{% for item in latest_ai_evaluation.declines_json %}
+<li class="text-gray-700 mb-1">{{ item }}</li>
+{% empty %}
+<li class="text-muted">No declines reported.</li>
+{% endfor %}
+</ul>
+</div>
+<div class="col-lg-3">
+<div class="fw-bold text-gray-900 mb-2">Warnings</div>
+<ul class="mb-0 ps-5">
+{% for item in latest_ai_evaluation.warnings_json %}
+<li class="text-gray-700 mb-1">{{ item }}</li>
+{% empty %}
+<li class="text-muted">No warnings reported.</li>
+{% endfor %}
+</ul>
+</div>
+<div class="col-lg-3">
+<div class="fw-bold text-gray-900 mb-2">Recommendations</div>
+<ul class="mb-0 ps-5">
+{% for item in latest_ai_evaluation.recommendations_json %}
+<li class="text-gray-700 mb-1">{{ item }}</li>
+{% empty %}
+<li class="text-muted">No recommendations reported.</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+{% endif %}
+{% else %}
+<div class="text-muted fw-semibold">No AI evaluation has been generated yet.</div>
+{% endif %}
+</div>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+{% endblock %}
+{% block extra_js_scripts %}
+<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<script>
+$(function () {
+/* <================= DataTable =================> */
+var reportTables = {};
+
+function initializeDataTable(tableKey, tableSelector, searchSelector, rowSelector, orderColumn, disabledTargets) {
+var $table = $(tableSelector);
+if (!$table.length || !$table.find(rowSelector).length) { return; }
+
+if (reportTables[tableKey]) {
+reportTables[tableKey].columns.adjust();
+return;
+}
+
+reportTables[tableKey] = $table.DataTable({
+info: false,
+scrollX: true,
+order: [[orderColumn, "desc"]],
+columnDefs: [
+{ orderable: false, targets: disabledTargets }
+]
+});
+
+$(searchSelector).off("keyup.datatable").on("keyup.datatable", function () {
+reportTables[tableKey].search(this.value).draw();
+});
+
+setTimeout(function () {
+reportTables[tableKey].columns.adjust();
+}, 100);
+}
+
+initializeDataTable("desktop", "#kt_datatable_desktop", "#input_desktop_search", "[data-desktop-row='true']", 2, [0, 14]);
+
+$('a[data-bs-toggle="tab"]').on("shown.bs.tab", function (event) {
+var tabTarget = $(event.target).attr("href");
+
+if (tabTarget === "#tab_desktop") {
+initializeDataTable("desktop", "#kt_datatable_desktop", "#input_desktop_search", "[data-desktop-row='true']", 2, [0, 14]);
+}
+
+if (tabTarget === "#tab_mobile") {
+initializeDataTable("mobile", "#kt_datatable_mobile", "#input_mobile_search", "[data-mobile-row='true']", 2, [0, 14]);
+}
+
+});
+});
+</script>
+{% endblock %}
