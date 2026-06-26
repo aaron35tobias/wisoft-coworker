@@ -112,7 +112,7 @@ def _build_pricing(user):
         'competitor': run.monitor.competitor_name,
         'website': _domain(run.monitor.competitor_website),
         'status': run.get_status_display(),
-        'pages': run.pages_checked,
+        'runs': run.monitor.runs.count(),
         'changes': run.changes_found,
         'mentions': run.news_mentions_found,
         'started': run.started_at,
