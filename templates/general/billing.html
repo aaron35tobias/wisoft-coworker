@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}AI API Billing & Usage | Wisoft Co-Worker{% endblock %}
+{% block title %}AI API Usage | Wisoft Co-Worker{% endblock %}
 
 {% block header %}
-{% include 'includes/header.html' with page_title='Billing & API Usage' %}
+{% include 'includes/header.html' with page_title='AI API Usage' %}
 {% endblock %}
 
 {% block content %}
@@ -13,25 +13,59 @@
     <!--begin::Container-->
     <div class="container-xxl" id="kt_content_container">
 
+        <!-- Marker element: tells base.html JS to suppress the top header alert on billing page -->
+        <div id="billing-page-marker" class="d-none"></div>
+
         {% if error %}
         <div class="alert alert-danger mb-8" role="alert">
             <strong>API Error:</strong> {{ error }}
         </div>
         {% endif %}
 
+        {% if limit_exceeded %}
+        <!--begin::Limit Exceeded Notice-->
+        <div class="notice d-flex bg-light-danger rounded border-danger border border-dashed p-6 mb-8">
+            <!--begin::Icon-->
+            <i class="ki-duotone ki-warning fs-2tx text-danger me-4">
+                <span class="path1"></span>
+                <span class="path2"></span>
+                <span class="path3"></span>
+            </i>
+            <!--end::Icon-->
+            <!--begin::Wrapper-->
+            <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
+                <!--begin::Content-->
+                <div class="fw-semibold mb-3 mb-md-0">
+                    <h4 class="text-gray-900 fw-bold">Token Limit Exceeded</h4>
+                    <div class="fs-6 text-gray-700 mt-1">You have used <strong>{{ usage_data.total_tokens }}</strong> of
+                        <strong>{{ usage_data.limit }}</strong> tokens. Renew your plan on the <strong>{{ api_provider
+                            }}</strong> billing platform to continue using AI features.
+                    </div>
+                </div>
+                <!--end::Content-->
+                <!--begin::Action-->
+                <a href="{{ api_upgrade_url }}" class="btn btn-danger btn-sm px-6 align-self-center ms-4 text-nowrap"
+                    target="_blank">Renew Plan</a>
+                <!--end::Action-->
+            </div>
+            <!--end::Wrapper-->
+        </div>
+        <!--end::Limit Exceeded Notice-->
+        {% endif %}
+
         <!--begin::Row-->
         <div class="row gy-5 g-xl-10">
             <!--begin::Col-->
-            <div class="col-xl-6">
+            <div class="col-xl-8 mx-auto">
                 <!--begin::Card-->
                 <div class="card card-xl-stretch mb-xl-10">
                     <!--begin::Header-->
                     <div class="card-header border-0 pt-5">
                         <h3 class="card-title align-items-start flex-column">
                             <span class="card-label fw-bold fs-3 mb-1">Token Usage Overview</span>
-                            <span class="text-muted mt-1 fw-semibold fs-7">Monthly API usage limits for Claude
-                                Sonnet</span>
+                            <span class="text-muted mt-1 fw-semibold fs-7">Monthly API usage limits for {{ api_provider }}</span>
                         </h3>
+
                     </div>
                     <!--end::Header-->
                     <!--begin::Body-->
@@ -44,7 +78,7 @@
                             </div>
                             <div class="progress h-8px w-100 bg-light-primary">
                                 <div class="progress-bar bg-primary" role="progressbar"
-                                    style="width: {{ usage_data.usage_percent }}%"
+                                    style="--progress-width: {{ usage_data.usage_percent }}%; width: var(--progress-width);"
                                     aria-valuenow="{{ usage_data.usage_percent }}" aria-valuemin="0"
                                     aria-valuemax="100"></div>
                             </div>
@@ -135,36 +169,6 @@
             </div>
             <!--end::Col-->
 
-            <!--begin::Col-->
-            <div class="col-xl-6">
-                <!--begin::Card-->
-                <div class="card card-xl-stretch mb-xl-10 theme-dark-bg-body" style="background-color: #CBF0F4">
-                    <!--begin::Body-->
-                    <div class="card-body d-flex flex-column">
-                        <div class="d-flex flex-column flex-grow-1">
-                            <span class="text-gray-900 fw-bold fs-3">Demo Call Executed</span>
-                            <div class="pt-5 mt-4">
-                                <span class="text-gray-900 fw-bold fs-6 lh-0 d-block mb-3">Model Used: Claude
-                                    Sonnet</span>
-                                <span class="text-gray-800 fs-7 d-block mb-2">A test API call was successfully executed
-                                    to fetch token usage data. The data displayed on the left represents the token cost
-                                    of that request combined with mock limit numbers.</span>
-
-                                <div class="bg-white rounded p-4 mt-5">
-                                    <h4 class="text-gray-800 fw-bold fs-6">Recent Activity</h4>
-                                    <div class="d-flex flex-stack mt-3">
-                                        <span class="text-muted fs-7">Test Chat Request</span>
-                                        <span class="badge badge-light-success fw-bold">Success</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!--end::Body-->
-                </div>
-                <!--end::Card-->
-            </div>
-            <!--end::Col-->
         </div>
         <!--end::Row-->
     </div>
