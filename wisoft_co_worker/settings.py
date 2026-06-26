@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'page_speed_and_cwv',
     'technical_seo',
     'content_gap',
+    'bulk_alt_text',
     'pricing_pr_monitor',
     'keyword_research',
     'serp_analysis',
