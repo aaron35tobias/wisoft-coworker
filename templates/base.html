@@ -23,6 +23,29 @@
             overflow-x: hidden;
         }
 
+        /* Fixed top API-limit alert bar: stays visible on scroll and offsets the layout below it */
+        :root { --top-alert-h: 0px; }
+        body.has-top-alert #header-limit-alert {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 110;
+        }
+        body.has-top-alert .page { padding-top: var(--top-alert-h); }
+        body.has-top-alert #kt_aside {
+            top: var(--top-alert-h);
+            height: calc(100vh - var(--top-alert-h));
+            min-height: calc(100vh - var(--top-alert-h));
+        }
+        body.has-top-alert .seo-sidebar-rail {
+            height: calc(100vh - var(--top-alert-h));
+            min-height: calc(100vh - var(--top-alert-h));
+        }
+        body.has-top-alert #kt_header {
+            top: var(--top-alert-h) !important;
+        }
+
         .flex-root,
         .page {
             width: 100%;
@@ -422,7 +445,7 @@
         <!-- Global API limit alert bar: full width, top of page, pushes the app down -->
         <div id="header-limit-alert" class="alert alert-danger d-flex align-items-center justify-content-center p-4 mb-0 rounded-0 d-none">
             <i class="ki-duotone ki-warning fs-2hx text-danger me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
-            <div class="d-flex flex-column">
+            <div class="d-flex flex-column text-center">
                 <h4 class="mb-1 text-danger">Action Required: API Limit Exceeded</h4>
                 <span class="text-gray-800">Your AI API usage for <strong>{{ api_provider }}</strong> has exceeded the limit. Please <a href="{{ api_upgrade_url }}" class="fw-bold text-danger text-decoration-underline" target="_blank">upgrade your plan</a> to restore access.</span>
             </div>
@@ -459,12 +482,21 @@
                 </div>
 
                 <script>
+                    function showTopAlert() {
+                        var el = document.getElementById('header-limit-alert');
+                        if (!el) return;
+                        el.classList.remove('d-none');
+                        document.body.classList.add('has-top-alert');
+                        var syncHeight = function () {
+                            document.documentElement.style.setProperty('--top-alert-h', el.offsetHeight + 'px');
+                        };
+                        syncHeight();
+                        window.addEventListener('resize', syncHeight);
+                    }
+
                     function dismissGlobalAlert() {
                         localStorage.setItem('limit_alert_dismissed', 'true');
-                        var headerAlert = document.getElementById('header-limit-alert');
-                        if (headerAlert) {
-                            headerAlert.classList.remove('d-none');
-                        }
+                        showTopAlert();
                     }
 
                     document.addEventListener("DOMContentLoaded", function () {
@@ -475,10 +507,7 @@
                                 myModal.show();
                             }
                         } else {
-                            var headerAlert = document.getElementById('header-limit-alert');
-                            if (headerAlert) {
-                                headerAlert.classList.remove('d-none');
-                            }
+                            showTopAlert();
                         }
                     });
                 </script>
