@@ -30,6 +30,14 @@ def validate_url(url, label):
     URLValidator()(url)
 
 
+def normalize_url(value):
+    """Accept bare domains (e.g. 'example.com/page') by defaulting to https."""
+    value = (value or '').strip()
+    if value and '://' not in value:
+        value = 'https://' + value
+    return value
+
+
 @login_required(login_url='sign-in')
 def analysis_form_view(request):
     context = {
@@ -55,12 +63,12 @@ def analysis_run_view(request):
     if request.method != 'POST':
         return redirect('content_gap:analysis')
 
-    own_url = request.POST.get('own_url', '').strip()
+    own_url = normalize_url(request.POST.get('own_url', ''))
     target_topic = request.POST.get('target_topic', '').strip()
     target_market = request.POST.get('target_market', '').strip()
     notes = request.POST.get('notes', '').strip()
     competitor_urls = [
-        request.POST.get(f'competitor_url_{index}', '').strip()
+        normalize_url(request.POST.get(f'competitor_url_{index}', ''))
         for index in range(1, 4)
         if request.POST.get(f'competitor_url_{index}', '').strip()
     ]

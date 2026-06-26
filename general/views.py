@@ -8,6 +8,7 @@ import anthropic
 from technical_seo.models import TechnicalSEOAudit
 from page_speed_and_cwv.models import WebsiteSpeedReport, Website
 from pricing_pr_monitor.models import PricingPRRun
+from content_gap.models import ContentGapAnalysis
 
 
 def _domain(url):
@@ -119,12 +120,46 @@ def _build_pricing(user):
     }
 
 
+def _build_content_gap(user):
+    """Latest content gap analysis for the most recently analysed website."""
+    analysis = (
+        ContentGapAnalysis.objects
+        .filter(requested_by=user)
+        .select_related('project')
+        .order_by('-started_at')
+        .first()
+    )
+    if not analysis:
+        return None
+
+    priority_class = {'High': 'danger', 'Medium': 'warning', 'Low': 'success'}
+    gaps = []
+    for gap in (analysis.content_gaps or [])[:3]:
+        priority = (gap.get('priority') or '').strip()
+        gaps.append({
+            'topic': gap.get('topic') or 'Content gap',
+            'priority': priority or '—',
+            'cls': priority_class.get(priority, 'secondary'),
+        })
+
+    url = analysis.own_url or (analysis.project.website_url if analysis.project else '')
+    return {
+        'website': _domain(url),
+        'status': analysis.get_status_display(),
+        'started': analysis.started_at,
+        'gaps': gaps,
+        'gaps_total': len(analysis.content_gaps or []),
+        'keywords_total': len(analysis.keyword_opportunities or []),
+    }
+
+
 @login_required(login_url='sign-in')
 def dashboard_view(request):
     context = {
         'tech': _build_technical_seo(request.user),
         'speed': _build_page_speed(request.user),
         'pricing': _build_pricing(request.user),
+        'content_gap': _build_content_gap(request.user),
     }
     return render(request, 'general/dashboard.html', context)
 
