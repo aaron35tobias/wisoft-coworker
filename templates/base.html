@@ -418,6 +418,16 @@
     <!--begin::Main-->
     <!--begin::Root-->
     <div class="d-flex flex-column flex-root">
+        {% if global_limit_exceeded %}
+        <!-- Global API limit alert bar: full width, top of page, pushes the app down -->
+        <div id="header-limit-alert" class="alert alert-danger d-flex align-items-center justify-content-center p-4 mb-0 rounded-0 d-none">
+            <i class="ki-duotone ki-warning fs-2hx text-danger me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+            <div class="d-flex flex-column">
+                <h4 class="mb-1 text-danger">Action Required: API Limit Exceeded</h4>
+                <span class="text-gray-800">Your AI API usage for <strong>{{ api_provider }}</strong> has exceeded the limit. Please <a href="{{ api_upgrade_url }}" class="fw-bold text-danger text-decoration-underline" target="_blank">upgrade your plan</a> to restore access.</span>
+            </div>
+        </div>
+        {% endif %}
         <!--begin::Page-->
         <div class="page d-flex flex-row flex-column-fluid">
             {% include 'includes/sidebar.html' %}
@@ -426,15 +436,6 @@
                 {% block header %}{% endblock %}
 
                 {% if global_limit_exceeded %}
-                <!-- Small Header Alert -->
-                <div id="header-limit-alert" class="alert alert-danger d-flex align-items-center p-4 mb-0 rounded-0 d-none justify-content-center" style="z-index: 1000; position: relative;">
-                    <i class="ki-duotone ki-warning fs-2hx text-danger me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
-                    <div class="d-flex flex-column">
-                        <h4 class="mb-1 text-danger">Action Required: API Limit Exceeded</h4>
-                        <span class="text-gray-800">Your AI API usage for <strong>{{ api_provider }}</strong> has exceeded the limit. Please <a href="{{ api_upgrade_url }}" class="fw-bold text-danger text-decoration-underline" target="_blank">upgrade your plan</a> to restore access.</span>
-                    </div>
-                </div>
-
                 <!-- Full Page Modal -->
                 <div class="modal fade" id="global_limit_modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
                     <div class="modal-dialog modal-fullscreen">
