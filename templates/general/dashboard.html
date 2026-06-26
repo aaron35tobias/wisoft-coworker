@@ -115,9 +115,10 @@
 <span class="text-gray-900 fw-bold fs-4">Technical SEO Audit</span>
 </div>
 {% if tech %}
+<div class="text-gray-500 fw-semibold fs-8 text-uppercase">Latest</div>
+<div class="fs-4 fw-bold text-gray-900 text-truncate mb-4">{{ tech.domain }}</div>
 <div class="d-flex align-items-center mb-2">
 <div class="flex-grow-1">
-<div class="text-gray-500 fs-8 mb-3">Latest: {{ tech.domain }}</div>
 <div class="row g-3">
 <div class="col-6"><div class="d-flex align-items-center"><i class="ki-duotone ki-check-circle fs-2 text-success me-2"><span class="path1"></span><span class="path2"></span></i><div><div class="fw-bold text-gray-900 fs-7 lh-1">{{ tech.status }}</div><div class="text-gray-500 fs-8">Status</div></div></div></div>
 <div class="col-6"><div class="d-flex align-items-center"><i class="ki-duotone {% if tech.critical %}ki-cross-circle text-danger{% else %}ki-check-circle text-success{% endif %} fs-2 me-2"><span class="path1"></span><span class="path2"></span></i><div><div class="fw-bold text-gray-900 fs-7 lh-1">{{ tech.critical }}</div><div class="text-gray-500 fs-8">Critical</div></div></div></div>
@@ -904,11 +905,11 @@ document.addEventListener("DOMContentLoaded", function () {
     var gaugeEl = document.querySelector("#tech_health_gauge");
     if (gaugeEl) {
         new ApexCharts(gaugeEl, {
-            chart: { type: "radialBar", height: 130, width: 130 },
+            chart: { type: "radialBar", height: 150, width: 150 },
             series: [{{ tech.health_score }}],
             colors: ["{{ tech.health_color }}"],
             plotOptions: { radialBar: {
-                hollow: { size: "55%" },
+                hollow: { size: "68%" },
                 dataLabels: {
                     name: { show: false },
                     value: { fontSize: "18px", fontWeight: "700", offsetY: 6, formatter: function (v) { return v + "/100"; } }
