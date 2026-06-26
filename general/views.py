@@ -7,6 +7,7 @@ import anthropic
 
 from technical_seo.models import TechnicalSEOAudit
 from page_speed_and_cwv.models import WebsiteSpeedReport, Website
+from pricing_pr_monitor.models import PricingPRRun
 
 
 def _domain(url):
@@ -96,11 +97,34 @@ def _build_page_speed(user):
     return data
 
 
+def _build_pricing(user):
+    """Latest Pricing & PR monitor run for the most recently checked competitor."""
+    run = (
+        PricingPRRun.objects
+        .filter(requested_by=user)
+        .select_related('monitor')
+        .order_by('-started_at')
+        .first()
+    )
+    if not run:
+        return None
+    return {
+        'competitor': run.monitor.competitor_name,
+        'website': _domain(run.monitor.competitor_website),
+        'status': run.get_status_display(),
+        'runs': run.monitor.runs.count(),
+        'changes': run.changes_found,
+        'mentions': run.news_mentions_found,
+        'started': run.started_at,
+    }
+
+
 @login_required(login_url='sign-in')
 def dashboard_view(request):
     context = {
         'tech': _build_technical_seo(request.user),
         'speed': _build_page_speed(request.user),
+        'pricing': _build_pricing(request.user),
     }
     return render(request, 'general/dashboard.html', context)
 
