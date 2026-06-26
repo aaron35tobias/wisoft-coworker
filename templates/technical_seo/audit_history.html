@@ -97,7 +97,7 @@
                     </table>
                 </div>
             </div>
-            <div class="card">
+            <!-- <div class="card">
                 <div class="card-header border-0 pt-6">
                     <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
                         <h3 class="fw-bold m-0">Technical SEO Websites</h3>
@@ -131,9 +131,9 @@
                             {% for site in websites %}
                                 <tr data-website-row="true">
                                     <td><a href="{{ site.website_url }}"
-   target="_blank"
-   rel="noopener"
-   class="text-gray-800 text-hover-primary">{{ site.website_url }}</a></td>
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="text-gray-800 text-hover-primary">{{ site.website_url }}</a></td>
                                     <td>{{ site.note|default:"-"|truncatechars:80 }}</td>
                                     <td>{{ site.audit_count }}</td>
                                     <td>
@@ -181,7 +181,7 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 {% endblock %}

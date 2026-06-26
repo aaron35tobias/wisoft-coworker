@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import socket
 import time
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict, deque
@@ -20,6 +21,9 @@ USER_AGENT = 'WisoftCoWorkerTechnicalSEOAudit/1.0'
 HTML_CONTENT_TYPES = ('text/html', 'application/xhtml+xml')
 DEFAULT_HTML_READ_LIMIT_BYTES = 5 * 1024 * 1024
 HREFLANG_PATTERN = re.compile(r'^(x-default|[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8})?)$')
+DEFAULT_AI_MAX_TOKENS = 1200
+DEFAULT_AI_TIMEOUT_SECONDS = 240
+DEFAULT_AI_RETRY_ATTEMPTS = 2
 
 
 def get_html_read_limit_bytes():
@@ -27,6 +31,29 @@ def get_html_read_limit_bytes():
         return int(os.environ.get('TECHNICAL_SEO_HTML_READ_LIMIT_BYTES', DEFAULT_HTML_READ_LIMIT_BYTES))
     except (TypeError, ValueError):
         return DEFAULT_HTML_READ_LIMIT_BYTES
+
+
+def get_env_int(name, default):
+    try:
+        return int(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def is_timeout_error(exc):
+    return isinstance(exc, (TimeoutError, socket.timeout)) or 'timed out' in str(exc).lower()
+
+
+def execute_json_request(request_factory, timeout, attempts):
+    max_attempts = max(1, attempts)
+    for attempt in range(max_attempts):
+        try:
+            with urlopen(request_factory(), timeout=max(1, timeout)) as response:
+                return json.loads(response.read().decode('utf-8'))
+        except Exception as exc:
+            if attempt >= max_attempts - 1 or not is_timeout_error(exc):
+                raise
+            time.sleep(2 * (attempt + 1))
 
 
 class PageSEOParser(HTMLParser):
@@ -742,8 +769,12 @@ def extract_anthropic_response_text(data):
 def build_ai_prompt(audit):
     return (
         'You are a senior technical SEO consultant. Analyze this structured crawl audit. '
-        'Return a concise client-ready summary with: Executive summary, top priorities, '
-        'corrective actions, Search Console insights, and developer notes. Be specific, do not invent facts. '
+        f'Return a complete client-ready summary that fits within {get_env_int("ANTHROPIC_MAX_TOKENS", DEFAULT_AI_MAX_TOKENS)} output tokens. '
+        'Use exactly these sections: Executive summary, Top priorities, Corrective actions, '
+        'Search Console insights, Developer notes. Keep each section concise. '
+        'Use no more than 5 bullets per section and no more than 18 words per bullet. '
+        'Prioritize the highest-impact findings instead of trying to mention every issue. '
+        'End with the exact line: Summary complete. Be specific, do not invent facts. '
         'Use Google URL Inspection data only when present, connecting '
         'indexing verdicts, canonical differences, and crawl issues to practical fixes. '
         'Prioritize crawlability, indexability, metadata duplication, H1 duplication, hreflang, canonicalization, and performance.\n\n'
@@ -754,33 +785,36 @@ def build_ai_prompt(audit):
 def generate_anthropic_summary(audit, prompt):
     api_key = os.environ.get('ANTHROPIC_API_KEY', '').strip()
     model = os.environ.get('ANTHROPIC_MODEL', 'claude-3-5-sonnet-20241022').strip()
+    max_tokens = get_env_int('ANTHROPIC_MAX_TOKENS', DEFAULT_AI_MAX_TOKENS)
+    timeout = get_env_int('AI_SUMMARY_TIMEOUT_SECONDS', DEFAULT_AI_TIMEOUT_SECONDS)
+    attempts = get_env_int('AI_SUMMARY_RETRY_ATTEMPTS', DEFAULT_AI_RETRY_ATTEMPTS)
     if not api_key:
         return False
 
-    body = json.dumps({
-        'model': model,
-        'max_tokens': 1200,
-        'messages': [
-            {
-                'role': 'user',
-                'content': prompt,
+    def request_factory():
+        body = json.dumps({
+            'model': model,
+            'max_tokens': max(1, max_tokens),
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': prompt,
+                },
+            ],
+        }).encode('utf-8')
+        return Request(
+            'https://api.anthropic.com/v1/messages',
+            data=body,
+            headers={
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+                'Content-Type': 'application/json',
             },
-        ],
-    }).encode('utf-8')
-    request = Request(
-        'https://api.anthropic.com/v1/messages',
-        data=body,
-        headers={
-            'x-api-key': api_key,
-            'anthropic-version': '2023-06-01',
-            'Content-Type': 'application/json',
-        },
-        method='POST',
-    )
+            method='POST',
+        )
 
     try:
-        with urlopen(request, timeout=45) as response:
-            data = json.loads(response.read().decode('utf-8'))
+        data = execute_json_request(request_factory, timeout, attempts)
         ai_summary = extract_anthropic_response_text(data)
         audit.ai_summary = ai_summary or summarize_without_ai(audit)
         audit.ai_model = f'anthropic:{model}'
@@ -796,26 +830,28 @@ def generate_anthropic_summary(audit, prompt):
 def generate_openai_summary(audit, prompt):
     api_key = os.environ.get('OPENAI_API_KEY', '').strip()
     model = os.environ.get('OPENAI_MODEL', 'gpt-4.1').strip()
+    timeout = get_env_int('AI_SUMMARY_TIMEOUT_SECONDS', DEFAULT_AI_TIMEOUT_SECONDS)
+    attempts = get_env_int('AI_SUMMARY_RETRY_ATTEMPTS', DEFAULT_AI_RETRY_ATTEMPTS)
     if not api_key:
         return False
 
-    body = json.dumps({
-        'model': model,
-        'input': prompt,
-    }).encode('utf-8')
-    request = Request(
-        'https://api.openai.com/v1/responses',
-        data=body,
-        headers={
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json',
-        },
-        method='POST',
-    )
+    def request_factory():
+        body = json.dumps({
+            'model': model,
+            'input': prompt,
+        }).encode('utf-8')
+        return Request(
+            'https://api.openai.com/v1/responses',
+            data=body,
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+            },
+            method='POST',
+        )
 
     try:
-        with urlopen(request, timeout=45) as response:
-            data = json.loads(response.read().decode('utf-8'))
+        data = execute_json_request(request_factory, timeout, attempts)
         ai_summary = extract_openai_response_text(data)
         audit.ai_summary = ai_summary or summarize_without_ai(audit)
         audit.ai_model = f'openai:{model}'

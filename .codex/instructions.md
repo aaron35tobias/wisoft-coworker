@@ -8,3 +8,5 @@
 - Keep similar features implemented in a similar way.
 - Do not add or install new packages without asking me first.
 - In this project, structure JavaScript consistently with section headers in this order: Initial Setup, DataTable, jQuery Validate, Drawer Handling, and Form Submission; place any additional upcoming sections after these in a logical order.
+- Use snake_case IDs for forms and form elements. Name forms by action, such as form_create, form_update, and form_delete. Name form elements by action and field, such as input_create_website_url, input_update_note, checkbox_create_is_active, and hidden_update_website_id. Keep every ID unique on the page.
+- When a page contains multiple DataTables, name them in sequence as kt_datatable_1, kt_datatable_2, and so on, and keep each related selector aligned with the same numbering.

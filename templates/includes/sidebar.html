@@ -137,7 +137,7 @@
 <div class="menu-item">
 <a class="menu-link{% if request.resolver_match.url_name == 'website-list' %} active{% endif %}" href="{% url 'page_speed_and_cwv:website-list' %}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Websites</span></a></div>
 <div class="menu-item">
-<a class="menu-link{% if request.resolver_match.url_name == 'reports' or request.resolver_match.url_name == 'website-reports' or request.resolver_match.url_name == 'website-report-detail' %} active{% endif %}" href="{% url 'page_speed_and_cwv:reports' %}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Reports</span></a></div>
+<a class="menu-link{% if request.resolver_match.url_name == 'overview' or request.resolver_match.url_name == 'website-overview' or request.resolver_match.url_name == 'website-overview-detail' %} active{% endif %}" href="{% url 'page_speed_and_cwv:overview' %}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Overview</span></a></div>
 </div>
 </div>
 <div data-kt-menu-trigger="click" class="menu-item menu-accordion{% if request.resolver_match.namespace == 'pricing_pr_monitor' %} here show{% endif %}">
