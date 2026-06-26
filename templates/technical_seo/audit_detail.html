@@ -10,6 +10,49 @@
 display: flex;
 flex-direction: column;
 }
+.ai-recommendation-list {
+display: grid;
+gap: 1rem;
+}
+.ai-recommendation-block {
+border: 1px solid rgba(148, 163, 184, 0.22);
+border-radius: 0.85rem;
+background: linear-gradient(180deg, rgba(248, 250, 252, 0.88), rgba(255, 255, 255, 0.96));
+padding: 1rem;
+}
+[data-bs-theme="dark"] .ai-recommendation-block {
+background: rgba(255, 255, 255, 0.04);
+border-color: rgba(255, 255, 255, 0.08);
+}
+.ai-recommendation-icon {
+width: 34px;
+height: 34px;
+border-radius: 10px;
+display: flex;
+align-items: center;
+justify-content: center;
+background: rgba(0, 158, 247, 0.12);
+}
+.ai-action-list {
+display: grid;
+gap: 0.65rem;
+margin: 0;
+padding: 0;
+}
+.ai-action-item {
+align-items: flex-start;
+display: flex;
+gap: 0.65rem;
+line-height: 1.5;
+}
+.ai-action-marker {
+width: 7px;
+height: 7px;
+border-radius: 50%;
+background: #009ef7;
+flex: 0 0 auto;
+margin-top: 0.55rem;
+}
 .ai-section-body {
 white-space: pre-line;
 line-height: 1.55;
@@ -19,10 +62,9 @@ max-height: 360px;
 overflow: auto;
 padding-right: 0.5rem;
 }
-.ai-full-response {
+.ai-response-panel {
 max-height: 70vh;
 overflow: auto;
-white-space: pre-line;
 line-height: 1.65;
 font-size: 0.95rem;
 padding: 1.25rem;
@@ -30,7 +72,7 @@ border-radius: 0.85rem;
 background: #f8f9fa;
 border: 1px solid rgba(148, 163, 184, 0.25);
 }
-[data-bs-theme="dark"] .ai-full-response {
+[data-bs-theme="dark"] .ai-response-panel {
 background: rgba(255, 255, 255, 0.04);
 border-color: rgba(255, 255, 255, 0.08);
 }
@@ -170,7 +212,7 @@ white-space: pre-line;
                 <div class="card-body p-8 text-center">
                     <div class="spinner-border text-primary mb-5" role="status"></div>
                     <h3 class="fw-bold text-gray-900 mb-3">Running Technical SEO Audit</h3>
-                    <div class="text-muted fs-6 mb-5">Crawling pages, detecting SEO issues, and preparing AI recommendations.</div>
+                    <div class="text-muted fs-6 mb-5">Crawling the website URL, following internal pages, detecting SEO issues, and preparing AI recommendations.</div>
                     <div class="mb-3 text-muted fs-7">
                         Pages crawled: <span id="audit_pages_crawled">{{ audit.pages_crawled }}</span>
                         |
@@ -238,13 +280,29 @@ white-space: pre-line;
                                 {% if audit.error_message %}
                                     <div class="alert alert-danger mb-6">{{ audit.error_message }}</div>
                                 {% endif %}
-                                <form method="post"
-                                      action="{% url 'technical_seo:audit-delete' audit.id %}"
-                                      class="js-delete-audit-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="next" value="{% url 'technical_seo:history' %}" />
-                                    <button type="submit" class="btn btn-sm btn-light-danger">Delete Audit</button>
-                                </form>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="{% url 'technical_seo:audit-export-excel' audit.id %}"
+                                       class="btn btn-sm btn-light-success">
+                                        <i class="ki-duotone ki-file-down fs-3">
+                                            <span class="path1"></span><span class="path2"></span>
+                                        </i>
+                                        Export Excel
+                                    </a>
+                                    <a href="{% url 'technical_seo:audit-export-pdf' audit.id %}"
+                                       class="btn btn-sm btn-light-primary">
+                                        <i class="ki-duotone ki-document fs-3">
+                                            <span class="path1"></span><span class="path2"></span>
+                                        </i>
+                                        Export PDF
+                                    </a>
+                                    <form method="post"
+                                          action="{% url 'technical_seo:audit-delete' audit.id %}"
+                                          class="js-delete-audit-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{% url 'technical_seo:history' %}" />
+                                        <button type="submit" class="btn btn-sm btn-light-danger">Delete Audit</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -348,22 +406,27 @@ white-space: pre-line;
                                 {% if audit.ai_summary %}
                                     <div class="ai-summary-scroll">
                                         {% if ai_summary_sections %}
-                                            <div class="accordion accordion-icon-toggle"
-                                                 id="kt_ai_recommendations_accordion">
+                                            <div class="ai-recommendation-list">
                                                 {% for section in ai_summary_sections %}
-                                                    <div class="mb-5">
-                                                        <div class="d-flex align-items-center cursor-pointer"
-                                                             data-bs-toggle="collapse"
-                                                             data-bs-target="#kt_ai_section_{{ forloop.counter }}">
-                                                            <span class="accordion-icon">
-                                                                <i class="ki-duotone ki-right fs-4"></i>
-                                                            </span>
-                                                            <div class="fs-5 fw-bold text-gray-800 ms-3">{{ section.title }}</div>
+                                                    <div class="ai-recommendation-block">
+                                                        <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+                                                            <div class="d-flex align-items-center gap-3">
+                                                                <div class="ai-recommendation-icon">
+                                                                    <i class="ki-duotone ki-chart-line-up fs-2 text-primary">
+                                                                        <span class="path1"></span><span class="path2"></span>
+                                                                    </i>
+                                                                </div>
+                                                                <div class="fs-5 fw-bold text-gray-900">{{ section.title }}</div>
+                                                            </div>
+                                                            <span class="badge badge-light-primary">{{ section.items|length }} items</span>
                                                         </div>
-                                                        <div id="kt_ai_section_{{ forloop.counter }}"
-                                                             class="collapse{% if forloop.first %} show{% endif %}"
-                                                             data-bs-parent="#kt_ai_recommendations_accordion">
-                                                            <div class="pt-3 ps-9 text-gray-700 ai-section-body">{{ section.body }}</div>
+                                                        <div class="ai-action-list">
+                                                            {% for item in section.items %}
+                                                                <div class="ai-action-item text-gray-700">
+                                                                    <span class="ai-action-marker"></span>
+                                                                    <span>{{ item }}</span>
+                                                                </div>
+                                                            {% endfor %}
                                                         </div>
                                                     </div>
                                                 {% endfor %}
@@ -374,7 +437,7 @@ white-space: pre-line;
                                     </div>
                                     <div class="separator my-5"></div>
                                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                                        <div class="text-muted fs-7">Open the complete raw AI output in a larger reading view.</div>
+                                        <div class="text-muted fs-7">Open the complete recommendations in a larger reading view.</div>
                                         <button class="btn btn-sm btn-light-primary"
                                                 type="button"
                                                 data-bs-toggle="modal"
@@ -382,7 +445,7 @@ white-space: pre-line;
                                             <i class="ki-duotone ki-eye fs-3">
                                                 <span class="path1"></span><span class="path2"></span><span class="path3"></span>
                                             </i>
-                                            View Full Response
+                                            Reading View
                                         </button>
                                     </div>
                                 {% else %}
@@ -421,7 +484,7 @@ white-space: pre-line;
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <div>
-                                        <h3 class="modal-title fw-bold text-gray-900">Full AI Response</h3>
+                                        <h3 class="modal-title fw-bold text-gray-900">AI Recommendation Reading View</h3>
                                         <div class="text-muted fs-7">
                                             {{ audit.website.website_url }}
                                             {% if audit.ai_model %}| {{ audit.ai_model }}{% endif %}
@@ -437,7 +500,30 @@ white-space: pre-line;
                                     </button>
                                 </div>
                                 <div class="modal-body">
-                                    <div class="ai-full-response text-gray-800">{{ audit.ai_summary }}</div>
+                                    <div class="ai-response-panel text-gray-800">
+                                        {% if ai_summary_sections %}
+                                            <div class="ai-recommendation-list">
+                                                {% for section in ai_summary_sections %}
+                                                    <div class="ai-recommendation-block">
+                                                        <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+                                                            <div class="fs-4 fw-bold text-gray-900">{{ section.title }}</div>
+                                                            <span class="badge badge-light-primary">{{ section.items|length }} items</span>
+                                                        </div>
+                                                        <div class="ai-action-list">
+                                                            {% for item in section.items %}
+                                                                <div class="ai-action-item text-gray-700">
+                                                                    <span class="ai-action-marker"></span>
+                                                                    <span>{{ item }}</span>
+                                                                </div>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="ai-section-body">{{ audit.ai_summary }}</div>
+                                        {% endif %}
+                                    </div>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>

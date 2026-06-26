@@ -254,17 +254,33 @@
                             </div>
                         {% endif %}
 
-                        <form method="post"
-                            action="{% url 'keyword_research:delete' run.id %}"
-                            class="js-delete-keyword-run-form">
-                            {% csrf_token %}
-                            <input type="hidden"
-                                name="next"
-                                value="{% url 'keyword_research:history' %}" />
-                            <button type="submit" class="btn btn-sm btn-light-danger">
-                                Delete Research
-                            </button>
-                        </form>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{% url 'keyword_research:export-excel' run.id %}"
+                               class="btn btn-sm btn-light-success">
+                                <i class="ki-duotone ki-file-down fs-3">
+                                    <span class="path1"></span><span class="path2"></span>
+                                </i>
+                                Export Excel
+                            </a>
+                            <a href="{% url 'keyword_research:export-pdf' run.id %}"
+                               class="btn btn-sm btn-light-primary">
+                                <i class="ki-duotone ki-document fs-3">
+                                    <span class="path1"></span><span class="path2"></span>
+                                </i>
+                                Export PDF
+                            </a>
+                            <form method="post"
+                                action="{% url 'keyword_research:delete' run.id %}"
+                                class="js-delete-keyword-run-form">
+                                {% csrf_token %}
+                                <input type="hidden"
+                                    name="next"
+                                    value="{% url 'keyword_research:history' %}" />
+                                <button type="submit" class="btn btn-sm btn-light-danger">
+                                    Delete Research
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -550,7 +566,7 @@
                                     <thead>
                                         <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
                                             <th>URL</th>
-                                            <th>Title</th>
+                                            <th>Meta Title</th>
                                             <th>Words</th>
                                             <th>Top Terms</th>
                                         </tr>

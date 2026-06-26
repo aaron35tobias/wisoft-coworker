@@ -25,6 +25,11 @@ background: rgba(18, 18, 23, 0.82);
 max-width: 420px;
 width: calc(100% - 32px);
 }
+.crawl-scope-note {
+border: 1px dashed rgba(0, 158, 247, 0.35);
+border-radius: 0.75rem;
+background: rgba(0, 158, 247, 0.06);
+}
     </style>
 {% endblock %}
 {% block header %}
@@ -62,14 +67,16 @@ width: calc(100% - 32px);
                                               rows="3"
                                               placeholder="Optional audit note">{% if website %}{{ website.note }}{% endif %}</textarea>
                                 </div>
-                                <div class="fv-row mb-6">
-                                    <label class="required fs-6 fw-semibold mb-2">Max Pages</label>
-                                    <input type="number"
-                                           name="max_pages"
-                                           class="form-control form-control-solid border border-gray-400"
-                                           value="50"
-                                           min="1"
-                                           max="100" />
+                                <div class="crawl-scope-note p-4 mb-6">
+                                    <div class="d-flex align-items-start">
+                                        <i class="ki-duotone ki-route fs-2x text-primary me-3">
+                                            <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+                                        </i>
+                                        <div>
+                                            <div class="fw-bold text-gray-900 mb-1">Full Website Crawl</div>
+                                            <div class="text-muted fs-7">The audit follows internal links and sitemap URLs from the website URL until the site queue is complete.</div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="separator separator-dashed mb-4"></div>
                                 <button type="submit"
@@ -226,7 +233,7 @@ width: calc(100% - 32px);
                 <div class="card-body p-8 text-center">
                     <div class="spinner-border text-primary mb-5" role="status"></div>
                     <h3 class="fw-bold text-gray-900 mb-3">Running Technical SEO Audit</h3>
-                    <div class="text-muted fs-6 mb-5">Crawling pages, detecting SEO issues, and preparing AI recommendations.</div>
+                    <div class="text-muted fs-6 mb-5">Crawling the website URL, following internal pages, detecting SEO issues, and preparing AI recommendations.</div>
                     <div class="progress h-8px bg-light-primary">
                         <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
                              role="progressbar"

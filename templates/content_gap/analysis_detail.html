@@ -213,15 +213,31 @@
                             </div>
                         {% endif %}
 
-                        <form method="post"
-                            action="{% url 'content_gap:analysis-delete' analysis.id %}"
-                            class="js-delete-analysis-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="next" value="{% url 'content_gap:history' %}" />
-                            <button type="submit" class="btn btn-sm btn-light-danger">
-                                Delete Analysis
-                            </button>
-                        </form>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{% url 'content_gap:analysis-export-excel' analysis.id %}"
+                               class="btn btn-sm btn-light-success">
+                                <i class="ki-duotone ki-file-down fs-3">
+                                    <span class="path1"></span><span class="path2"></span>
+                                </i>
+                                Export Excel
+                            </a>
+                            <a href="{% url 'content_gap:analysis-export-pdf' analysis.id %}"
+                               class="btn btn-sm btn-light-primary">
+                                <i class="ki-duotone ki-document fs-3">
+                                    <span class="path1"></span><span class="path2"></span>
+                                </i>
+                                Export PDF
+                            </a>
+                            <form method="post"
+                                action="{% url 'content_gap:analysis-delete' analysis.id %}"
+                                class="js-delete-analysis-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{% url 'content_gap:history' %}" />
+                                <button type="submit" class="btn btn-sm btn-light-danger">
+                                    Delete Analysis
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -464,8 +480,8 @@
                                     <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
                                         <th>Type</th>
                                         <th>URL</th>
-                                        <th>Status</th>
-                                        <th>Title</th>
+                                        <th>Meta Title</th>
+                                        <th>Meta Cnt.</th>
                                         <th>H1</th>
                                         <th>Words</th>
                                         <th>Images</th>
@@ -479,8 +495,8 @@
                                         <td class="text-break min-w-200px"><a href="{{ analysis.own_page_snapshot.url }}"
    target="_blank"
    rel="noopener">{{ analysis.own_page_snapshot.url }}</a></td>
-                                        <td>{{ analysis.own_page_snapshot.status_code|default:"-" }}</td>
                                         <td>{{ analysis.own_page_snapshot.title|default:"-"|truncatechars:80 }}</td>
+                                        <td>{{ analysis.own_page_snapshot.title|length|default:"0" }}</td>
                                         <td>{{ analysis.own_page_snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
                                         <td>{{ analysis.own_page_snapshot.word_count|default:"0" }}</td>
                                         <td><span class="badge badge-light-info">{{ analysis.own_page_snapshot.image_count|default:"0" }}</span></td>
@@ -496,8 +512,8 @@
                                         <tr>
                                             <td><span class="badge badge-light">Competitor</span></td>
                                             <td class="text-break min-w-200px"><a href="{{ snapshot.url }}" target="_blank" rel="noopener">{{ snapshot.url }}</a></td>
-                                            <td>{{ snapshot.status_code|default:"-" }}</td>
                                             <td>{{ snapshot.title|default:"-"|truncatechars:80 }}</td>
+                                            <td>{{ snapshot.title|length|default:"0" }}</td>
                                             <td>{{ snapshot.h1|join:", "|default:"-"|truncatechars:80 }}</td>
                                             <td>{{ snapshot.word_count|default:"0" }}</td>
                                             <td><span class="badge badge-light-info">{{ snapshot.image_count|default:"0" }}</span></td>

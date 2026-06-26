@@ -112,10 +112,59 @@
     padding-right: 0.5rem;
 }
 
-.serp-ai-full-response {
+.serp-recommendation-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.serp-recommendation-block {
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 0.85rem;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.88), rgba(255, 255, 255, 0.96));
+    padding: 1rem;
+}
+
+[data-bs-theme="dark"] .serp-recommendation-block {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.serp-recommendation-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 158, 247, 0.12);
+}
+
+.serp-action-list {
+    display: grid;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0;
+}
+
+.serp-action-item {
+    align-items: flex-start;
+    display: flex;
+    gap: 0.65rem;
+    line-height: 1.5;
+}
+
+.serp-action-marker {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #009ef7;
+    flex: 0 0 auto;
+    margin-top: 0.55rem;
+}
+
+.serp-ai-response-panel {
     max-height: 70vh;
     overflow: auto;
-    white-space: pre-line;
     line-height: 1.65;
     font-size: 0.95rem;
     padding: 1.25rem;
@@ -124,7 +173,7 @@
     border: 1px solid rgba(148, 163, 184, 0.25);
 }
 
-[data-bs-theme="dark"] .serp-ai-full-response {
+[data-bs-theme="dark"] .serp-ai-response-panel {
     background: rgba(255, 255, 255, 0.04);
     border-color: rgba(255, 255, 255, 0.08);
 }
@@ -202,7 +251,7 @@
                                     </div>
                                 {% endif %}
                                 {% if analysis.competitor_urls %}
-                                    <div>
+                                    <div class="mb-6">
                                         <div class="text-muted fs-8 text-uppercase fw-bold mb-2">Competitor URLs</div>
                                         <div class="d-flex flex-column gap-2">
                                             {% for competitor_url in analysis.competitor_urls %}
@@ -216,6 +265,22 @@
                                         </div>
                                     </div>
                                 {% endif %}
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="{% url 'serp_analysis:export-excel' analysis.id %}"
+                                       class="btn btn-sm btn-light-success">
+                                        <i class="ki-duotone ki-file-down fs-3">
+                                            <span class="path1"></span><span class="path2"></span>
+                                        </i>
+                                        Export Excel
+                                    </a>
+                                    <a href="{% url 'serp_analysis:export-pdf' analysis.id %}"
+                                       class="btn btn-sm btn-light-primary">
+                                        <i class="ki-duotone ki-document fs-3">
+                                            <span class="path1"></span><span class="path2"></span>
+                                        </i>
+                                        Export PDF
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -289,20 +354,27 @@
                         {% if analysis.ai_summary %}
                             <div class="serp-ai-summary-scroll">
                                 {% if ai_summary_sections %}
-                                    <div class="accordion accordion-icon-toggle"
-                                         id="kt_serp_ai_summary_accordion">
+                                    <div class="serp-recommendation-list">
                                         {% for section in ai_summary_sections %}
-                                            <div class="mb-5">
-                                                <div class="d-flex align-items-center cursor-pointer"
-                                                     data-bs-toggle="collapse"
-                                                     data-bs-target="#kt_serp_ai_section_{{ forloop.counter }}">
-                                                    <span class="accordion-icon"><i class="ki-duotone ki-right fs-4"></i></span>
-                                                    <div class="fs-5 fw-bold text-gray-800 ms-3">{{ section.title }}</div>
+                                            <div class="serp-recommendation-block">
+                                                <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <div class="serp-recommendation-icon">
+                                                            <i class="ki-duotone ki-chart-line-up fs-2 text-primary">
+                                                                <span class="path1"></span><span class="path2"></span>
+                                                            </i>
+                                                        </div>
+                                                        <div class="fs-5 fw-bold text-gray-900">{{ section.title }}</div>
+                                                    </div>
+                                                    <span class="badge badge-light-primary">{{ section.items|length }} items</span>
                                                 </div>
-                                                <div id="kt_serp_ai_section_{{ forloop.counter }}"
-                                                     class="collapse{% if forloop.first %} show{% endif %}"
-                                                     data-bs-parent="#kt_serp_ai_summary_accordion">
-                                                    <div class="pt-3 ps-9 text-gray-700 lh-lg">{{ section.body|linebreaksbr }}</div>
+                                                <div class="serp-action-list">
+                                                    {% for item in section.items %}
+                                                        <div class="serp-action-item text-gray-700">
+                                                            <span class="serp-action-marker"></span>
+                                                            <span>{{ item }}</span>
+                                                        </div>
+                                                    {% endfor %}
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -313,7 +385,7 @@
                             </div>
                             <div class="separator my-5"></div>
                             <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                                <div class="text-muted fs-7">Open the complete raw AI output in a larger reading view.</div>
+                                <div class="text-muted fs-7">Open the complete recommendations in a larger reading view.</div>
                                 <button class="btn btn-sm btn-light-primary"
                                         type="button"
                                         data-bs-toggle="modal"
@@ -321,7 +393,7 @@
                                     <i class="ki-duotone ki-eye fs-3">
                                         <span class="path1"></span><span class="path2"></span><span class="path3"></span>
                                     </i>
-                                    View Full Response
+                                    Reading View
                                 </button>
                             </div>
                         {% else %}
@@ -338,7 +410,7 @@
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <div>
-                                        <h3 class="modal-title fw-bold text-gray-900">Full AI Response</h3>
+                                        <h3 class="modal-title fw-bold text-gray-900">AI Recommendation Reading View</h3>
                                         <div class="text-muted fs-7">
                                             {{ analysis.keyword }}
                                             {% if analysis.ai_model %} | {{ analysis.ai_model }}{% endif %}
@@ -354,7 +426,30 @@
                                     </button>
                                 </div>
                                 <div class="modal-body">
-                                    <div class="serp-ai-full-response text-gray-800">{{ analysis.ai_summary }}</div>
+                                    <div class="serp-ai-response-panel text-gray-800">
+                                        {% if ai_summary_sections %}
+                                            <div class="serp-recommendation-list">
+                                                {% for section in ai_summary_sections %}
+                                                    <div class="serp-recommendation-block">
+                                                        <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+                                                            <div class="fs-4 fw-bold text-gray-900">{{ section.title }}</div>
+                                                            <span class="badge badge-light-primary">{{ section.items|length }} items</span>
+                                                        </div>
+                                                        <div class="serp-action-list">
+                                                            {% for item in section.items %}
+                                                                <div class="serp-action-item text-gray-700">
+                                                                    <span class="serp-action-marker"></span>
+                                                                    <span>{{ item }}</span>
+                                                                </div>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="lh-lg">{{ analysis.ai_summary|linebreaksbr }}</div>
+                                        {% endif %}
+                                    </div>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
