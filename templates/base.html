@@ -495,19 +495,22 @@
                     }
 
                     function dismissGlobalAlert() {
-                        localStorage.setItem('limit_alert_dismissed', 'true');
-                        showTopAlert();
+                        // Closing the modal also means it won't pop up again this session
+                        sessionStorage.setItem('limit_modal_shown', 'true');
                     }
 
                     document.addEventListener("DOMContentLoaded", function () {
-                        if (localStorage.getItem('limit_alert_dismissed') !== 'true') {
+                        // The top banner stays visible the whole time the limit is exceeded
+                        showTopAlert();
+
+                        // Show the full-screen popup only ONCE per browser session
+                        // (on first visit after the app/server is opened), not on every refresh
+                        if (sessionStorage.getItem('limit_modal_shown') !== 'true') {
                             var modalElement = document.getElementById('global_limit_modal');
                             if (modalElement) {
-                                var myModal = new bootstrap.Modal(modalElement);
-                                myModal.show();
+                                new bootstrap.Modal(modalElement).show();
+                                sessionStorage.setItem('limit_modal_shown', 'true');
                             }
-                        } else {
-                            showTopAlert();
                         }
                     });
                 </script>
