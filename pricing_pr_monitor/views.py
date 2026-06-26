@@ -19,6 +19,14 @@ def validate_urls(urls):
         validator(url)
 
 
+def normalize_url(value):
+    """Accept bare domains (e.g. 'adidas.com') by defaulting to https."""
+    value = (value or '').strip()
+    if value and '://' not in value:
+        value = 'https://' + value
+    return value
+
+
 def monitor_queryset(user):
     monitors = list(PricingPRMonitor.objects.filter(added_by=user).prefetch_related('runs'))
     for monitor in monitors:
@@ -75,9 +83,9 @@ def monitor_run_view(request, monitor_id=None):
         monitor = get_object_or_404(PricingPRMonitor, id=monitor_id, added_by=request.user)
     else:
         competitor_name = request.POST.get('competitor_name', '').strip()
-        competitor_website = request.POST.get('competitor_website', '').strip()
-        pricing_url = request.POST.get('pricing_url', '').strip()
-        monitored_urls = split_lines(request.POST.get('monitored_urls', ''))
+        competitor_website = normalize_url(request.POST.get('competitor_website', ''))
+        pricing_url = normalize_url(request.POST.get('pricing_url', ''))
+        monitored_urls = [normalize_url(url) for url in split_lines(request.POST.get('monitored_urls', ''))]
         news_keywords = split_lines(request.POST.get('news_keywords', ''))
         notes = request.POST.get('notes', '').strip()
 
