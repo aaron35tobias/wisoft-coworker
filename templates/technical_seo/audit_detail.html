@@ -187,165 +187,150 @@ white-space: pre-line;
     {% else %}
         <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
             <div class="container-xxl" id="kt_content_container">
-        <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
-
-            <div class="col-xl-6">
-                <div class="card audit-overview-card h-100">
-                    <div class="card-body p-8 position-relative">
-                        <div class="d-flex align-items-start justify-content-between gap-4 mb-6">
-                            <div class="d-flex align-items-center gap-4 min-w-0">
-                                <div class="audit-overview-icon flex-shrink-0">
-                                    <i class="ki-duotone ki-shield-tick fs-2x text-primary">
-                                        <span class="path1"></span><span class="path2"></span>
-                                    </i>
+                <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+                    <div class="col-xl-6">
+                        <div class="card audit-overview-card h-100">
+                            <div class="card-body p-8 position-relative">
+                                <div class="d-flex align-items-start justify-content-between gap-4 mb-6">
+                                    <div class="d-flex align-items-center gap-4 min-w-0">
+                                        <div class="audit-overview-icon flex-shrink-0">
+                                            <i class="ki-duotone ki-shield-tick fs-2x text-primary">
+                                                <span class="path1"></span><span class="path2"></span>
+                                            </i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="text-muted fs-7 text-uppercase fw-bold">Technical SEO Audit</div>
+                                            <h2 class="fw-bold text-gray-900 mb-0 text-break">
+                                                <a href="{{ audit.website.website_url }}"
+                                                   target="_blank"
+                                                   rel="noopener"
+                                                   class="text-gray-900 text-hover-primary">
+                                                    {{ audit.website.website_url }}
+                                                </a>
+                                            </h2>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                        {% if audit.status == 'completed' %}
+                                            <span class="badge badge-light-success fs-7">Completed</span>
+                                        {% elif audit.status == 'failed' %}
+                                            <span class="badge badge-light-danger fs-7">Failed</span>
+                                        {% else %}
+                                            <span class="badge badge-light-primary fs-7">Running</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                <div class="min-w-0">
-                                    <div class="text-muted fs-7 text-uppercase fw-bold">Technical SEO Audit</div>
-                                    <h2 class="fw-bold text-gray-900 mb-0 text-break">
-                                        <a href="{{ audit.website.website_url }}" target="_blank" rel="noopener" class="text-gray-900 text-hover-primary">
-                                            {{ audit.website.website_url }}
-                                        </a>
-                                    </h2>
+                                <div class="d-flex flex-wrap gap-3 mb-6">
+                                    <div class="badge badge-light fw-semibold">Started {{ audit.started_at|date:"d M Y, g:i A" }}</div>
+                                    {% if audit.completed_at %}
+                                        <div class="badge badge-light-success fw-semibold">Completed {{ audit.completed_at|date:"d M Y, g:i A" }}</div>
+                                    {% endif %}
                                 </div>
-                            </div>
-
-                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                                {% if audit.status == 'completed' %}
-                                    <span class="badge badge-light-success fs-7">Completed</span>
-                                {% elif audit.status == 'failed' %}
-                                    <span class="badge badge-light-danger fs-7">Failed</span>
-                                {% else %}
-                                    <span class="badge badge-light-primary fs-7">Running</span>
+                                <div class="mb-6">
+                                    <div class="text-muted fs-8 text-uppercase fw-bold mb-2">Website URL</div>
+                                    <a href="{{ audit.website.website_url }}"
+                                       target="_blank"
+                                       rel="noopener"
+                                       class="audit-pill-link text-gray-800 text-hover-primary text-break">
+                                        {{ audit.website.website_url }}
+                                    </a>
+                                </div>
+                                {% if audit.error_message %}
+                                    <div class="alert alert-danger mb-6">{{ audit.error_message }}</div>
                                 {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex flex-wrap gap-3 mb-6">
-                            <div class="badge badge-light fw-semibold">
-                                Started {{ audit.started_at|date:"d M Y, g:i A" }}
-                            </div>
-                            {% if audit.completed_at %}
-                                <div class="badge badge-light-success fw-semibold">
-                                    Completed {{ audit.completed_at|date:"d M Y, g:i A" }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-6">
-                            <div class="text-muted fs-8 text-uppercase fw-bold mb-2">Website URL</div>
-                            <a href="{{ audit.website.website_url }}" target="_blank" rel="noopener" class="audit-pill-link text-gray-800 text-hover-primary text-break">
-                                {{ audit.website.website_url }}
-                            </a>
-                        </div>
-
-                        {% if audit.error_message %}
-                            <div class="alert alert-danger mb-6">{{ audit.error_message }}</div>
-                        {% endif %}
-
-                        <form method="post"
-                            action="{% url 'technical_seo:audit-delete' audit.id %}"
-                            class="js-delete-audit-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="next" value="{% url 'technical_seo:history' %}" />
-                            <button type="submit" class="btn btn-sm btn-light-danger">
-                                Delete Audit
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-6">
-                <div class="row g-5 h-100">
-
-                    <div class="col-md-4">
-                        <div class="card audit-metric-card h-100">
-                            <div class="card-body p-6">
-                                <div class="audit-metric-icon bg-light-primary mb-5">
-                                    <i class="ki-duotone ki-document fs-2x text-primary">
-                                        <span class="path1"></span><span class="path2"></span>
-                                    </i>
-                                </div>
-                                <div class="audit-metric-value text-gray-900">{{ audit.pages_crawled }}</div>
-                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Pages</div>
+                                <form method="post"
+                                      action="{% url 'technical_seo:audit-delete' audit.id %}"
+                                      class="js-delete-audit-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'technical_seo:history' %}" />
+                                    <button type="submit" class="btn btn-sm btn-light-danger">Delete Audit</button>
+                                </form>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-md-4">
-                        <div class="card audit-metric-card h-100">
-                            <div class="card-body p-6">
-                                <div class="audit-metric-icon bg-light-warning mb-5">
-                                    <i class="ki-duotone ki-information-5 fs-2x text-warning">
-                                        <span class="path1"></span><span class="path2"></span><span class="path3"></span>
-                                    </i>
+                    <div class="col-xl-6">
+                        <div class="row g-5 h-100">
+                            <div class="col-md-4">
+                                <div class="card audit-metric-card h-100">
+                                    <div class="card-body p-6">
+                                        <div class="audit-metric-icon bg-light-primary mb-5">
+                                            <i class="ki-duotone ki-document fs-2x text-primary">
+                                                <span class="path1"></span><span class="path2"></span>
+                                            </i>
+                                        </div>
+                                        <div class="audit-metric-value text-gray-900">{{ audit.pages_crawled }}</div>
+                                        <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Pages</div>
+                                    </div>
                                 </div>
-                                <div class="audit-metric-value text-gray-900">{{ audit.issues_found }}</div>
-                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Issues</div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="card audit-metric-card h-100">
-                            <div class="card-body p-6">
-                                <div class="audit-metric-icon bg-light-danger mb-5">
-                                    <i class="ki-duotone ki-cross-circle fs-2x text-danger">
-                                        <span class="path1"></span><span class="path2"></span>
-                                    </i>
+                            <div class="col-md-4">
+                                <div class="card audit-metric-card h-100">
+                                    <div class="card-body p-6">
+                                        <div class="audit-metric-icon bg-light-warning mb-5">
+                                            <i class="ki-duotone ki-information-5 fs-2x text-warning">
+                                                <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+                                            </i>
+                                        </div>
+                                        <div class="audit-metric-value text-gray-900">{{ audit.issues_found }}</div>
+                                        <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Issues</div>
+                                    </div>
                                 </div>
-                                <div class="audit-metric-value text-danger">{{ audit.critical_issues }}</div>
-                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Critical</div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="card audit-metric-card h-100">
-                            <div class="card-body p-6">
-                                <div class="audit-metric-icon bg-light-warning mb-5">
-                                    <i class="ki-duotone ki-arrow-up fs-2x text-warning">
-                                        <span class="path1"></span><span class="path2"></span>
-                                    </i>
+                            <div class="col-md-4">
+                                <div class="card audit-metric-card h-100">
+                                    <div class="card-body p-6">
+                                        <div class="audit-metric-icon bg-light-danger mb-5">
+                                            <i class="ki-duotone ki-cross-circle fs-2x text-danger">
+                                                <span class="path1"></span><span class="path2"></span>
+                                            </i>
+                                        </div>
+                                        <div class="audit-metric-value text-danger">{{ audit.critical_issues }}</div>
+                                        <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Critical</div>
+                                    </div>
                                 </div>
-                                <div class="audit-metric-value text-warning">{{ audit.high_issues }}</div>
-                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">High</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card audit-metric-card h-100">
+                                    <div class="card-body p-6">
+                                        <div class="audit-metric-icon bg-light-warning mb-5">
+                                            <i class="ki-duotone ki-arrow-up fs-2x text-warning">
+                                                <span class="path1"></span><span class="path2"></span>
+                                            </i>
+                                        </div>
+                                        <div class="audit-metric-value text-warning">{{ audit.high_issues }}</div>
+                                        <div class="text-muted fs-7 text-uppercase fw-bold mt-2">High</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card audit-metric-card h-100">
+                                    <div class="card-body p-6">
+                                        <div class="audit-metric-icon bg-light-primary mb-5">
+                                            <i class="ki-duotone ki-chart-simple fs-2x text-primary">
+                                                <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span>
+                                            </i>
+                                        </div>
+                                        <div class="audit-metric-value text-primary">{{ audit.medium_issues }}</div>
+                                        <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Medium</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card audit-metric-card h-100">
+                                    <div class="card-body p-6">
+                                        <div class="audit-metric-icon bg-light-success mb-5">
+                                            <i class="ki-duotone ki-check-circle fs-2x text-success">
+                                                <span class="path1"></span><span class="path2"></span>
+                                            </i>
+                                        </div>
+                                        <div class="audit-metric-value text-success">{{ audit.low_issues }}</div>
+                                        <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Low</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-md-4">
-                        <div class="card audit-metric-card h-100">
-                            <div class="card-body p-6">
-                                <div class="audit-metric-icon bg-light-primary mb-5">
-                                    <i class="ki-duotone ki-chart-simple fs-2x text-primary">
-                                        <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span>
-                                    </i>
-                                </div>
-                                <div class="audit-metric-value text-primary">{{ audit.medium_issues }}</div>
-                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Medium</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="card audit-metric-card h-100">
-                            <div class="card-body p-6">
-                                <div class="audit-metric-icon bg-light-success mb-5">
-                                    <i class="ki-duotone ki-check-circle fs-2x text-success">
-                                        <span class="path1"></span><span class="path2"></span>
-                                    </i>
-                                </div>
-                                <div class="audit-metric-value text-success">{{ audit.low_issues }}</div>
-                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Low</div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
-            </div>
-
-        </div>
                 <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
                     <div class="col-xl-7">
                         <div class="card card-flush h-100">
@@ -439,7 +424,7 @@ white-space: pre-line;
                                         <h3 class="modal-title fw-bold text-gray-900">Full AI Response</h3>
                                         <div class="text-muted fs-7">
                                             {{ audit.website.website_url }}
-                                            {% if audit.ai_model %} | {{ audit.ai_model }}{% endif %}
+                                            {% if audit.ai_model %}| {{ audit.ai_model }}{% endif %}
                                         </div>
                                     </div>
                                     <button type="button"
@@ -487,13 +472,13 @@ white-space: pre-line;
                                                 {% if gsc_filters.verdict == verdict %}selected{% endif %}>{{ verdict|title }}</option>
                                     {% endfor %}
                                 </select>
-                                <button type="submit" class="btn btn-sm btn-light-primary">Filter</button>
+                                <button type="submit" class="btn btn-sm btn-light-primary">Apply Filter</button>
                             </form>
                         </div>
                     </div>
                     <div class="card-body pt-0">
                         <div class="table-responsive">
-                            <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6 audit-detail-table"
+                            <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-7 audit-detail-table"
                                    id="kt_gsc_inspection_table">
                                 <thead>
                                     <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
@@ -568,7 +553,7 @@ white-space: pre-line;
                     </div>
                 </div>
                 <div class="card mb-5 mb-xl-10">
-                   <div class="card-header border-0 pt-6">
+                    <div class="card-header border-0 pt-6">
                         <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
                             <div class="d-flex align-items-center gap-3 flex-wrap">
                                 <div class="d-flex align-items-center position-relative my-1">
@@ -577,15 +562,13 @@ white-space: pre-line;
                                         <span class="path2"></span>
                                     </i>
                                     <input type="text"
-                                        id="kt_seo_issues_table_search"
-                                        class="form-control form-control-solid border border-gray-400 w-250px ps-13"
-                                        placeholder="Search Issues" />
+                                           id="kt_seo_issues_table_search"
+                                           class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                           placeholder="Search Issues" />
                                 </div>
-
                                 <form method="get" class="d-flex align-items-center gap-2 my-1">
                                     {% if severity_filter %}<input type="hidden" name="severity" value="{{ severity_filter }}" />{% endif %}
                                     {% if gsc_filters.verdict %}<input type="hidden" name="gsc_verdict" value="{{ gsc_filters.verdict }}" />{% endif %}
-
                                     <div class="position-relative">
                                         <i class="ki-duotone ki-filter fs-3 text-gray-500 position-absolute top-50 translate-middle-y ms-4">
                                             <span class="path1"></span>
@@ -596,7 +579,8 @@ white-space: pre-line;
                                                 onchange="this.form.submit()">
                                             <option value="">All issue types</option>
                                             {% for row in issue_type_counts %}
-                                                <option value="{{ row.issue_type }}" {% if issue_type_filter == row.issue_type %}selected{% endif %}>
+                                                <option value="{{ row.issue_type }}"
+                                                        {% if issue_type_filter == row.issue_type %}selected{% endif %}>
                                                     {{ row.label }} ({{ row.total }})
                                                 </option>
                                             {% endfor %}
@@ -604,13 +588,12 @@ white-space: pre-line;
                                     </div>
                                 </form>
                             </div>
-
                             <div class="d-flex gap-2 flex-wrap">
                                 <a class="btn btn-sm {% if not severity_filter %}btn-primary{% else %}btn-light{% endif %}"
-                                href="{% url 'technical_seo:audit-detail' audit.id %}{% if issue_type_filter or gsc_filters.verdict %}?{% if issue_type_filter %}issue_type={{ issue_type_filter|urlencode }}{% endif %}{% if issue_type_filter and gsc_filters.verdict %}&{% endif %}{% if gsc_filters.verdict %}gsc_verdict={{ gsc_filters.verdict|urlencode }}{% endif %}{% endif %}">All</a>
+                                   href="{% url 'technical_seo:audit-detail' audit.id %}{% if issue_type_filter or gsc_filters.verdict %}?{% if issue_type_filter %}issue_type={{ issue_type_filter|urlencode }}{% endif %}{% if issue_type_filter and gsc_filters.verdict %}&{% endif %}{% if gsc_filters.verdict %}gsc_verdict={{ gsc_filters.verdict|urlencode }}{% endif %}{% endif %}">All</a>
                                 {% for value, label in severity_choices %}
                                     <a class="btn btn-sm {% if severity_filter == value %}btn-primary{% else %}btn-light{% endif %}"
-                                    href="{% url 'technical_seo:audit-detail' audit.id %}?severity={{ value }}{% if issue_type_filter %}&issue_type={{ issue_type_filter|urlencode }}{% endif %}{% if gsc_filters.verdict %}&gsc_verdict={{ gsc_filters.verdict|urlencode }}{% endif %}">{{ label }}</a>
+                                       href="{% url 'technical_seo:audit-detail' audit.id %}?severity={{ value }}{% if issue_type_filter %}&issue_type={{ issue_type_filter|urlencode }}{% endif %}{% if gsc_filters.verdict %}&gsc_verdict={{ gsc_filters.verdict|urlencode }}{% endif %}">{{ label }}</a>
                                 {% endfor %}
                             </div>
                         </div>
@@ -822,6 +805,16 @@ row.child(
 ).show();
 var child = row.child();
 jQuery(child).find(".js-gsc-detail-field").each(function (index) {
+if (index === 0 && url !== "-") {
+jQuery("<a>", {
+href: url,
+target: "_blank",
+rel: "noopener",
+class: "text-gray-800 text-hover-primary",
+text: url
+}).appendTo(this);
+return;
+}
 jQuery(this).text(fields[index][1]);
 });
 });
