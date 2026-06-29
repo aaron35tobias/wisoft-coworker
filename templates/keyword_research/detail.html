@@ -256,14 +256,14 @@
 
                         <div class="d-flex flex-wrap gap-2">
                             <a href="{% url 'keyword_research:export-excel' run.id %}"
-                               class="btn btn-sm btn-light-success">
+                               class="btn btn-sm btn-success">
                                 <i class="ki-duotone ki-file-down fs-3">
                                     <span class="path1"></span><span class="path2"></span>
                                 </i>
                                 Export Excel
                             </a>
                             <a href="{% url 'keyword_research:export-pdf' run.id %}"
-                               class="btn btn-sm btn-light-primary">
+                               class="btn btn-sm btn-primary">
                                 <i class="ki-duotone ki-document fs-3">
                                     <span class="path1"></span><span class="path2"></span>
                                 </i>
@@ -276,7 +276,7 @@
                                 <input type="hidden"
                                     name="next"
                                     value="{% url 'keyword_research:history' %}" />
-                                <button type="submit" class="btn btn-sm btn-light-danger">
+                                <button type="submit" class="btn btn-sm btn-danger">
                                     Delete Research
                                 </button>
                             </form>

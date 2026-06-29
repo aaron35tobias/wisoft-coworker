@@ -2,6 +2,7 @@ from io import BytesIO
 import re
 import textwrap
 import zipfile
+from urllib.parse import urlparse
 from xml.sax.saxutils import escape as xml_escape
 
 from django.contrib import messages
@@ -652,10 +653,16 @@ def export_pdf_view(request, analysis_id):
 def delete_view(request, analysis_id):
     analysis = get_user_analysis(request.user, analysis_id)
     if request.method == 'POST':
+        detail_url = reverse('serp_analysis:detail', args=[analysis.id])
         analysis.delete()
         messages.success(request, 'SERP analysis deleted successfully.')
         next_url = request.POST.get('next', '').strip()
-        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        next_path = urlparse(next_url).path
+        if (
+            next_url
+            and next_path != detail_url
+            and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()})
+        ):
             return redirect(next_url)
         return redirect('serp_analysis:history')
     return redirect('serp_analysis:history')

@@ -215,14 +215,14 @@
 
                         <div class="d-flex flex-wrap gap-2">
                             <a href="{% url 'content_gap:analysis-export-excel' analysis.id %}"
-                               class="btn btn-sm btn-light-success">
+                               class="btn btn-sm btn-success">
                                 <i class="ki-duotone ki-file-down fs-3">
                                     <span class="path1"></span><span class="path2"></span>
                                 </i>
                                 Export Excel
                             </a>
                             <a href="{% url 'content_gap:analysis-export-pdf' analysis.id %}"
-                               class="btn btn-sm btn-light-primary">
+                               class="btn btn-sm btn-primary">
                                 <i class="ki-duotone ki-document fs-3">
                                     <span class="path1"></span><span class="path2"></span>
                                 </i>
@@ -233,7 +233,7 @@
                                 class="js-delete-analysis-form">
                                 {% csrf_token %}
                                 <input type="hidden" name="next" value="{% url 'content_gap:history' %}" />
-                                <button type="submit" class="btn btn-sm btn-light-danger">
+                                <button type="submit" class="btn btn-sm btn-danger">
                                     Delete Analysis
                                 </button>
                             </form>
