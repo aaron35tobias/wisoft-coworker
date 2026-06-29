@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Bulk Alt Text | Wisoft Co-Worker{% endblock %}
+{% block extra_css_scripts %}
+<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+{% block header %}
+{% url 'bulk_alt_text:history' as history_url %}
+{% include 'includes/header.html' with page_title='Bulk Alt Text' parent_title='SEO Co-Worker' action_url=history_url action_label='History' %}
+{% endblock %}
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+<div class="container-xxl" id="kt_content_container">
+{% include 'bulk_alt_text/includes/messages.html' %}
+
+<div class="row g-5 g-xl-10 mb-5">
+<div class="col-xl-5">
+<div class="card card-flush h-100">
+<div class="card-header">
+<h3 class="card-title fw-bold text-gray-900">Generate Alt Text</h3>
+</div>
+<div class="card-body">
+<form class="form" method="post" action="{% url 'bulk_alt_text:run' %}" id="form_create" name="form_create">
+{% csrf_token %}
+<div class="fv-row mb-6">
+<label class="required fs-6 fw-semibold mb-2">Page URL</label>
+<input type="url" name="page_url" id="input_page_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com/service-page" autocomplete="url" required />
+</div>
+<div class="separator separator-dashed mb-4"></div>
+<button type="submit" class="btn btn-sm btn-primary w-100" id="button_create">
+<span class="indicator-label">Analyze Images</span>
+<span class="indicator-progress">Please wait...
+<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+</button>
+</form>
+</div>
+</div>
+</div>
+
+<div class="col-xl-7">
+<div class="card card-flush h-100">
+<div class="card-header">
+<h3 class="card-title fw-bold text-gray-900">What This Checks</h3>
+</div>
+<div class="card-body">
+<div class="row g-5">
+<div class="col-md-6">
+<div class="d-flex align-items-center mb-5">
+<i class="ki-duotone ki-picture fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+<div>
+<div class="fw-bold text-gray-900">Image Discovery</div>
+<div class="text-muted fs-7">Finds image tags from the submitted page</div>
+</div>
+</div>
+</div>
+<div class="col-md-6">
+<div class="d-flex align-items-center mb-5">
+<i class="ki-duotone ki-check-circle fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+<div>
+<div class="fw-bold text-gray-900">Alt Text Status</div>
+<div class="text-muted fs-7">Shows existing and missing alt attributes</div>
+</div>
+</div>
+</div>
+<div class="col-md-6">
+<div class="d-flex align-items-center">
+<i class="ki-duotone ki-message-text-2 fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+<div>
+<div class="fw-bold text-gray-900">Suggested Alt Text</div>
+<div class="text-muted fs-7">Creates readable SEO-friendly suggestions</div>
+</div>
+</div>
+</div>
+<div class="col-md-6">
+<div class="d-flex align-items-center">
+<i class="ki-duotone ki-tablet-text-down fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+<div>
+<div class="fw-bold text-gray-900">Export Ready</div>
+<div class="text-muted fs-7">Keeps results in history for review</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header border-0 pt-6">
+<div class="card-title">
+<div class="d-flex align-items-center position-relative my-1">
+<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+<input type="text" id="kt_datatable_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Recent" />
+</div>
+</div>
+</div>
+<div class="card-body pt-1">
+<div class="table-responsive">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_datatable">
+<thead>
+<tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+<th class="w-50px">#</th>
+<th>Page URL</th>
+<th>Total Images</th>
+<th>Missing Alt</th>
+<th>Status</th>
+<th>Scanned At</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody class="fw-semibold text-gray-700">
+{% for analysis in analyses %}
+<tr data-record-row="true">
+<td>{{ forloop.counter }}</td>
+<td><a href="{{ analysis.page_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ analysis.page_url }}</a></td>
+<td><span class="badge badge-light-primary fs-5">{{ analysis.total_images }}</span></td>
+<td><span class="badge badge-light-warning fs-5">{{ analysis.missing_alt_count }}</span></td>
+<td><span class="badge badge-light-{% if analysis.status == 'completed' %}success{% elif analysis.status == 'failed' %}danger{% else %}primary{% endif %} fs-6">{{ analysis.get_status_display }}</span></td>
+<td>{{ analysis.started_at|date:"d M Y, g:i A" }}</td>
+<td><a href="{% url 'bulk_alt_text:detail' analysis.id %}" class="btn btn-sm btn-primary">View</a></td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="7" class="text-center text-muted py-10">No bulk alt text analyses yet.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+{% endblock %}
+{% block extra_js_scripts %}
+<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<script>
+$(function () {
+/* <================= Initial Setup =================> */
+var $formCreate = $("#form_create");
+var $buttonCreate = $("#button_create");
+
+/* <================= DataTable =================> */
+var $datatable = $("#kt_datatable");
+if ($datatable.length && $datatable.find("[data-record-row='true']").length) {
+var datatable = $datatable.DataTable({
+info: false,
+order: []
+});
+
+$("#kt_datatable_search").on("keyup", function () {
+datatable.search(this.value).draw();
+});
+}
+
+/* <================= Form Submission =================> */
+$formCreate.on("submit", function () {
+$buttonCreate.attr("data-kt-indicator", "on").prop("disabled", true);
+});
+});
+</script>
+{% endblock %}

@@ -64,7 +64,7 @@ Please review the form and try again.
 <span class="path1"></span>
 <span class="path2"></span>
 </i>
-<input type="text" id="kt_websites_table_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Records" />
+<input type="text" id="kt_datatable_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Records" />
 </div>
 <!--end::Search-->
 </div>
@@ -86,7 +86,7 @@ Please review the form and try again.
 <div class="card-body pt-1">
 <div class="table-responsive">
 <!--begin::Table-->
-<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_websites_table">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_datatable">
 <thead>
 <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
 <th class="w-50px table-sort-asc">#</th>
@@ -103,13 +103,14 @@ Please review the form and try again.
 <tr data-website-row="true">
 <td>{{ forloop.counter }}</td>
 <td>
-<div class="d-flex">
-<a href="{% url 'page_speed_and_cwv:website-reports' website.id %}" class="btn btn-sm btn-info fs-6 me-2">Reports</a>
-<a href="#" class="btn btn-sm btn-primary fs-6 me-2 js-edit-website" data-website='{"id":{{ website.id }},"website_url":"{{ website.website_url|escapejs }}","note":"{{ website.note|escapejs }}","is_active":{{ website.is_active|yesno:"true,false" }}}'>Edit</a>
-<form method="post" action="{% url 'page_speed_and_cwv:website-delete' website.id %}" class="js-delete-website-form">
+<div class="d-flex gap-2">
+<a href="#" class="btn btn-sm btn-primary fs-6 js-edit-website" data-website='{"id":{{ website.id }},"website_url":"{{ website.website_url|escapejs }}","note":"{{ website.note|escapejs }}","is_active":{{ website.is_active|yesno:"true,false" }}}'>Edit</a>
+<form method="post" action="{% url 'page_speed_and_cwv:website-delete' website.id %}" name="form_delete" class="form_delete_class" >
 {% csrf_token %}
 <button type="submit" class="btn btn-sm btn-danger fs-6">Delete</button>
 </form>
+<a href="{% url 'page_speed_and_cwv:page-list' %}?website_id={{ website.id }}" class="btn btn-sm btn-success fs-6">Manage Pages</a>
+<a href="{% url 'page_speed_and_cwv:website-overview' website.id %}" class="btn btn-sm btn-info fs-6">Overview</a>
 </div>
 </td>
 <td>
@@ -149,7 +150,6 @@ Please review the form and try again.
 <!--end::Container-->
 </div>
 <!--end::Content-->
-
 <!--begin::Add website drawer-->
 <div id="kt_add_website_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="add-website" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'300px', 'md': '500px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_add_website_toggle" data-kt-drawer-close="#kt_add_website_close">
 <div class="card shadow-none rounded-0 w-100">
@@ -168,26 +168,26 @@ Please review the form and try again.
 <!--end::Header-->
 <!--begin::Body-->
 <div class="card-body position-relative">
-<form class="form" method="post" action="{% url 'page_speed_and_cwv:website-create' %}" id="kt_add_website_form" novalidate>
+<form class="form" method="post" id="form_create" name="form_create" action="{% url 'page_speed_and_cwv:website-create' %}" novalidate>
 {% csrf_token %}
 <div class="fv-row mb-8">
-<label class="required fs-6 fw-semibold mb-2">Website URL</label>
-<input type="url" name="website_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com" autocomplete="url" />
+<label for="input_create_website_url" class="required fs-6 fw-semibold mb-2">Website URL</label>
+<input type="url" id="input_create_website_url" name="website_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com" autocomplete="url" />
 </div>
 <div class="fv-row mb-8">
-<label class="fs-6 fw-semibold mb-2">Note</label>
-<textarea name="note" class="form-control form-control-solid border border-gray-400" rows="5" placeholder="Optional note"></textarea>
+<label for="input_create_note" class="fs-6 fw-semibold mb-2">Note</label>
+<textarea id="input_create_note" name="note" class="form-control form-control-solid border border-gray-400" rows="5" placeholder="Optional note"></textarea>
 </div>
 <div class="fv-row mb-8">
 <label class="form-check form-switch form-check-custom form-check-solid">
-<input class="form-check-input" type="checkbox" name="is_active" value="1" checked />
+<input id="input_create_is_active" class="form-check-input" type="checkbox" name="is_active" value="1" checked />
 <span class="form-check-label fw-semibold text-gray-700">Active</span>
 </label>
 </div>
 <div class="separator separator-dashed mb-4"></div>
 <div class="d-flex justify-content-end">
-<button type="button" class="btn btn-sm btn-light fs-6 me-3" id="kt_add_website_cancel">Discard</button>
-<button type="submit" class="btn btn-sm btn-primary fs-6" id="kt_add_website_submit">
+<button type="button" class="btn btn-sm btn-light fs-6 me-3" id="form_create_cancel">Discard</button>
+<button type="submit" class="btn btn-sm btn-primary fs-6" id="form_create_submit">
 <span class="indicator-label">Submit</span>
 <span class="indicator-progress">Please wait...
 <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
@@ -199,7 +199,6 @@ Please review the form and try again.
 </div>
 </div>
 <!--end::Add website drawer-->
-
 <!--begin::Edit website drawer-->
 <div id="kt_edit_website_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="edit-website" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'300px', 'md': '500px'}" data-kt-drawer-direction="end" data-kt-drawer-close="#kt_edit_website_close">
 <div class="card shadow-none rounded-0 w-100">
@@ -218,27 +217,27 @@ Please review the form and try again.
 <!--end::Header-->
 <!--begin::Body-->
 <div class="card-body position-relative">
-<form class="form" method="post" action="{% url 'page_speed_and_cwv:website-update' %}" id="kt_edit_website_form" novalidate>
+<form class="form" method="post" id="form_update" name="form_update" action="{% url 'page_speed_and_cwv:website-update' %}" novalidate>
 {% csrf_token %}
-<input type="hidden" name="website_id" />
+<input type="hidden" id="input_update_website_id" name="website_id" />
 <div class="fv-row mb-8">
-<label class="required fs-6 fw-semibold mb-2">Website URL</label>
-<input type="url" name="website_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com" autocomplete="url" />
+<label for="input_update_website_url" class="required fs-6 fw-semibold mb-2">Website URL</label>
+<input type="url" id="input_update_website_url" name="website_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com" autocomplete="url" />
 </div>
 <div class="fv-row mb-8">
-<label class="fs-6 fw-semibold mb-2">Note</label>
-<textarea name="note" class="form-control form-control-solid border border-gray-400" rows="5" placeholder="Optional note"></textarea>
+<label for="input_update_note" class="fs-6 fw-semibold mb-2">Note</label>
+<textarea id="input_update_note" name="note" class="form-control form-control-solid border border-gray-400" rows="5" placeholder="Optional note"></textarea>
 </div>
 <div class="fv-row mb-8">
 <label class="form-check form-switch form-check-custom form-check-solid">
-<input class="form-check-input" type="checkbox" name="is_active" value="1" />
+<input id="input_update_is_active" class="form-check-input" type="checkbox" name="is_active" value="1" />
 <span class="form-check-label fw-semibold text-gray-700">Active</span>
 </label>
 </div>
 <div class="separator separator-dashed mb-4"></div>
 <div class="d-flex justify-content-end">
-<button type="button" class="btn btn-sm btn-light fs-6 me-3" id="kt_edit_website_cancel">Discard</button>
-<button type="submit" class="btn btn-sm btn-primary fs-6" id="kt_edit_website_submit">
+<button type="button" class="btn btn-sm btn-light fs-6 me-3" id="form_update_cancel">Discard</button>
+<button type="submit" class="btn btn-sm btn-primary fs-6" id="form_update_submit">
 <span class="indicator-label">Update</span>
 <span class="indicator-progress">Please wait...
 <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
@@ -251,7 +250,6 @@ Please review the form and try again.
 </div>
 <!--end::Edit website drawer-->
 {% endblock %}
-
 {% block extra_js_scripts %}
 <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
 <script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
@@ -259,15 +257,15 @@ Please review the form and try again.
 <script src="https://cdn.jsdelivr.net/npm/jquery-validation/dist/jquery.validate.min.js"></script>
 <script>
 $(function () {
-
 /* <================= Initial Setup =================> */
 var addDrawerElement = document.querySelector("#kt_add_website_drawer");
-var addFormElement = document.querySelector("#kt_add_website_form");
 var editDrawerElement = document.querySelector("#kt_edit_website_drawer");
-var editFormElement = document.querySelector("#kt_edit_website_form");
-
+var $formCreate = $("#form_create");
+var $formEdit = $("#form_update");
+var $formCreateSubmit = $("#form_create_submit");
+var $formUpdateSubmit = $("#form_update_submit");
 /* <================= DataTable =================> */
-var websitesTableElement = document.querySelector("#kt_websites_table");
+var websitesTableElement = document.querySelector("#kt_datatable");
 if (websitesTableElement && websitesTableElement.querySelector("[data-website-row='true']")) {
 var websitesTable = $(websitesTableElement).DataTable({
 info: false,
@@ -276,17 +274,43 @@ columnDefs: [
 { orderable: false, targets: 1 }
 ]
 });
-$("#kt_websites_table_search").on("keyup", function () {
+$("#kt_datatable_search").on("keyup", function () {
 websitesTable.search(this.value).draw();
 });
 }
-
 /* <================= jQuery Validate =================> */
-var addValidator = $("#kt_add_website_form").validate({
+function detect_submit_button(form) {
+return form && form.id === "form_create" ? $formCreateSubmit : $formUpdateSubmit;
+}
+function enableSubmitButton(form) {
+var $submitButton = detect_submit_button(form);
+if (!$submitButton.length) { return; }
+$submitButton.removeAttr("data-kt-indicator").prop("disabled", false);
+}
+function showSubmitIndicator(form) {
+var $submitButton = detect_submit_button(form);
+if (!$submitButton.length) { return; }
+$submitButton.attr("data-kt-indicator", "on");
+}
+function disableSubmitButton(form) {
+var $submitButton = detect_submit_button(form);
+if (!$submitButton.length) { return; }
+$submitButton.attr("data-kt-indicator", "on").prop("disabled", true);
+}
+var addValidator = $formCreate.validate({
 rules: {
 website_url: {
 required: true,
-url: true
+url: true,
+remote: {
+url: "{% url 'page_speed_and_cwv:website-validate' %}",
+type: "get",
+data: {
+website_url: function () {
+return $formCreate.find("[name='website_url']").val();
+}
+}
+}
 },
 note: {
 maxlength: 1000
@@ -295,21 +319,40 @@ maxlength: 1000
 messages: {
 website_url: {
 required: "Website URL is required.",
-url: "Enter a valid website URL."
+url: "Enter a valid website URL.",
+remote: "This website has already been added."
 },
 note: {
 maxlength: "Note must be 1000 characters or less."
 }
 },
 errorClass: "text-danger mt-2",
-errorElement: "div"
+errorElement: "div",
+invalidHandler: function (event, validator) {
+enableSubmitButton(validator.currentForm);
+},
+submitHandler: function (form) {
+disableSubmitButton(form);
+form.submit();
+}
 });
-
-var editValidator = $("#kt_edit_website_form").validate({
+var editValidator = $formEdit.validate({
 rules: {
 website_url: {
 required: true,
-url: true
+url: true,
+remote: {
+url: "{% url 'page_speed_and_cwv:website-validate' %}",
+type: "get",
+data: {
+website_url: function () {
+return $formEdit.find("[name='website_url']").val();
+},
+website_id: function () {
+return $formEdit.find("[name='website_id']").val();
+}
+}
+}
 },
 note: {
 maxlength: 1000
@@ -318,26 +361,35 @@ maxlength: 1000
 messages: {
 website_url: {
 required: "Website URL is required.",
-url: "Enter a valid website URL."
+url: "Enter a valid website URL.",
+remote: "This website has already been added."
 },
 note: {
 maxlength: "Note must be 1000 characters or less."
 }
 },
 errorClass: "text-danger mt-2",
-errorElement: "div"
+errorElement: "div",
+invalidHandler: function (event, validator) {
+enableSubmitButton(validator.currentForm);
+},
+submitHandler: function (form) {
+disableSubmitButton(form);
+form.submit();
+}
 });
-
 /* <================= Drawer Handling =================> */
 function resetAddWebsiteDrawer() {
-if (!addFormElement) { return; }
-addFormElement.reset();
+if (!$formCreate.length) { return; }
+$formCreate[0].reset();
 addValidator.resetForm();
+enableSubmitButton($formCreate[0]);
 }
 function resetEditWebsiteDrawer() {
-if (!editFormElement) { return; }
-editFormElement.reset();
+if (!$formEdit.length) { return; }
+$formEdit[0].reset();
 editValidator.resetForm();
+enableSubmitButton($formEdit[0]);
 }
 $("#kt_add_website_toggle").on("click", function () {
 resetAddWebsiteDrawer();
@@ -346,45 +398,36 @@ $(document).on("click", ".js-edit-website", function (event) {
 event.preventDefault();
 resetEditWebsiteDrawer();
 var website = JSON.parse(this.dataset.website);
-$("#kt_edit_website_form [name='website_id']").val(website.id);
-$("#kt_edit_website_form [name='website_url']").val(website.website_url);
-$("#kt_edit_website_form [name='note']").val(website.note);
-$("#kt_edit_website_form [name='is_active']").prop("checked", website.is_active);
+$formEdit.find("[name='website_id']").val(website.id);
+$formEdit.find("[name='website_url']").val(website.website_url);
+$formEdit.find("[name='note']").val(website.note);
+$formEdit.find("[name='is_active']").prop("checked", website.is_active);
 var drawer = editDrawerElement ? KTDrawer.getInstance(editDrawerElement) || new KTDrawer(editDrawerElement) : null;
 if (drawer) {
 drawer.show();
 }
 });
-$("#kt_add_website_cancel").on("click", function () {
+$("#form_create_cancel").on("click", function () {
 resetAddWebsiteDrawer();
 var drawer = addDrawerElement ? KTDrawer.getInstance(addDrawerElement) || new KTDrawer(addDrawerElement) : null;
 if (drawer) { drawer.hide(); }
 });
-$("#kt_edit_website_cancel").on("click", function () {
+$("#form_update_cancel").on("click", function () {
 resetEditWebsiteDrawer();
 var drawer = editDrawerElement ? KTDrawer.getInstance(editDrawerElement) || new KTDrawer(editDrawerElement) : null;
 if (drawer) {
 drawer.hide();
 }
 });
-
 /* <================= Form Submission =================> */
-$("#kt_add_website_form, #kt_edit_website_form").on("submit", function () {
-if (!$(this).valid()) {
-return false;
-}
-var submitButton = this.querySelector("button[type='submit']");
-if (submitButton) {
-submitButton.setAttribute("data-kt-indicator", "on");
-submitButton.disabled = true;
-}
+$formCreateSubmit.add($formUpdateSubmit).on("click", function () {
+showSubmitIndicator(this.form);
 });
-$(document).on("submit", ".js-delete-website-form", function (event) {
+$(document).on("submit", ".form_delete_class", function (event) {
 if (!window.confirm("Are you sure you want to delete this website?")) {
 event.preventDefault();
 }
 });
-
 });
 </script>
 {% endblock %}

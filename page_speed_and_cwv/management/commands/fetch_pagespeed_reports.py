@@ -1,11 +1,14 @@
 import json
 import os
+import re
 from decimal import Decimal
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from urllib.request import urlopen
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 from page_speed_and_cwv.models import (
     Website,
+    WebsitePage,
     WebsiteSpeedReport,
     WebsiteSpeedReportAiIndex,
 )
@@ -19,7 +22,12 @@ class Command(BaseCommand):
         parser.add_argument(
             '--website-id',
             type=int,
-            help='Fetch reports for one website only.',
+            help='Fetch reports for one website pages only.',
+        )
+        parser.add_argument(
+            '--page-id',
+            type=int,
+            help='Fetch reports for one saved page only.',
         )
         parser.add_argument(
             '--strategy',
@@ -37,9 +45,13 @@ class Command(BaseCommand):
         if not api_key:
             raise CommandError('GOOGLE_PAGESPEED_API_KEY is not set.')
 
-        websites = Website.objects.filter(is_active=True)
+        pages = WebsitePage.objects.filter(is_active=True, website__is_active=True).select_related('website')
+
         if options['website_id']:
-            websites = websites.filter(id=options['website_id'])
+            pages = pages.filter(website_id=options['website_id'])
+
+        if options['page_id']:
+            pages = pages.filter(id=options['page_id'])
 
         strategies = [options['strategy']]
         if options['strategy'] == 'both':
@@ -49,19 +61,20 @@ class Command(BaseCommand):
             ]
 
         total_reports = 0
-        for website in websites:
-            report_ai_index = WebsiteSpeedReportAiIndex.objects.create(
-                website=website,
-            )
+        scan_group_tokens = {}
+        for page in pages.order_by('website_id', 'id'):
+            scan_group_token = scan_group_tokens.setdefault(page.website_id, self.create_scan_group_token(page.website))
+            report_ai_index = WebsiteSpeedReportAiIndex.objects.create(website=page.website,page=page,scan_group_token=scan_group_token)
             for strategy in strategies:
-                self.stdout.write(f'Fetching {strategy} report for {website.website_url}')
+                self.stdout.write(f'Fetching {strategy} report for {page.page_url}')
                 data = self.fetch_pagespeed_data(
-                    url=website.website_url,
+                    url=page.page_url,
                     strategy=strategy,
                     api_key=api_key,
                 )
                 WebsiteSpeedReport.objects.create(
-                    website=website,
+                    website=page.website,
+                    page=page,
                     report_ai_index=report_ai_index,
                     device_type=strategy,
                     performance_score=self.get_category_score(data, 'performance'),
@@ -80,6 +93,14 @@ class Command(BaseCommand):
                 total_reports += 1
 
         self.stdout.write(self.style.SUCCESS(f'Created {total_reports} PageSpeed report(s).'))
+
+    def create_scan_group_token(self, website):
+        parsed_url = urlparse(website.website_url)
+        site_name = parsed_url.netloc or parsed_url.path
+        site_name = site_name.lower().replace('www.', '').split('.')[0]
+        site_prefix = re.sub(r'[^a-z0-9]', '', site_name)[:4].upper() or 'SITE'
+        timestamp = timezone.now().strftime('%Y%m%d%H%M%S%f')
+        return f'{site_prefix}-{timestamp}'
 
     def fetch_pagespeed_data(self, url, strategy, api_key):
         params = urlencode({
