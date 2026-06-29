@@ -81,6 +81,9 @@ def run_research_view(request):
         return redirect('keyword_research:research')
 
     website_url = request.POST.get('website_url', '').strip()
+    # Accept bare domains (e.g. "example.com") by defaulting to https.
+    if website_url and '://' not in website_url:
+        website_url = 'https://' + website_url
     target_location = request.POST.get('target_location', '').strip()
     language = request.POST.get('language', '').strip()
     seed_topic = request.POST.get('seed_topic', '').strip()

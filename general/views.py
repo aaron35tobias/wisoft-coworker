@@ -9,6 +9,7 @@ from technical_seo.models import TechnicalSEOAudit
 from page_speed_and_cwv.models import WebsiteSpeedReport, Website
 from pricing_pr_monitor.models import PricingPRRun
 from content_gap.models import ContentGapAnalysis
+from keyword_research.models import KeywordResearchRun, KeywordIdea
 
 
 def _domain(url):
@@ -153,6 +154,39 @@ def _build_content_gap(user):
     }
 
 
+def _build_keyword(user):
+    """Latest keyword research run for the most recently analysed website."""
+    run = (
+        KeywordResearchRun.objects
+        .filter(requested_by=user)
+        .select_related('project')
+        .order_by('-started_at')
+        .first()
+    )
+    if not run:
+        return None
+
+    priority_class = {'High': 'danger', 'Medium': 'warning', 'Low': 'success'}
+    ideas = []
+    for idea in KeywordIdea.objects.filter(run=run)[:3]:
+        priority = (idea.priority or '').strip()
+        ideas.append({
+            'keyword': idea.keyword,
+            'intent': idea.intent or '—',
+            'priority': priority or '—',
+            'cls': priority_class.get(priority, 'secondary'),
+        })
+
+    return {
+        'website': _domain(run.project.website_url),
+        'seed': run.project.seed_topic,
+        'status': run.get_status_display(),
+        'started': run.started_at,
+        'ideas': ideas,
+        'ideas_total': KeywordIdea.objects.filter(run=run).count(),
+    }
+
+
 @login_required(login_url='sign-in')
 def dashboard_view(request):
     context = {
@@ -160,6 +194,7 @@ def dashboard_view(request):
         'speed': _build_page_speed(request.user),
         'pricing': _build_pricing(request.user),
         'content_gap': _build_content_gap(request.user),
+        'keyword': _build_keyword(request.user),
     }
     return render(request, 'general/dashboard.html', context)
 
