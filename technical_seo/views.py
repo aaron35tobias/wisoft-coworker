@@ -674,5 +674,8 @@ def audit_status_view(request, audit_id):
         "status": audit.status,
         "pages_crawled": audit.pages_crawled,
         "issues_found": audit.issues_found,
+        "gsc_status": audit.gsc_status,
+        "pagespeed_status": audit.pagespeed_status,
+        "ai_ready": bool(audit.ai_summary),
         "detail_url": reverse("technical_seo:audit-detail", args=[audit.id]),
     })

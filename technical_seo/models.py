@@ -27,11 +27,13 @@ class TechnicalSEOWebsite(models.Model):
 
 class TechnicalSEOAudit(models.Model):
     STATUS_RUNNING = 'running'
+    STATUS_CRAWL_COMPLETED = 'crawl_completed'
     STATUS_COMPLETED = 'completed'
     STATUS_FAILED = 'failed'
 
     STATUS_CHOICES = [
         (STATUS_RUNNING, 'Running'),
+        (STATUS_CRAWL_COMPLETED, 'Crawl Completed'),
         (STATUS_COMPLETED, 'Completed'),
         (STATUS_FAILED, 'Failed'),
     ]

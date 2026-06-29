@@ -1099,6 +1099,10 @@ def run_technical_seo_audit(audit):
         detect_duplicate_issues(audit)
         detect_hreflang_issues(audit)
         update_audit_counts(audit)
+        audit.status = TechnicalSEOAudit.STATUS_CRAWL_COMPLETED
+        audit.gsc_status = 'queued'
+        audit.pagespeed_status = 'queued'
+        audit.save(update_fields=['status', 'gsc_status', 'pagespeed_status'])
         run_search_console_collection(audit)
         run_pagespeed_collection(audit)
         generate_ai_summary(audit)
