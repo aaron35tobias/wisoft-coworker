@@ -56,7 +56,7 @@
                             </div>
                         </div>
                         <div class="pagespeed-score-ring"
-                             style="--score-value: {{ audit.pagespeed_mobile.performance_score|default:0 }}; --score-color: #009ef7;">
+                             style="--score-value: {{ audit.pagespeed_mobile.performance_score|default:0 }}; --score-color: {% if audit.pagespeed_mobile.performance_score >= 90 %}#50cd89{% elif audit.pagespeed_mobile.performance_score >= 50 %}#f6c000{% else %}#f1416c{% endif %};">
                             <div class="pagespeed-score-inner">
                                 <div class="pagespeed-score-value">{{ audit.pagespeed_mobile.performance_score|default:"-" }}</div>
                                 <div class="text-muted fs-9 text-uppercase fw-bold">Score</div>
@@ -64,32 +64,32 @@
                         </div>
                     </div>
                     <div class="pagespeed-category-grid mb-5">
-                        <div class="pagespeed-category-chip">
-                            <div class="text-muted fs-8">Accessibility</div>
-                            <div class="fw-bold text-gray-900 fs-5">{{ audit.pagespeed_mobile.accessibility_score|default:"-" }}</div>
+                        <div class="pagespeed-category-chip is-accessibility">
+                            <div class="pagespeed-data-label">Accessibility</div>
+                            <div class="pagespeed-data-value">{{ audit.pagespeed_mobile.accessibility_score|default:"-" }}</div>
                         </div>
-                        <div class="pagespeed-category-chip">
-                            <div class="text-muted fs-8">Best Practices</div>
-                            <div class="fw-bold text-gray-900 fs-5">{{ audit.pagespeed_mobile.best_practices_score|default:"-" }}</div>
+                        <div class="pagespeed-category-chip is-best-practices">
+                            <div class="pagespeed-data-label">Best Practices</div>
+                            <div class="pagespeed-data-value">{{ audit.pagespeed_mobile.best_practices_score|default:"-" }}</div>
                         </div>
-                        <div class="pagespeed-category-chip">
-                            <div class="text-muted fs-8">SEO</div>
-                            <div class="fw-bold text-gray-900 fs-5">{{ audit.pagespeed_mobile.seo_score|default:"-" }}</div>
+                        <div class="pagespeed-category-chip is-seo">
+                            <div class="pagespeed-data-label">SEO</div>
+                            <div class="pagespeed-data-value">{{ audit.pagespeed_mobile.seo_score|default:"-" }}</div>
                         </div>
-                        <div class="pagespeed-category-chip">
-                            <div class="text-muted fs-8">Speed Index</div>
-                            <div class="fw-bold text-gray-900 fs-5">{{ audit.pagespeed_mobile.speed_index|default:"-" }}{% if audit.pagespeed_mobile.speed_index %}s{% endif %}</div>
+                        <div class="pagespeed-category-chip is-speed">
+                            <div class="pagespeed-data-label">Speed Index</div>
+                            <div class="pagespeed-data-value">{{ audit.pagespeed_mobile.speed_index|default:"-" }}{% if audit.pagespeed_mobile.speed_index %}s{% endif %}</div>
                         </div>
                     </div>
                     <div class="separator separator-dashed mb-5"></div>
                     <div class="text-muted fs-8 text-uppercase fw-bold mb-3">Core Web Vitals</div>
                     <div class="pagespeed-vitals-grid">
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">FCP</div><div class="fw-bold">{{ audit.pagespeed_mobile.first_contentful_paint|default:"-" }}{% if audit.pagespeed_mobile.first_contentful_paint %}s{% endif %}</div></div>
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">LCP</div><div class="fw-bold">{{ audit.pagespeed_mobile.largest_contentful_paint|default:"-" }}{% if audit.pagespeed_mobile.largest_contentful_paint %}s{% endif %}</div></div>
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">INP</div><div class="fw-bold">{{ audit.pagespeed_mobile.interaction_to_next_paint|default:"-" }}{% if audit.pagespeed_mobile.interaction_to_next_paint %}ms{% endif %}</div></div>
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">CLS</div><div class="fw-bold">{{ audit.pagespeed_mobile.cumulative_layout_shift|default:"-" }}</div></div>
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">TBT</div><div class="fw-bold">{{ audit.pagespeed_mobile.total_blocking_time|default:"-" }}{% if audit.pagespeed_mobile.total_blocking_time %}ms{% endif %}</div></div>
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">TTFB</div><div class="fw-bold">{{ audit.pagespeed_mobile.time_to_first_byte|default:"-" }}{% if audit.pagespeed_mobile.time_to_first_byte %}s{% endif %}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">FCP</div><div class="pagespeed-vital-value is-fast">{{ audit.pagespeed_mobile.first_contentful_paint|default:"-" }}{% if audit.pagespeed_mobile.first_contentful_paint %}s{% endif %}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">LCP</div><div class="pagespeed-vital-value is-medium">{{ audit.pagespeed_mobile.largest_contentful_paint|default:"-" }}{% if audit.pagespeed_mobile.largest_contentful_paint %}s{% endif %}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">INP</div><div class="pagespeed-vital-value is-fast">{{ audit.pagespeed_mobile.interaction_to_next_paint|default:"-" }}{% if audit.pagespeed_mobile.interaction_to_next_paint %}ms{% endif %}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">CLS</div><div class="pagespeed-vital-value is-fast">{{ audit.pagespeed_mobile.cumulative_layout_shift|default:"-" }}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">TBT</div><div class="pagespeed-vital-value is-slow">{{ audit.pagespeed_mobile.total_blocking_time|default:"-" }}{% if audit.pagespeed_mobile.total_blocking_time %}ms{% endif %}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">TTFB</div><div class="pagespeed-vital-value is-medium">{{ audit.pagespeed_mobile.time_to_first_byte|default:"-" }}{% if audit.pagespeed_mobile.time_to_first_byte %}s{% endif %}</div></div>
                     </div>
                 </div>
             </div>
@@ -108,7 +108,7 @@
                             </div>
                         </div>
                         <div class="pagespeed-score-ring"
-                             style="--score-value: {{ audit.pagespeed_desktop.performance_score|default:0 }}; --score-color: #7239ea;">
+                             style="--score-value: {{ audit.pagespeed_desktop.performance_score|default:0 }}; --score-color: {% if audit.pagespeed_desktop.performance_score >= 90 %}#50cd89{% elif audit.pagespeed_desktop.performance_score >= 50 %}#f6c000{% else %}#f1416c{% endif %};">
                             <div class="pagespeed-score-inner">
                                 <div class="pagespeed-score-value">{{ audit.pagespeed_desktop.performance_score|default:"-" }}</div>
                                 <div class="text-muted fs-9 text-uppercase fw-bold">Score</div>
@@ -116,32 +116,32 @@
                         </div>
                     </div>
                     <div class="pagespeed-category-grid mb-5">
-                        <div class="pagespeed-category-chip">
-                            <div class="text-muted fs-8">Accessibility</div>
-                            <div class="fw-bold text-gray-900 fs-5">{{ audit.pagespeed_desktop.accessibility_score|default:"-" }}</div>
+                        <div class="pagespeed-category-chip is-accessibility">
+                            <div class="pagespeed-data-label">Accessibility</div>
+                            <div class="pagespeed-data-value">{{ audit.pagespeed_desktop.accessibility_score|default:"-" }}</div>
                         </div>
-                        <div class="pagespeed-category-chip">
-                            <div class="text-muted fs-8">Best Practices</div>
-                            <div class="fw-bold text-gray-900 fs-5">{{ audit.pagespeed_desktop.best_practices_score|default:"-" }}</div>
+                        <div class="pagespeed-category-chip is-best-practices">
+                            <div class="pagespeed-data-label">Best Practices</div>
+                            <div class="pagespeed-data-value">{{ audit.pagespeed_desktop.best_practices_score|default:"-" }}</div>
                         </div>
-                        <div class="pagespeed-category-chip">
-                            <div class="text-muted fs-8">SEO</div>
-                            <div class="fw-bold text-gray-900 fs-5">{{ audit.pagespeed_desktop.seo_score|default:"-" }}</div>
+                        <div class="pagespeed-category-chip is-seo">
+                            <div class="pagespeed-data-label">SEO</div>
+                            <div class="pagespeed-data-value">{{ audit.pagespeed_desktop.seo_score|default:"-" }}</div>
                         </div>
-                        <div class="pagespeed-category-chip">
-                            <div class="text-muted fs-8">Speed Index</div>
-                            <div class="fw-bold text-gray-900 fs-5">{{ audit.pagespeed_desktop.speed_index|default:"-" }}{% if audit.pagespeed_desktop.speed_index %}s{% endif %}</div>
+                        <div class="pagespeed-category-chip is-speed">
+                            <div class="pagespeed-data-label">Speed Index</div>
+                            <div class="pagespeed-data-value">{{ audit.pagespeed_desktop.speed_index|default:"-" }}{% if audit.pagespeed_desktop.speed_index %}s{% endif %}</div>
                         </div>
                     </div>
                     <div class="separator separator-dashed mb-5"></div>
                     <div class="text-muted fs-8 text-uppercase fw-bold mb-3">Core Web Vitals</div>
                     <div class="pagespeed-vitals-grid">
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">FCP</div><div class="fw-bold">{{ audit.pagespeed_desktop.first_contentful_paint|default:"-" }}{% if audit.pagespeed_desktop.first_contentful_paint %}s{% endif %}</div></div>
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">LCP</div><div class="fw-bold">{{ audit.pagespeed_desktop.largest_contentful_paint|default:"-" }}{% if audit.pagespeed_desktop.largest_contentful_paint %}s{% endif %}</div></div>
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">INP</div><div class="fw-bold">{{ audit.pagespeed_desktop.interaction_to_next_paint|default:"-" }}{% if audit.pagespeed_desktop.interaction_to_next_paint %}ms{% endif %}</div></div>
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">CLS</div><div class="fw-bold">{{ audit.pagespeed_desktop.cumulative_layout_shift|default:"-" }}</div></div>
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">TBT</div><div class="fw-bold">{{ audit.pagespeed_desktop.total_blocking_time|default:"-" }}{% if audit.pagespeed_desktop.total_blocking_time %}ms{% endif %}</div></div>
-                        <div class="pagespeed-vital-tile"><div class="text-muted fs-8">TTFB</div><div class="fw-bold">{{ audit.pagespeed_desktop.time_to_first_byte|default:"-" }}{% if audit.pagespeed_desktop.time_to_first_byte %}s{% endif %}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">FCP</div><div class="pagespeed-vital-value is-fast">{{ audit.pagespeed_desktop.first_contentful_paint|default:"-" }}{% if audit.pagespeed_desktop.first_contentful_paint %}s{% endif %}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">LCP</div><div class="pagespeed-vital-value is-medium">{{ audit.pagespeed_desktop.largest_contentful_paint|default:"-" }}{% if audit.pagespeed_desktop.largest_contentful_paint %}s{% endif %}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">INP</div><div class="pagespeed-vital-value is-fast">{{ audit.pagespeed_desktop.interaction_to_next_paint|default:"-" }}{% if audit.pagespeed_desktop.interaction_to_next_paint %}ms{% endif %}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">CLS</div><div class="pagespeed-vital-value is-fast">{{ audit.pagespeed_desktop.cumulative_layout_shift|default:"-" }}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">TBT</div><div class="pagespeed-vital-value is-slow">{{ audit.pagespeed_desktop.total_blocking_time|default:"-" }}{% if audit.pagespeed_desktop.total_blocking_time %}ms{% endif %}</div></div>
+                        <div class="pagespeed-vital-tile"><div class="pagespeed-vital-name">TTFB</div><div class="pagespeed-vital-value is-medium">{{ audit.pagespeed_desktop.time_to_first_byte|default:"-" }}{% if audit.pagespeed_desktop.time_to_first_byte %}s{% endif %}</div></div>
                     </div>
                 </div>
             </div>

@@ -356,17 +356,110 @@ white-space: pre-line;
 .pagespeed-category-chip {
     border-radius: 0.85rem;
     background: #f8f9fa;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-left: 4px solid var(--chip-color, #009ef7);
     padding: 0.9rem;
+}
+
+.pagespeed-category-chip.is-accessibility {
+    --chip-color: #50cd89;
+    background: linear-gradient(135deg, rgba(80, 205, 137, 0.1), rgba(255, 255, 255, 0.96));
+}
+
+.pagespeed-category-chip.is-best-practices {
+    --chip-color: #009ef7;
+    background: linear-gradient(135deg, rgba(0, 158, 247, 0.1), rgba(255, 255, 255, 0.96));
+}
+
+.pagespeed-category-chip.is-seo {
+    --chip-color: #7239ea;
+    background: linear-gradient(135deg, rgba(114, 57, 234, 0.1), rgba(255, 255, 255, 0.96));
+}
+
+.pagespeed-category-chip.is-speed {
+    --chip-color: #f6c000;
+    background: linear-gradient(135deg, rgba(246, 192, 0, 0.14), rgba(255, 255, 255, 0.96));
+}
+
+.pagespeed-data-label {
+    color: #7e8299;
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+.pagespeed-data-value {
+    color: var(--chip-color, #181c32);
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.2;
+    margin-top: 0.25rem;
 }
 
 .pagespeed-vital-tile {
     border: 1px dashed rgba(148, 163, 184, 0.45);
     border-radius: 0.85rem;
+    background: rgba(248, 250, 252, 0.72);
     padding: 0.9rem;
+}
+
+.pagespeed-vital-name {
+    color: #7e8299;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.pagespeed-vital-value {
+    color: #181c32;
+    font-size: 1rem;
+    font-weight: 800;
+    margin-top: 0.25rem;
+}
+
+.pagespeed-vital-value.is-fast {
+    color: #50cd89;
+}
+
+.pagespeed-vital-value.is-medium {
+    color: #f6c000;
+}
+
+.pagespeed-vital-value.is-slow {
+    color: #f1416c;
 }
 
 [data-bs-theme="dark"] .pagespeed-category-chip {
     background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-bs-theme="dark"] .pagespeed-category-chip.is-accessibility,
+[data-bs-theme="dark"] .pagespeed-category-chip.is-best-practices,
+[data-bs-theme="dark"] .pagespeed-category-chip.is-seo,
+[data-bs-theme="dark"] .pagespeed-category-chip.is-speed {
+    background: rgba(255, 255, 255, 0.045);
+}
+
+[data-bs-theme="dark"] .pagespeed-vital-tile {
+    background: rgba(255, 255, 255, 0.035);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .pagespeed-vital-value {
+    color: #f5f8fa;
+}
+
+[data-bs-theme="dark"] .pagespeed-vital-value.is-fast {
+    color: #75d99f;
+}
+
+[data-bs-theme="dark"] .pagespeed-vital-value.is-medium {
+    color: #ffd45a;
+}
+
+[data-bs-theme="dark"] .pagespeed-vital-value.is-slow {
+    color: #ff7a9a;
 }
 
 @media (min-width: 1200px) {
