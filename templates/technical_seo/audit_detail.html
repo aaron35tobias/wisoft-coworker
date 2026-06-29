@@ -198,6 +198,108 @@ white-space: pre-line;
 [data-bs-theme="dark"] .audit-pill-link {
     background: rgba(255, 255, 255, 0.04);
 }
+.pagespeed-panel {
+    border: 0;
+    border-radius: 1.15rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.07);
+    overflow: hidden;
+}
+
+[data-bs-theme="dark"] .pagespeed-panel {
+    background: linear-gradient(135deg, #171b26 0%, #202635 100%);
+}
+
+.pagespeed-card {
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 1rem;
+    background: #ffffff;
+    height: 100%;
+}
+
+[data-bs-theme="dark"] .pagespeed-card {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.pagespeed-device-icon {
+    align-items: center;
+    border-radius: 14px;
+    display: flex;
+    height: 44px;
+    justify-content: center;
+    width: 44px;
+}
+
+.pagespeed-score-ring {
+    align-items: center;
+    background: conic-gradient(var(--score-color) calc(var(--score-value, 0) * 1%), #eef2f7 0);
+    border-radius: 50%;
+    display: flex;
+    flex: 0 0 auto;
+    height: 116px;
+    justify-content: center;
+    position: relative;
+    width: 116px;
+}
+
+.pagespeed-score-ring::before {
+    background: #ffffff;
+    border-radius: 50%;
+    content: "";
+    height: 86px;
+    position: absolute;
+    width: 86px;
+}
+
+[data-bs-theme="dark"] .pagespeed-score-ring::before {
+    background: #1b1e2a;
+}
+
+.pagespeed-score-inner {
+    position: relative;
+    text-align: center;
+}
+
+.pagespeed-score-value {
+    color: #181c32;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+[data-bs-theme="dark"] .pagespeed-score-value {
+    color: #f5f8fa;
+}
+
+.pagespeed-category-grid,
+.pagespeed-vitals-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pagespeed-category-chip {
+    border-radius: 0.85rem;
+    background: #f8f9fa;
+    padding: 0.9rem;
+}
+
+.pagespeed-vital-tile {
+    border: 1px dashed rgba(148, 163, 184, 0.45);
+    border-radius: 0.85rem;
+    padding: 0.9rem;
+}
+
+[data-bs-theme="dark"] .pagespeed-category-chip {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+@media (min-width: 1200px) {
+    .pagespeed-vitals-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
     </style>
 {% endblock %}
 {% block header %}
@@ -749,6 +851,7 @@ white-space: pre-line;
                         </div>
                     </div>
                 </div>
+                {% include 'technical_seo/includes/pagespeed_card.html' %}
                 <div class="card">
                     <div class="card-header border-0 pt-6">
                         <div class="card-title">

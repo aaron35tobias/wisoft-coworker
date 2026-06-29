@@ -81,6 +81,10 @@ def build_export_sheets(export_context):
         ['Low Issues', audit.low_issues],
         ['AI Model', audit.ai_model],
         ['AI Error', audit.ai_error],
+        ['PageSpeed Status', audit.pagespeed_status],
+        ['PageSpeed Error', audit.pagespeed_error],
+        ['PageSpeed Mobile Performance', (audit.pagespeed_mobile or {}).get('performance_score', '')],
+        ['PageSpeed Desktop Performance', (audit.pagespeed_desktop or {}).get('performance_score', '')],
         ['GSC Status', audit.gsc_status],
         ['GSC Site URL', audit.gsc_site_url],
         ['GSC Rows Found', audit.gsc_rows_found],
@@ -170,10 +174,32 @@ def build_export_sheets(export_context):
             row.date_range_end.isoformat() if row.date_range_end else '',
         ])
 
+    pagespeed_rows = [[
+        'Device', 'Performance', 'Accessibility', 'Best Practices', 'SEO',
+        'FCP (s)', 'LCP (s)', 'INP (ms)', 'CLS', 'TBT (ms)', 'Speed Index (s)', 'TTFB (s)', 'Final URL',
+    ]]
+    for label, data in (('Mobile', audit.pagespeed_mobile or {}), ('Desktop', audit.pagespeed_desktop or {})):
+        pagespeed_rows.append([
+            label,
+            data.get('performance_score', ''),
+            data.get('accessibility_score', ''),
+            data.get('best_practices_score', ''),
+            data.get('seo_score', ''),
+            data.get('first_contentful_paint', ''),
+            data.get('largest_contentful_paint', ''),
+            data.get('interaction_to_next_paint', ''),
+            data.get('cumulative_layout_shift', ''),
+            data.get('total_blocking_time', ''),
+            data.get('speed_index', ''),
+            data.get('time_to_first_byte', ''),
+            data.get('final_url', ''),
+        ])
+
     return [
         ('Overview', overview_rows),
         ('AI Recommendations', ai_rows),
         ('Issues', issue_rows),
+        ('PageSpeed', pagespeed_rows),
         ('Crawled Pages', page_rows),
         ('GSC URL Inspections', inspection_rows),
         ('GSC Search Analytics', gsc_rows),

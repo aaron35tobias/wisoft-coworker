@@ -5,10 +5,11 @@ import socket
 import time
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict, deque
+from decimal import Decimal
 from html.parser import HTMLParser
 from urllib import robotparser
 from urllib.error import HTTPError, URLError
-from urllib.parse import urldefrag, urljoin, urlparse, urlunparse
+from urllib.parse import urlencode, urldefrag, urljoin, urlparse, urlunparse
 from urllib.request import Request, urlopen
 
 from django.utils import timezone
@@ -24,6 +25,7 @@ HREFLANG_PATTERN = re.compile(r'^(x-default|[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8})?)
 DEFAULT_AI_MAX_TOKENS = 1200
 DEFAULT_AI_TIMEOUT_SECONDS = 240
 DEFAULT_AI_RETRY_ATTEMPTS = 2
+PAGESPEED_API_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed'
 
 
 def get_html_read_limit_bytes():
@@ -54,6 +56,110 @@ def execute_json_request(request_factory, timeout, attempts):
             if attempt >= max_attempts - 1 or not is_timeout_error(exc):
                 raise
             time.sleep(2 * (attempt + 1))
+
+
+def get_decimal_audit_value(data, audit_key):
+    value = (
+        data.get('lighthouseResult', {})
+        .get('audits', {})
+        .get(audit_key, {})
+        .get('numericValue')
+    )
+    if value is None:
+        return None
+    return Decimal(str(value))
+
+
+def decimal_to_string(value, places):
+    if value is None:
+        return ''
+    return str(value.quantize(Decimal(places)))
+
+
+def get_pagespeed_category_score(data, category_key):
+    score = (
+        data.get('lighthouseResult', {})
+        .get('categories', {})
+        .get(category_key, {})
+        .get('score')
+    )
+    if score is None:
+        return None
+    return round(score * 100)
+
+
+def parse_pagespeed_response(data, strategy):
+    fcp = get_decimal_audit_value(data, 'first-contentful-paint')
+    lcp = get_decimal_audit_value(data, 'largest-contentful-paint')
+    inp = get_decimal_audit_value(data, 'interaction-to-next-paint')
+    cls = get_decimal_audit_value(data, 'cumulative-layout-shift')
+    tbt = get_decimal_audit_value(data, 'total-blocking-time')
+    speed_index = get_decimal_audit_value(data, 'speed-index')
+    ttfb = get_decimal_audit_value(data, 'server-response-time')
+
+    return {
+        'strategy': strategy,
+        'performance_score': get_pagespeed_category_score(data, 'performance'),
+        'accessibility_score': get_pagespeed_category_score(data, 'accessibility'),
+        'best_practices_score': get_pagespeed_category_score(data, 'best-practices'),
+        'seo_score': get_pagespeed_category_score(data, 'seo'),
+        'first_contentful_paint': decimal_to_string(fcp / Decimal('1000') if fcp is not None else None, '0.01'),
+        'largest_contentful_paint': decimal_to_string(lcp / Decimal('1000') if lcp is not None else None, '0.01'),
+        'interaction_to_next_paint': decimal_to_string(inp, '0.01'),
+        'cumulative_layout_shift': decimal_to_string(cls, '0.0001'),
+        'total_blocking_time': decimal_to_string(tbt, '0.01'),
+        'speed_index': decimal_to_string(speed_index / Decimal('1000') if speed_index is not None else None, '0.01'),
+        'time_to_first_byte': decimal_to_string(ttfb / Decimal('1000') if ttfb is not None else None, '0.01'),
+        'final_url': (
+            data.get('lighthouseResult', {})
+            .get('finalDisplayedUrl', '')
+        ),
+        'fetched_at': timezone.now().isoformat(),
+    }
+
+
+def fetch_pagespeed_data(url, strategy, api_key):
+    params = urlencode({
+        'url': url,
+        'strategy': strategy,
+        'key': api_key,
+        'category': ['performance', 'accessibility', 'best-practices', 'seo'],
+    }, doseq=True)
+    request_url = f'{PAGESPEED_API_URL}?{params}'
+
+    request = Request(request_url, headers={'User-Agent': USER_AGENT})
+    with urlopen(request, timeout=get_env_int('PAGESPEED_API_TIMEOUT_SECONDS', 120)) as response:
+        return json.loads(response.read().decode('utf-8'))
+
+
+def run_pagespeed_collection(audit):
+    api_key = os.environ.get('GOOGLE_PAGESPEED_API_KEY', '').strip()
+    audit.pagespeed_mobile = {}
+    audit.pagespeed_desktop = {}
+    audit.pagespeed_error = ''
+
+    if not api_key:
+        audit.pagespeed_status = 'not_configured'
+        audit.pagespeed_error = 'GOOGLE_PAGESPEED_API_KEY is not set.'
+        audit.save(update_fields=['pagespeed_status', 'pagespeed_error', 'pagespeed_mobile', 'pagespeed_desktop'])
+        return
+
+    audit.pagespeed_status = 'running'
+    audit.save(update_fields=['pagespeed_status', 'pagespeed_error', 'pagespeed_mobile', 'pagespeed_desktop'])
+
+    errors = []
+    update_fields = ['pagespeed_status', 'pagespeed_error', 'pagespeed_mobile', 'pagespeed_desktop']
+    for strategy, field_name in (('mobile', 'pagespeed_mobile'), ('desktop', 'pagespeed_desktop')):
+        try:
+            data = fetch_pagespeed_data(audit.website.website_url, strategy, api_key)
+            setattr(audit, field_name, parse_pagespeed_response(data, strategy))
+        except Exception as exc:
+            errors.append(f'{strategy}: {exc}')
+            setattr(audit, field_name, {})
+
+    audit.pagespeed_status = 'failed' if errors and not (audit.pagespeed_mobile or audit.pagespeed_desktop) else 'completed'
+    audit.pagespeed_error = '; '.join(errors)
+    audit.save(update_fields=update_fields)
 
 
 class PageSEOParser(HTMLParser):
@@ -743,6 +849,12 @@ def build_ai_payload(audit):
             },
             'url_inspections': list(gsc_inspections),
         },
+        'pagespeed': {
+            'status': audit.pagespeed_status,
+            'error': audit.pagespeed_error,
+            'mobile': audit.pagespeed_mobile,
+            'desktop': audit.pagespeed_desktop,
+        },
     }
 
 
@@ -988,6 +1100,7 @@ def run_technical_seo_audit(audit):
         detect_hreflang_issues(audit)
         update_audit_counts(audit)
         run_search_console_collection(audit)
+        run_pagespeed_collection(audit)
         generate_ai_summary(audit)
         audit.status = TechnicalSEOAudit.STATUS_COMPLETED
         audit.completed_at = timezone.now()
