@@ -853,7 +853,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 hollow: { size: "68%" },
                 dataLabels: {
                     name: { show: false },
-                    value: { fontSize: "18px", fontWeight: "700", offsetY: 6, formatter: function (v) { return v + "/100"; } }
+                    value: { fontSize: "18px", fontWeight: "700", color: "{{ tech.health_color }}", offsetY: 6, formatter: function (v) { return v + "/100"; } }
                 }
             }},
             labels: ["Health"]
