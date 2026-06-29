@@ -25,10 +25,8 @@ def api_status(request):
     # Check session to see if limit exceeded has been triggered (by view logic)
     limit_exceeded = request.session.get('limit_exceeded', False)
 
-    # For mock data (when no valid API keys are found)
-    if not anthropic_key or anthropic_key == 'xxx':
-        if not openai_key and not gemini_key:
-            limit_exceeded = True
+    # For mock data, the hardcoded usage is 47,688 out of 50,000 (95%).
+    # We rely on the session 'limit_exceeded' or actual threshold logic instead of forcing it to True.
 
     return {
         'api_provider': api_provider,
