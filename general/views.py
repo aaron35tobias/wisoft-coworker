@@ -266,7 +266,7 @@ def billing_view(request):
     else:
         # Mock data if the keys are missing or 'xxx'
         limit = 50000
-        total_used = 47688
+        total_used = 57688
         usage_data = {
             'input_tokens': 34000,
             'output_tokens': 14500,

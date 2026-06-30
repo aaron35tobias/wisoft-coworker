@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Settings - Wisoft Co-Worker{% endblock %}
+{% block title %}Profile Settings - Wisoft Co-Worker{% endblock %}
 
 {% block header %}
 {% include 'includes/header.html' with page_title='Profile Settings' %}
@@ -23,6 +23,8 @@
             </div>
         </div>
         {% endif %}
+
+        <h2 class="fw-bold mb-5">Profile Settings</h2>
 
         <!-- Update Profile Picture -->
         <div class="card mb-5 mb-xl-10">
@@ -80,91 +82,93 @@
                 </div>
             </div>
             <div id="kt_account_security" class="collapse show">
-                <div class="card-body border-top p-9">
-                    <!-- Nav Tabs -->
-                    <ul class="nav nav-tabs nav-line-tabs mb-8 border-0" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link active" id="username_tab" data-bs-toggle="tab" href="#username_pane" aria-selected="true" role="tab">
-                                <span class="d-block text-start">
-                                    <span class="d-block fw-bold fs-7">Username</span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="password_tab" data-bs-toggle="tab" href="#password_pane" aria-selected="false" role="tab" tabindex="-1">
-                                <span class="d-block text-start">
-                                    <span class="d-block fw-bold fs-7">Password</span>
-                                </span>
-                            </a>
-                        </li>
-                    </ul>
-
-                    <!-- Tab Content -->
-                    <div class="tab-content" id="account_security_content">
-                        <!-- Username Tab -->
-                        <div class="tab-pane fade show active" id="username_pane" role="tabpanel" aria-labelledby="username_tab">
-                            <form id="kt_account_profile_details_form" class="form" method="POST">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="update_username">
-                                <div class="row mb-6">
-                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">New Username</label>
-                                    <div class="col-lg-8 fv-row">
-                                        <input type="text" name="username"
-                                            class="form-control form-control-lg form-control-solid {% if errors.username %}is-invalid{% endif %}"
-                                            placeholder="Enter new username" />
-                                        {% if errors.username %}
-                                        <div class="invalid-feedback d-block">{{ errors.username }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-end pt-4">
-                                    <button type="submit" class="btn btn-primary">Update Username</button>
-                                </div>
-                            </form>
+                <div class="card-body border-top p-0">
+                    <div class="d-flex">
+                        <!-- Vertical Side Tabs -->
+                        <div class="flex-shrink-0 border-end" style="width: 180px;">
+                            <ul class="nav nav-pills flex-column p-4 gap-1" role="tablist" id="account_security_tabs">
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link active rounded px-4 py-3 fw-semibold fs-7" id="username_tab"
+                                        data-bs-toggle="tab" href="#username_pane" role="tab" aria-selected="true">
+                                        Username
+                                    </a>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link rounded px-4 py-3 fw-semibold fs-7" id="password_tab"
+                                        data-bs-toggle="tab" href="#password_pane" role="tab" aria-selected="false" tabindex="-1">
+                                        Password
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
 
-                        <!-- Password Tab -->
-                        <div class="tab-pane fade" id="password_pane" role="tabpanel" aria-labelledby="password_tab">
-                            <form id="kt_signin_change_password" class="form" method="POST">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="update_password">
-                                <div class="row mb-6">
-                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">Current Password</label>
-                                    <div class="col-lg-8 fv-row">
-                                        <input type="password" name="current_password"
-                                            class="form-control form-control-lg form-control-solid {% if errors.password_current_password %}is-invalid{% endif %}"
-                                            placeholder="Current Password" />
-                                        {% if errors.password_current_password %}
-                                        <div class="invalid-feedback d-block">{{ errors.password_current_password }}</div>
-                                        {% endif %}
-                                    </div>
+                        <!-- Tab Content -->
+                        <div class="flex-grow-1 p-9">
+                            <div class="tab-content" id="account_security_content">
+
+                                <!-- Username Tab -->
+                                <div class="tab-pane fade show active" id="username_pane" role="tabpanel" aria-labelledby="username_tab">
+                                    <form id="kt_account_profile_details_form" class="form" method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="update_username">
+                                        <div class="mb-6">
+                                            <label class="form-label required fw-semibold fs-6 mb-2">New Username</label>
+                                            <input type="text" name="username"
+                                                class="form-control form-control-lg form-control-solid {% if errors.username %}is-invalid{% endif %}"
+                                                placeholder="Enter new username" />
+                                            {% if errors.username %}
+                                            <div class="invalid-feedback d-block mt-1">{{ errors.username }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="d-flex justify-content-end pt-2">
+                                            <button type="submit" class="btn btn-primary">Update Username</button>
+                                        </div>
+                                    </form>
                                 </div>
-                                <div class="row mb-6">
-                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">New Password</label>
-                                    <div class="col-lg-8 fv-row">
-                                        <input type="password" name="new_password"
-                                            class="form-control form-control-lg form-control-solid {% if errors.new_password %}is-invalid{% endif %}"
-                                            placeholder="New Password" />
-                                        {% if errors.new_password %}
-                                        <div class="invalid-feedback d-block">{{ errors.new_password }}</div>
-                                        {% endif %}
-                                    </div>
+
+                                <!-- Password Tab -->
+                                <div class="tab-pane fade" id="password_pane" role="tabpanel" aria-labelledby="password_tab">
+                                    <form id="kt_signin_change_password" class="form" method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="update_password">
+                                        <!-- Current Password — full width on top -->
+                                        <div class="mb-6">
+                                            <label class="form-label required fw-semibold fs-6 mb-2">Current Password</label>
+                                            <input type="password" name="current_password"
+                                                class="form-control form-control-lg form-control-solid {% if errors.password_current_password %}is-invalid{% endif %}"
+                                                placeholder="Enter your current password" />
+                                            {% if errors.password_current_password %}
+                                            <div class="invalid-feedback d-block mt-1">{{ errors.password_current_password }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <!-- New + Confirm side by side below -->
+                                        <div class="row mb-6">
+                                            <div class="col-md-6">
+                                                <label class="form-label required fw-semibold fs-6 mb-2">New Password</label>
+                                                <input type="password" name="new_password"
+                                                    class="form-control form-control-lg form-control-solid {% if errors.new_password %}is-invalid{% endif %}"
+                                                    placeholder="Enter new password" />
+                                                {% if errors.new_password %}
+                                                <div class="invalid-feedback d-block mt-1">{{ errors.new_password }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label required fw-semibold fs-6 mb-2">Confirm New Password</label>
+                                                <input type="password" name="confirm_password"
+                                                    class="form-control form-control-lg form-control-solid {% if errors.confirm_password %}is-invalid{% endif %}"
+                                                    placeholder="Confirm new password" />
+                                                {% if errors.confirm_password %}
+                                                <div class="invalid-feedback d-block mt-1">{{ errors.confirm_password }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-end pt-2">
+                                            <button type="submit" class="btn btn-primary">Update Password</button>
+                                        </div>
+                                    </form>
                                 </div>
-                                <div class="row mb-6">
-                                    <label class="col-lg-4 col-form-label required fw-semibold fs-6">Confirm New Password</label>
-                                    <div class="col-lg-8 fv-row">
-                                        <input type="password" name="confirm_password"
-                                            class="form-control form-control-lg form-control-solid {% if errors.confirm_password %}is-invalid{% endif %}"
-                                            placeholder="Confirm Password" />
-                                        {% if errors.confirm_password %}
-                                        <div class="invalid-feedback d-block">{{ errors.confirm_password }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-end pt-4">
-                                    <button type="submit" class="btn btn-primary">Update Password</button>
-                                </div>
-                            </form>
+
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -107,56 +107,35 @@ def logout_view(request):
 @login_required(login_url='sign-in')
 def profile_view(request):
     user = request.user
-    return render(request, 'accounts/profile.html', {'user': user})
+    errors = {}
+    success_message = ''
+    active_section = request.GET.get('section', 'personal_info')
 
+    profile_strength = 20
+    if user.email:
+        profile_strength += 20
+    if user.first_name or user.last_name:
+        profile_strength += 20
+    if user.profile.profile_picture:
+        profile_strength += 20
+    if user.profile.banner_image:
+        profile_strength += 20
 
-@login_required(login_url='sign-in')
-def settings_view(request):
-    user = request.user
+    profile_strength_offset = max(0, min(257.6, 257.6 - (profile_strength * 2.576)))
+
     if request.method == 'POST':
         action = request.POST.get('action')
-        errors = {}
-        success_message = ''
-        
-        if action == 'update_username':
-            new_username = request.POST.get('username', '').strip()
-            
-            if not new_username:
-                errors['username'] = 'Username is required.'
-            elif new_username == user.username:
-                errors['username'] = 'New username must be different from your current username.'
-            elif User.objects.filter(username=new_username).exists():
-                errors['username'] = 'Username is already taken.'
-                
-            if not errors:
-                user.username = new_username
-                user.save()
-                success_message = 'Username updated successfully.'
-                
-        elif action == 'update_password':
-            current_password = request.POST.get('current_password', '')
-            new_password = request.POST.get('new_password', '')
-            confirm_password = request.POST.get('confirm_password', '')
-            
-            if not current_password:
-                errors['password_current_password'] = 'Current password is required.'
-            elif not user.check_password(current_password):
-                errors['password_current_password'] = 'Incorrect current password.'
-                
-            if not new_password:
-                errors['new_password'] = 'New password is required.'
-            elif len(new_password) < 8:
-                errors['new_password'] = 'Password must be at least 8 characters long.'
-                
-            if new_password != confirm_password:
-                errors['confirm_password'] = 'Passwords do not match.'
-                
-            if not errors:
-                user.set_password(new_password)
-                user.save()
-                update_session_auth_hash(request, user)  # Keep user logged in
-                success_message = 'Password updated successfully.'
-                
+
+        if action == 'update_banner_image':
+            banner_image = request.FILES.get('banner_image')
+            if banner_image:
+                user.profile.banner_image = banner_image
+                user.profile.save()
+                success_message = 'Banner image updated successfully.'
+            else:
+                errors['banner_image'] = 'Please select an image to upload.'
+            active_section = 'banner'
+
         elif action == 'update_profile_picture':
             profile_picture = request.FILES.get('profile_picture')
             if profile_picture:
@@ -165,11 +144,74 @@ def settings_view(request):
                 success_message = 'Profile picture updated successfully.'
             else:
                 errors['profile_picture'] = 'Please select an image to upload.'
-                
+            active_section = 'profile_picture'
+
+        elif action == 'update_profile_details':
+            first_name = request.POST.get('first_name', '').strip()
+            last_name = request.POST.get('last_name', '').strip()
+            new_username = request.POST.get('username', '').strip()
+
+            if not new_username:
+                errors['username'] = 'Username is required.'
+            elif User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
+                errors['username'] = 'Username is already taken.'
+
+            if not errors:
+                user.first_name = first_name
+                user.last_name = last_name
+                user.username = new_username
+                user.save()
+                success_message = 'Profile details updated successfully.'
+            
+            # If there are errors in the form submission, we set active_section 
+            # to 'profile_edit' so the template can keep the form open on page reload
+            if errors:
+                active_section = 'profile_edit'
+            else:
+                active_section = 'personal_info'
+
+        elif action == 'update_password':
+            current_password = request.POST.get('current_password', '')
+            new_password = request.POST.get('new_password', '')
+            confirm_password = request.POST.get('confirm_password', '')
+
+            if not current_password:
+                errors['password_current_password'] = 'Current password is required.'
+            elif not user.check_password(current_password):
+                errors['password_current_password'] = 'Incorrect current password.'
+
+            if not new_password:
+                errors['new_password'] = 'New password is required.'
+            elif len(new_password) < 8:
+                errors['new_password'] = 'Password must be at least 8 characters long.'
+
+            if new_password != confirm_password:
+                errors['confirm_password'] = 'Passwords do not match.'
+
+            if not errors:
+                user.set_password(new_password)
+                user.save()
+                update_session_auth_hash(request, user)
+                success_message = 'Password updated successfully.'
+            active_section = 'password'
+
         context = {
             'errors': errors,
             'success_message': success_message,
+            'active_section': active_section,
+            'profile_strength': profile_strength,
+            'profile_strength_offset': profile_strength_offset,
         }
-        return render(request, 'accounts/settings.html', context)
-        
-    return render(request, 'accounts/settings.html')
+        return render(request, 'accounts/profile.html', context)
+
+    context = {
+        'active_section': active_section,
+        'profile_strength': profile_strength,
+        'profile_strength_offset': profile_strength_offset,
+    }
+    return render(request, 'accounts/profile.html', context)
+
+
+@login_required(login_url='sign-in')
+def settings_view(request):
+    return redirect('profile')
