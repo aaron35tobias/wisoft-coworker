@@ -1,11 +1,11 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
-
 {% block title %}Technical SEO Audits | Wisoft Co-Worker{% endblock %}
-
 {% block extra_css_scripts %}
-<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
-<style>
+    <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
+          rel="stylesheet"
+          type="text/css" />
+    <style>
 .audit-loading-overlay {
 align-items: center;
 background: rgba(255, 255, 255, 0.82);
@@ -25,222 +25,227 @@ background: rgba(18, 18, 23, 0.82);
 max-width: 420px;
 width: calc(100% - 32px);
 }
-</style>
+.crawl-scope-note {
+border: 1px dashed rgba(0, 158, 247, 0.35);
+border-radius: 0.75rem;
+background: rgba(0, 158, 247, 0.06);
+}
+    </style>
 {% endblock %}
-
 {% block header %}
-{% url 'technical_seo:history' as audit_history_url %}
-{% include 'includes/header.html' with page_title='Run Technical SEO Audit' parent_title='SEO Co-Worker' action_url=audit_history_url action_label='Audit History' %}
+    {% url 'technical_seo:history' as audit_history_url %}
+    {% include 'includes/header.html' with page_title='Run Technical SEO Audit' parent_title='SEO Co-Worker' action_url=audit_history_url action_label='Audit History' %}
 {% endblock %}
-
 {% block content %}
-<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
-<div class="container-xxl" id="kt_content_container">
-
-<div class="row g-5 g-xl-10 mb-5 mb-xl-10">
-<div class="col-xl-4">
-<div class="card card-flush h-100">
-<div class="card-header">
-<h3 class="card-title fw-bold text-gray-900">Run Audit</h3>
-</div>
-<div class="card-body">
-<form method="post" action="{% url 'technical_seo:audit-run' %}" id="kt_technical_seo_audit_form">
-{% csrf_token %}
-<div class="fv-row mb-6">
-<label class="required fs-6 fw-semibold mb-2">Website URL</label>
-<input type="text" name="website_url" class="form-control form-control-solid" placeholder="example.com" value="{% if website %}{{ website.website_url }}{% endif %}" required />
-</div>
-<div class="fv-row mb-6">
-<label class="fs-6 fw-semibold mb-2">Note</label>
-<textarea name="note" class="form-control form-control-solid" rows="3" placeholder="Optional audit note">{% if website %}{{ website.note }}{% endif %}</textarea>
-</div>
-<div class="fv-row mb-6">
-<label class="required fs-6 fw-semibold mb-2">Max Pages</label>
-<input type="number" name="max_pages" class="form-control form-control-solid" value="50" min="1" max="100" />
-</div>
-<div class="separator separator-dashed my-6"></div>
-<div class="fw-bold text-gray-900 mb-4">Search Console Filters</div>
-<div class="row g-4 mb-6">
-<div class="col-md-6">
-<label class="fs-7 fw-semibold mb-2">Start Date</label>
-<input type="date" name="gsc_start_date" class="form-control form-control-solid" />
-</div>
-<div class="col-md-6">
-<label class="fs-7 fw-semibold mb-2">End Date</label>
-<input type="date" name="gsc_end_date" class="form-control form-control-solid" />
-</div>
-</div>
-<div class="row g-4 mb-6">
-<div class="col-md-6">
-<label class="fs-7 fw-semibold mb-2">Country</label>
-<input type="text" name="gsc_country_filter" class="form-control form-control-solid" maxlength="3" placeholder="ARE" />
-</div>
-<div class="col-md-6">
-<label class="fs-7 fw-semibold mb-2">Device</label>
-<select name="gsc_device_filter" class="form-select form-select-solid">
-<option value="">All Devices</option>
-<option value="DESKTOP">Desktop</option>
-<option value="MOBILE">Mobile</option>
-<option value="TABLET">Tablet</option>
-</select>
-</div>
-</div>
-<button type="submit" class="btn btn-sm btn-primary w-100" id="kt_technical_seo_audit_submit">
-<span class="indicator-label">Start Technical Audit</span>
-<span class="indicator-progress">Running audit...
-<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-</button>
-</form>
-</div>
-</div>
-</div>
-
-<div class="col-xl-8">
-<div class="card card-flush h-100">
-<div class="card-header">
-<h3 class="card-title fw-bold text-gray-900">Audit Checks</h3>
-</div>
-<div class="card-body">
-<div class="row g-5">
-<div class="col-md-6">
-<div class="d-flex align-items-center mb-5">
-<i class="ki-duotone ki-shield-tick fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
-<div>
-<div class="fw-bold text-gray-900">Crawlability</div>
-<div class="text-muted fs-7">Status codes, blocked URLs, crawl failures, redirects</div>
-</div>
-</div>
-</div>
-<div class="col-md-6">
-<div class="d-flex align-items-center mb-5">
-<i class="ki-duotone ki-magnifier fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
-<div>
-<div class="fw-bold text-gray-900">Indexability</div>
-<div class="text-muted fs-7">Noindex directives, canonicals, robots signals</div>
-</div>
-</div>
-</div>
-<div class="col-md-6">
-<div class="d-flex align-items-center">
-<i class="ki-duotone ki-text-align-left fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
-<div>
-<div class="fw-bold text-gray-900">On-page Signals</div>
-<div class="text-muted fs-7">Titles, descriptions, headings, duplicate metadata</div>
-</div>
-</div>
-</div>
-<div class="col-md-6">
-<div class="d-flex align-items-center">
-<i class="ki-duotone ki-picture fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
-<div>
-<div class="fw-bold text-gray-900">Assets & Speed</div>
-<div class="text-muted fs-7">Missing alt text and slow responses</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-
-<div class="card mt-5">
-<div class="card-header border-0 pt-6">
-<div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
-<h3 class="fw-bold m-0">Technical SEO Websites</h3>
-<div class="d-flex align-items-center position-relative my-1">
-<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
-<span class="path1"></span>
-<span class="path2"></span>
-</i>
-<input type="text" id="kt_seo_websites_table_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Websites" />
-</div>
-</div>
-</div>
-<div class="card-body pt-0">
-<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_seo_websites_table">
-<thead>
-<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-<th>Website</th>
-<th>Note</th>
-<th>Audits</th>
-<th>Latest Status</th>
-<th>Latest Issues</th>
-<th>Last Audit</th>
-<th>Actions</th>
-</tr>
-</thead>
-<tbody class="fw-semibold text-gray-600">
-{% for site in websites %}
-<tr data-website-row="true">
-<td><a href="{{ site.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ site.website_url }}</a></td>
-<td>{{ site.note|default:"-"|truncatechars:80 }}</td>
-<td>{{ site.audit_count }}</td>
-<td>
-{% if site.latest_audit %}
-{% if site.latest_audit.status == 'completed' %}
-<span class="badge badge-light-success">Completed</span>
-{% elif site.latest_audit.status == 'failed' %}
-<span class="badge badge-light-danger">Failed</span>
-{% else %}
-<span class="badge badge-light-primary">Running</span>
-{% endif %}
-{% else %}
-<span class="text-muted">Not audited</span>
-{% endif %}
-</td>
-<td>
-{% if site.latest_audit %}
-<span class="badge badge-light-{% if site.latest_issues_found %}warning{% else %}success{% endif %}">{{ site.latest_issues_found }}</span>
-<span class="text-muted fs-8 ms-1">/ {{ site.latest_pages_crawled }} pages</span>
-{% else %}
-<span class="text-muted">-</span>
-{% endif %}
-</td>
-<td>
-{% if site.latest_audit %}
-{{ site.latest_audit.started_at|date:"d M Y, g:i A" }}
-{% else %}
-<span class="text-muted">-</span>
-{% endif %}
-</td>
-<td>
-<div class="d-flex gap-2">
-<a href="{% url 'technical_seo:website-audits' site.id %}" class="btn btn-sm btn-light-primary">Run Again</a>
-<a href="{% url 'technical_seo:website-history' site.id %}" class="btn btn-sm btn-light">History</a>
-</div>
-</td>
-</tr>
-{% empty %}
-<tr>
-<td colspan="7" class="text-center text-muted py-10">No Technical SEO websites yet. Run your first audit above.</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-</div>
-
-</div>
-</div>
-
-<div class="audit-loading-overlay" id="kt_audit_loading_overlay" aria-live="polite" aria-busy="true">
-<div class="card shadow-sm audit-loading-panel">
-<div class="card-body p-8 text-center">
-<div class="spinner-border text-primary mb-5" role="status"></div>
-<h3 class="fw-bold text-gray-900 mb-3">Running Technical SEO Audit</h3>
-<div class="text-muted fs-6 mb-5">Crawling pages, detecting SEO issues, and preparing AI recommendations.</div>
-<div class="progress h-8px bg-light-primary">
-<div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
-</div>
-</div>
-</div>
-</div>
-{% endblock %}
-
-{% block extra_js_scripts %}
-<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
-<script>
+    <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+        <div class="container-xxl" id="kt_content_container">
+            <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+                <div class="col-xl-4">
+                    <div class="card card-flush h-100">
+                        <div class="card-header">
+                            <h3 class="card-title fw-bold text-gray-900">Run Audit</h3>
+                        </div>
+                        <div class="card-body">
+                            <form class="form"
+                                  method="post"
+                                  action="{% url 'technical_seo:audit-run' %}"
+                                  id="kt_technical_seo_audit_form">
+                                {% csrf_token %}
+                                <div class="fv-row mb-6">
+                                    <label class="required fs-6 fw-semibold mb-2">Website URL</label>
+                                    <input type="url"
+                                           name="website_url"
+                                           class="form-control form-control-solid border border-gray-400"
+                                           placeholder="https://example.com"
+                                           value="{% if website %}{{ website.website_url }}{% endif %}"
+                                           required />
+                                </div>
+                                <div class="fv-row mb-6">
+                                    <label class="fs-6 fw-semibold mb-2">Note</label>
+                                    <textarea name="note"
+                                              class="form-control form-control-solid border border-gray-400"
+                                              rows="3"
+                                              placeholder="Optional audit note">{% if website %}{{ website.note }}{% endif %}</textarea>
+                                </div>
+                                <div class="crawl-scope-note p-4 mb-6">
+                                    <div class="d-flex align-items-start">
+                                        <i class="ki-duotone ki-route fs-2x text-primary me-3">
+                                            <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+                                        </i>
+                                        <div>
+                                            <div class="fw-bold text-gray-900 mb-1">Full Website Crawl</div>
+                                            <div class="text-muted fs-7">The audit follows internal links and sitemap URLs from the website URL until the site queue is complete.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="separator separator-dashed mb-4"></div>
+                                <button type="submit"
+                                        class="btn btn-sm btn-primary w-100"
+                                        id="kt_technical_seo_audit_submit">
+                                    <span class="indicator-label">Start Technical Audit</span>
+                                    <span class="indicator-progress">Running audit...
+                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-8">
+                        <div class="card card-flush h-100">
+                            <div class="card-header">
+                                <h3 class="card-title fw-bold text-gray-900">Audit Checks</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-5">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-5">
+                                            <i class="ki-duotone ki-shield-tick fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                            <div>
+                                                <div class="fw-bold text-gray-900">Crawlability</div>
+                                                <div class="text-muted fs-7">Status codes, blocked URLs, crawl failures, redirects</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-5">
+                                            <i class="ki-duotone ki-magnifier fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                            <div>
+                                                <div class="fw-bold text-gray-900">Indexability</div>
+                                                <div class="text-muted fs-7">Noindex directives, canonicals, robots signals</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="ki-duotone ki-text-align-left fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                            <div>
+                                                <div class="fw-bold text-gray-900">On-page Signals</div>
+                                                <div class="text-muted fs-7">Titles, descriptions, headings, duplicate metadata</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <i class="ki-duotone ki-picture fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                            <div>
+                                                <div class="fw-bold text-gray-900">Assets & Speed</div>
+                                                <div class="text-muted fs-7">Missing alt text and slow responses</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mt-5">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+                            <h3 class="fw-bold m-0">Technical SEO Websites</h3>
+                            <div class="d-flex align-items-center position-relative my-1">
+                                <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                                <input type="text"
+                                       id="kt_seo_websites_table_search"
+                                       class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                       placeholder="Search Websites" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"
+                               id="kt_seo_websites_table">
+                            <thead>
+                                <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                    <th>Website</th>
+                                    <th>Note</th>
+                                    <th>Audits</th>
+                                    <th>Latest Status</th>
+                                    <th>Latest Issues</th>
+                                    <th>Last Audit</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="fw-semibold text-gray-700">
+                                {% for site in websites %}
+                                    <tr data-website-row="true">
+                                        <td><a href="{{ site.website_url }}"
+   target="_blank"
+   rel="noopener"
+   class="text-gray-800 text-hover-primary">{{ site.website_url }}</a></td>
+                                        <td>{{ site.note|default:"-"|truncatechars:80 }}</td>
+                                        <td>{{ site.audit_count }}</td>
+                                        <td>
+                                            {% if site.latest_audit %}
+                                                {% if site.latest_audit.status == 'completed' %}
+                                                    <span class="badge badge-light-success">Completed</span>
+                                                {% elif site.latest_audit.status == 'failed' %}
+                                                    <span class="badge badge-light-danger">Failed</span>
+                                                {% else %}
+                                                    <span class="badge badge-light-primary">Running</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">Not audited</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if site.latest_audit %}
+                                                <span class="badge badge-light-{% if site.latest_issues_found %}warning{% else %}success{% endif %}">{{ site.latest_issues_found }}</span>
+                                                <span class="text-muted fs-8 ms-1">/ {{ site.latest_pages_crawled }} pages</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if site.latest_audit %}
+                                                {{ site.latest_audit.started_at|date:"d M Y, g:i A" }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <a href="{% url 'technical_seo:website-audits' site.id %}"
+                                                   class="btn btn-sm btn-light-primary">Run Again</a>
+                                                <a href="{% url 'technical_seo:website-history' site.id %}"
+                                                   class="btn btn-sm btn-light">History</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-10">No Technical SEO websites yet. Run your first audit above.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="audit-loading-overlay"
+             id="kt_audit_loading_overlay"
+             aria-live="polite"
+             aria-busy="true">
+            <div class="card shadow-sm audit-loading-panel">
+                <div class="card-body p-8 text-center">
+                    <div class="spinner-border text-primary mb-5" role="status"></div>
+                    <h3 class="fw-bold text-gray-900 mb-3">Running Technical SEO Audit</h3>
+                    <div class="text-muted fs-6 mb-5">Crawling the website URL, following internal pages, detecting SEO issues, and preparing AI recommendations.</div>
+                    <div class="progress h-8px bg-light-primary">
+                        <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+                             role="progressbar"
+                             style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endblock %}
+    {% block extra_js_scripts %}
+        <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+        <script>
 jQuery(function () {
 var auditForm = document.querySelector("#kt_technical_seo_audit_form");
 var auditSubmit = document.querySelector("#kt_technical_seo_audit_submit");
@@ -273,5 +278,5 @@ websitesTable.search(this.value).draw();
 });
 }
 });
-</script>
-{% endblock %}
+        </script>
+    {% endblock %}

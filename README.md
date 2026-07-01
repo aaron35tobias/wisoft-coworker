@@ -1,4 +1,4 @@
-# WiSoft Co-Worker AI Agent
+﻿# WiSoft Co-Worker AI Agent
 A comprehensive SEO AI agent platform built with Django. It provides an integrated suite of tools for Technical SEO audits, Content Gap analysis, Keyword Research, PageSpeed tracking, and Pricing/PR monitoring, powered by AI (Anthropic Claude & OpenAI).
 
 ## Prerequisites
@@ -114,7 +114,7 @@ If you're currently on `main`
 git checkout main
 git pull origin main #This switches to `main` and downloads + merges the latest changes from the remote
 git checkout <user>/<url-fix> #Then switch back to your feature branch
-git rebase main #Merge `main` into it:
+git rebase main #Merge `main` into it
 ```
 
 Done, now to check what branch you're on [OPTIONAL]

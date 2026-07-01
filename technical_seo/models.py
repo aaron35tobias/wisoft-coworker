@@ -1,4 +1,4 @@
-from django.conf import settings
+﻿from django.conf import settings
 from django.db import models
 
 
@@ -15,7 +15,7 @@ class TechnicalSEOWebsite(models.Model):
     date_modified = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'page_speed_and_cwv_technicalseowebsite'
+        db_table = 'technical_seo_technicalseowebsite'
         ordering = ['-date_added']
         indexes = [
             models.Index(fields=['added_by', '-date_added']),
@@ -27,11 +27,13 @@ class TechnicalSEOWebsite(models.Model):
 
 class TechnicalSEOAudit(models.Model):
     STATUS_RUNNING = 'running'
+    STATUS_CRAWL_COMPLETED = 'crawl_completed'
     STATUS_COMPLETED = 'completed'
     STATUS_FAILED = 'failed'
 
     STATUS_CHOICES = [
         (STATUS_RUNNING, 'Running'),
+        (STATUS_CRAWL_COMPLETED, 'Crawl Completed'),
         (STATUS_COMPLETED, 'Completed'),
         (STATUS_FAILED, 'Failed'),
     ]
@@ -57,6 +59,10 @@ class TechnicalSEOAudit(models.Model):
     ai_summary = models.TextField(blank=True)
     ai_model = models.CharField(max_length=100, blank=True)
     ai_error = models.TextField(blank=True)
+    pagespeed_status = models.CharField(max_length=100, blank=True)
+    pagespeed_error = models.TextField(blank=True)
+    pagespeed_mobile = models.JSONField(default=dict, blank=True)
+    pagespeed_desktop = models.JSONField(default=dict, blank=True)
     gsc_status = models.CharField(max_length=100, blank=True)
     gsc_error = models.TextField(blank=True)
     gsc_site_url = models.CharField(max_length=500, blank=True)
@@ -71,7 +77,7 @@ class TechnicalSEOAudit(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = 'page_speed_and_cwv_technicalseoaudit'
+        db_table = 'technical_seo_technicalseoaudit'
         ordering = ['-started_at']
         indexes = [
             models.Index(fields=['website', '-started_at']),
@@ -109,7 +115,7 @@ class TechnicalSEOPage(models.Model):
     scanned_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'page_speed_and_cwv_technicalseopage'
+        db_table = 'technical_seo_technicalseopage'
         ordering = ['depth', 'url']
         indexes = [
             models.Index(fields=['audit', 'status_code']),
@@ -164,7 +170,7 @@ class TechnicalSEOIssue(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'page_speed_and_cwv_technicalseoissue'
+        db_table = 'technical_seo_technicalseoissue'
         ordering = ['severity', 'issue_type', 'created_at']
         indexes = [
             models.Index(fields=['audit', 'severity']),

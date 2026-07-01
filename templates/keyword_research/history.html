@@ -1,38 +1,107 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
-
 {% block title %}Keyword Research History | Wisoft Co-Worker{% endblock %}
-
 {% block extra_css_scripts %}
-<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
+          rel="stylesheet"
+          type="text/css" />
 {% endblock %}
-
 {% block header %}
-{% url 'keyword_research:research' as research_url %}
-{% include 'includes/header.html' with page_title='Keyword Research History' parent_title='Keyword Research' action_url=research_url action_label='Run Research' %}
+    {% url 'keyword_research:research' as research_url %}
+    {% include 'includes/header.html' with page_title='Keyword Research History' parent_title='Keyword Research' action_url=research_url action_label='Run Research' %}
 {% endblock %}
-
 {% block content %}
-<div class="content d-flex flex-column flex-column-fluid" id="kt_content"><div class="container-xxl" id="kt_content_container">
-<div class="card"><div class="card-header border-0 pt-6"><div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100"><div class="d-flex align-items-center position-relative my-1"><i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i><input type="text" id="kt_keyword_history_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search History" /></div></div></div><div class="card-body pt-0">
-<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_keyword_history_table"><thead><tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0"><th>#</th><th>Website</th><th>Location</th><th>Status</th><th>Pages</th><th>Ideas</th><th>Planner</th><th>Started</th><th>Actions</th></tr></thead><tbody class="fw-semibold text-gray-600">
-{% for run in runs %}
-<tr data-run-row="true"><td>{{ forloop.counter }}</td><td><a href="{{ run.project.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ run.project.website_url }}</a></td><td>{{ run.project.target_location }}</td><td>{% if run.status == 'completed' %}<span class="badge badge-light-success">Completed</span>{% elif run.status == 'failed' %}<span class="badge badge-light-danger">Failed</span>{% else %}<span class="badge badge-light-primary">Running</span>{% endif %}</td><td>{{ run.pages_crawled }}</td><td><span class="badge badge-light-primary">{{ run.keyword_ideas.count }}</span></td><td><span class="badge badge-light-info">{{ run.planner_metrics.count }}</span></td><td>{{ run.started_at|date:"d M Y, g:i A" }}</td><td><div class="d-flex gap-2"><a href="{% url 'keyword_research:detail' run.id %}" class="btn btn-sm btn-primary">View</a><form method="post" action="{% url 'keyword_research:delete' run.id %}" class="js-delete-keyword-run-form">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}" /><button type="submit" class="btn btn-sm btn-danger">Delete</button></form></div></td></tr>
-{% empty %}
-<tr><td colspan="9" class="text-center text-muted py-10">No keyword research history yet.</td></tr>
-{% endfor %}
-</tbody></table>
-</div></div>
-</div></div>
+    <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+        <div class="container-xxl" id="kt_content_container">
+            <div class="card">
+                <div class="card-header border-0 pt-6">
+                    <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+                        <div class="d-flex align-items-center position-relative my-1">
+                            <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+                            <input type="text"
+                                   id="kt_keyword_history_search"
+                                   class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                   placeholder="Search History" />
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"
+                           id="kt_keyword_history_table">
+                        <thead>
+                            <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                <th>#</th>
+                                <th>Page / Keywords</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Page</th>
+                                <th>Ideas</th>
+                                <th>Planner</th>
+                                <th>Started</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fw-semibold text-gray-700">
+                            {% for run in runs %}
+                                <tr data-run-row="true">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        {% if run.project.website_url %}
+                                            <a href="{{ run.project.website_url }}"
+                                               target="_blank"
+                                               rel="noopener"
+                                               class="text-gray-800 text-hover-primary">{{ run.project.website_url }}</a>
+                                        {% else %}
+                                            <span class="text-gray-800">{{ run.project.seed_keywords|truncatechars:90 }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ run.project.target_location }}</td>
+                                    <td>
+                                        {% if run.status == 'completed' %}
+                                            <span class="badge badge-light-success">Completed</span>
+                                        {% elif run.status == 'failed' %}
+                                            <span class="badge badge-light-danger">Failed</span>
+                                        {% else %}
+                                            <span class="badge badge-light-primary">Running</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ run.pages_crawled }}</td>
+                                    <td><span class="badge badge-light-primary">{{ run.keyword_ideas.count }}</span></td>
+                                    <td><span class="badge badge-light-info">{{ run.planner_metrics.count }}</span></td>
+                                    <td>{{ run.started_at|date:"d M Y, g:i A" }}</td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="{% url 'keyword_research:detail' run.id %}"
+                                               class="btn btn-sm btn-primary">View</a>
+                                            <form method="post"
+                                                  action="{% url 'keyword_research:delete' run.id %}"
+                                                  class="js-delete-keyword-run-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-10">No keyword research history yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
-
 {% block extra_js_scripts %}
-<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
-<script>
+    <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+    <script>
 jQuery(function(){
 var tableElement=document.querySelector("#kt_keyword_history_table");
 if(tableElement&&tableElement.querySelector("[data-run-row='true']")){var table=jQuery(tableElement).DataTable({pageLength:10,lengthMenu:[[10,25,50,100,-1],[10,25,50,100,"All"]],dom:"rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>",order:[[7,"desc"]],columnDefs:[{orderable:false,targets:[0,8]}]});jQuery("#kt_keyword_history_search").on("keyup",function(){table.search(this.value).draw();});}
 jQuery(document).on("submit",".js-delete-keyword-run-form",function(event){if(!window.confirm("Delete this keyword research run?")){event.preventDefault();}});
 });
-</script>
+    </script>
 {% endblock %}

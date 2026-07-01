@@ -1,11 +1,11 @@
-import json
+﻿import json
 import os
 import re
 import time
 from collections import Counter
 from html.parser import HTMLParser
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
 from django.utils import timezone
@@ -55,25 +55,203 @@ def get_anthropic_max_tokens():
 
 
 class ContentSnapshotParser(HTMLParser):
-    def __init__(self):
+    CONTENT_TAGS = {'article', 'main'}
+    CONTENT_ROLES = {'article', 'document', 'main'}
+    CONTENT_CLASS_ID_TOKENS = {'content', 'main'}
+    CONTENT_CLASS_ID_PATTERNS = {
+        'article-body',
+        'article-content',
+        'blog-content',
+        'body-content',
+        'content-main',
+        'entry-content',
+        'main-content',
+        'page-content',
+        'post-body',
+        'post-content',
+        'rich-text',
+        'single-content',
+    }
+    CHROME_TAGS = {'nav', 'header', 'footer', 'aside'}
+    CHROME_ROLES = {'banner', 'contentinfo', 'navigation', 'search'}
+    CHROME_CLASS_ID_TOKENS = {
+        'breadcrumb',
+        'breadcrumbs',
+        'footer',
+        'header',
+        'menu',
+        'navbar',
+        'nav',
+        'navigation',
+        'sidebar',
+        'site-footer',
+        'site-header',
+        'topbar',
+    }
+    ARTICLE_METADATA_PATH_PREFIXES = ('/author/', '/blog/category/')
+
+    def __init__(self, base_url):
         super().__init__(convert_charrefs=True)
+        self.base_url = base_url
+        self.base_netloc = urlparse(base_url).netloc.lower()
         self.title = ''
         self.meta_description = ''
         self.headings = {'h1': [], 'h2': [], 'h3': []}
         self.body_parts = []
+        self.image_count = 0
+        self.video_count = 0
+        self.internal_links_count = 0
+        self.external_links_count = 0
+        self.internal_links = []
+        self.external_links = []
+        self._content_internal_links = []
+        self._content_external_links = []
+        self._content_seen_links = set()
+        self._fallback_internal_links = []
+        self._fallback_external_links = []
+        self._fallback_seen_links = set()
         self._active_tag = None
         self._buffer = []
         self._ignored_depth = 0
+        self._body_depth = 0
+        self._chrome_depth = 0
+        self._content_depth = 0
+        self._content_container_seen = False
+        self._body_tag_stack = []
+
+    def _inside_body(self):
+        return self._body_depth > 0
+
+    def _inside_content_body(self):
+        return self._inside_body() and self._chrome_depth == 0
+
+    def _inside_confirmed_content(self):
+        return self._inside_content_body() and self._content_depth > 0
+
+    def _attribute_tokens(self, attrs_dict, names):
+        tokens = set()
+        for attr_name in names:
+            value = attrs_dict.get(attr_name, '').lower()
+            tokens.update(token for token in re.split(r'[^a-z0-9]+', value) if token)
+        return tokens
+
+    def _class_id_value(self, attrs_dict):
+        return ' '.join(attrs_dict.get(attr_name, '').lower() for attr_name in ('class', 'id'))
+
+    def _is_content_container(self, tag, attrs_dict):
+        if tag in self.CONTENT_TAGS:
+            return True
+        if attrs_dict.get('role', '').strip().lower() in self.CONTENT_ROLES:
+            return True
+        if tag == 'body':
+            return False
+
+        class_id_value = self._class_id_value(attrs_dict)
+        normalized_class_id = re.sub(r'[^a-z0-9]+', '-', class_id_value).strip('-')
+        if any(pattern in normalized_class_id for pattern in self.CONTENT_CLASS_ID_PATTERNS):
+            return True
+
+        tokens = self._attribute_tokens(attrs_dict, ('class', 'id'))
+        return bool(tokens & self.CONTENT_CLASS_ID_TOKENS)
+
+    def _is_chrome_container(self, tag, attrs_dict):
+        if tag in self.CHROME_TAGS:
+            return True
+        if attrs_dict.get('role', '').strip().lower() in self.CHROME_ROLES:
+            return True
+        if attrs_dict.get('data-elementor-type', '').strip().lower() in self.CHROME_TAGS:
+            return True
+
+        tokens = self._attribute_tokens(attrs_dict, ('aria-label', 'class', 'data-elementor-type', 'id'))
+        return bool(tokens & self.CHROME_CLASS_ID_TOKENS)
+
+    def _record_link(self, href, link_lists, seen_links):
+        if not href or href.lower().startswith(('mailto:', 'tel:', 'javascript:')):
+            return
+
+        href_without_fragment = href.split('#', 1)[0].strip()
+        if not href_without_fragment:
+            return
+
+        link = urljoin(self.base_url, href_without_fragment)
+        parsed_link = urlparse(link)
+        if parsed_link.scheme not in {'http', 'https'} or not parsed_link.netloc:
+            return
+
+        normalized_link = parsed_link._replace(fragment='').geturl()
+        if normalized_link in seen_links:
+            return
+
+        seen_links.add(normalized_link)
+        if parsed_link.netloc.lower() == self.base_netloc:
+            path = parsed_link.path.lower()
+            if any(path.startswith(prefix) for prefix in self.ARTICLE_METADATA_PATH_PREFIXES):
+                return
+            link_lists['internal'].append(normalized_link)
+        else:
+            link_lists['external'].append(normalized_link)
+
+    def finalize(self):
+        if self._content_container_seen:
+            self.internal_links = self._content_internal_links
+            self.external_links = self._content_external_links
+        else:
+            self.internal_links = self._fallback_internal_links
+            self.external_links = self._fallback_external_links
+
+        self.internal_links_count = len(self.internal_links)
+        self.external_links_count = len(self.external_links)
 
     def handle_starttag(self, tag, attrs):
         tag = tag.lower()
         attrs_dict = {name.lower(): (value or '') for name, value in attrs}
 
+        if tag == 'body':
+            self._body_depth += 1
+
         if tag in {'script', 'style', 'noscript', 'svg'}:
             self._ignored_depth += 1
             return
 
-        if tag in {'title', 'h1', 'h2', 'h3'}:
+        if self._inside_body():
+            is_chrome_container = self._is_chrome_container(tag, attrs_dict)
+            is_content_container = (
+                not is_chrome_container
+                and self._is_content_container(tag, attrs_dict)
+            )
+            self._body_tag_stack.append((tag, is_chrome_container, is_content_container))
+            if is_chrome_container:
+                self._chrome_depth += 1
+            if is_content_container:
+                self._content_depth += 1
+                self._content_container_seen = True
+
+        if tag == 'img' and self._inside_body():
+            self.image_count += 1
+
+        if tag == 'video' and self._inside_body():
+            self.video_count += 1
+
+        if tag == 'iframe' and self._inside_body():
+            src = attrs_dict.get('src', '').lower()
+            if any(provider in src for provider in ('youtube.com', 'youtu.be', 'vimeo.com', 'wistia.com')):
+                self.video_count += 1
+
+        if tag == 'a' and self._inside_content_body():
+            href = attrs_dict.get('href', '').strip()
+            self._record_link(
+                href,
+                {'internal': self._fallback_internal_links, 'external': self._fallback_external_links},
+                self._fallback_seen_links,
+            )
+            if self._inside_confirmed_content():
+                self._record_link(
+                    href,
+                    {'internal': self._content_internal_links, 'external': self._content_external_links},
+                    self._content_seen_links,
+                )
+
+        if tag == 'title' or (tag in {'h1', 'h2', 'h3'} and self._inside_body()):
             self._active_tag = tag
             self._buffer = []
 
@@ -88,6 +266,8 @@ class ContentSnapshotParser(HTMLParser):
             return
         if self._active_tag:
             self._buffer.append(data)
+        if not self._inside_body():
+            return
         cleaned = ' '.join(data.split())
         if cleaned:
             self.body_parts.append(cleaned)
@@ -97,6 +277,25 @@ class ContentSnapshotParser(HTMLParser):
         if tag in {'script', 'style', 'noscript', 'svg'} and self._ignored_depth:
             self._ignored_depth -= 1
             return
+        if self._inside_body() and self._body_tag_stack:
+            matching_index = None
+            for index in range(len(self._body_tag_stack) - 1, -1, -1):
+                if self._body_tag_stack[index][0] == tag:
+                    matching_index = index
+                    break
+            if matching_index is not None:
+                closing_entries = self._body_tag_stack[matching_index:]
+                self._body_tag_stack = self._body_tag_stack[:matching_index]
+            else:
+                closing_entries = []
+
+            for open_tag, was_chrome_container, was_content_container in closing_entries:
+                if was_chrome_container and self._chrome_depth:
+                    self._chrome_depth -= 1
+                if was_content_container and self._content_depth:
+                    self._content_depth -= 1
+        if tag == 'body' and self._body_depth:
+            self._body_depth -= 1
         if tag != self._active_tag:
             return
 
@@ -203,15 +402,22 @@ def build_snapshot(url):
         'h2': [],
         'h3': [],
         'word_count': 0,
+        'image_count': 0,
+        'video_count': 0,
+        'internal_links_count': 0,
+        'external_links_count': 0,
+        'internal_links': [],
+        'external_links': [],
         'top_terms': [],
         'body_excerpt': '',
     }
     if fetched['error_message'] or not any(content_type.startswith(valid) for valid in HTML_CONTENT_TYPES):
         return snapshot
 
-    parser = ContentSnapshotParser()
+    parser = ContentSnapshotParser(fetched['final_url'] or url)
     html = decode_body(fetched['body'])
     parser.feed(html)
+    parser.finalize()
     body_text = normalize_text(' '.join(parser.body_parts))
 
     snapshot.update({
@@ -221,6 +427,12 @@ def build_snapshot(url):
         'h2': parser.headings['h2'][:30],
         'h3': parser.headings['h3'][:40],
         'word_count': len(body_text.split()),
+        'image_count': parser.image_count,
+        'video_count': parser.video_count,
+        'internal_links_count': parser.internal_links_count,
+        'external_links_count': parser.external_links_count,
+        'internal_links': parser.internal_links[:100],
+        'external_links': parser.external_links[:100],
         'top_terms': extract_terms(body_text),
         'body_excerpt': body_text[:3500],
     })
@@ -360,6 +572,9 @@ def compact_snapshot_for_ai(snapshot):
         'h2': snapshot.get('h2', [])[:12],
         'h3': snapshot.get('h3', [])[:12],
         'word_count': snapshot.get('word_count', 0),
+        'image_count': snapshot.get('image_count', 0),
+        'video_count': snapshot.get('video_count', 0),
+        'internal_links_count': snapshot.get('internal_links_count', 0),
         'top_terms': snapshot.get('top_terms', [])[:15],
         'body_excerpt': snapshot.get('body_excerpt', '')[:500],
         'error_message': snapshot.get('error_message', ''),

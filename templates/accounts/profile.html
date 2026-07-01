@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}My Profile - Wisoft Co-Worker{% endblock %}
@@ -28,88 +28,147 @@
             [data-bs-theme="light"] .profile-completion-ring circle.fill { fill: rgba(255,255,255,0.96); }
             [data-bs-theme="light"] .profile-completion-ring text { fill: #0d6efd; }
         </style>
+        <style>
+            /* Mobile responsive overrides */
+            @media (max-width: 576px) {
+                #kt_content_container { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+                #kt_content_container > .page-title {
+                    width: 100%;
+                    align-items: center !important;
+                    text-align: center;
+                }
+                #kt_content_container > .page-title h1 {
+                    width: 100%;
+                    align-items: center !important;
+                    text-align: center;
+                }
+                .profile-card-body { padding-left: 1rem !important; padding-right: 1rem !important; }
+                .profile-detail-card .card-body,
+                .profile-detail-card .card-header { padding-left: 1rem !important; padding-right: 1rem !important; }
+                .profile-banner-container { height: 180px !important; }
+                .profile-avatar-offset { margin-top: -50px !important; }
+                .profile-avatar-wrap { width: 100px !important; height: 100px !important; margin-top: 0 !important; }
+                .profile-avatar-cam { height: 28px !important; }
+                .profile-avatar-cam svg { width: 12px !important; height: 12px !important; }
+                .profile-user-meta { margin-top: 0.75rem !important; padding-bottom: 1rem !important; }
+                .profile-user-title { flex-wrap: wrap; }
+                .profile-completion-section { max-width: 100% !important; }
+            }
+        </style>
         <div class="card mb-10 overflow-hidden">
-            <div class="position-relative">
-                <div id="profile_banner_preview" class="bgi-no-repeat bgi-position-center" style="height: 280px; background-image: {% if request.user.profile.banner_image %}url('{{ request.user.profile.banner_image.url }}'){% else %}linear-gradient(135deg, rgba(13,110,253,0.95) 0%, rgba(77,199,255,0.9) 100%){% endif %}; background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
-                <div class="position-absolute top-0 start-0 end-0 bottom-0 bg-dark bg-opacity-25"></div>
-                <div class="position-absolute top-0 end-0 p-4" style="z-index: 10;">
-                    <form id="banner_upload_form" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="update_banner_image">
-                        <label class="btn btn-icon btn-sm btn-light btn-active-light-primary shadow-sm" aria-label="Change banner image" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;">
-                            <i class="ki-duotone ki-pencil fs-5 text-primary" style="line-height:1;">
-                                <span class="path1"></span>
-                                <span class="path2"></span>
-                            </i>
-                            <input type="file" name="banner_image" id="banner_image_input" class="d-none" accept="image/*" />
-                        </label>
-                    </form>
+            <div class="position-relative w-100 profile-banner-container" style="height: 280px;">
+                <div id="profile_banner_preview" class="w-100 h-100" style="background-image: {% if request.user.profile.banner_image %}url('{{ request.user.profile.banner_image.url }}'){% else %}linear-gradient(135deg, rgba(13,110,253,0.95) 0%, rgba(77,199,255,0.9) 100%){% endif %}; background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+                <div class="position-absolute top-0 start-0 end-0 bottom-0 bg-dark bg-opacity-25" style="pointer-events: none;"></div>
+
+                <form id="banner_upload_form" method="POST" enctype="multipart/form-data" style="display:none;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_banner_image">
+                    <input type="file" accept=".png, .jpg, .jpeg" name="banner_image" id="banner_image_input" />
+                </form>
+                <form id="delete_banner_form" method="POST" style="display:none;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_banner_image">
+                </form>
+
+                <div class="position-absolute top-0 end-0 m-4" style="z-index: 15;">
+                    <button type="button" class="btn btn-icon rounded-circle d-flex align-items-center justify-content-center" id="banner_menu_btn" style="width: 44px; height: 44px; background-color: rgba(0,0,0,0.78); border: none; cursor: pointer; box-shadow: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="color: #fff;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    </button>
+                    <div id="banner_menu_popup" class="rounded-3 shadow-lg py-2" style="display:none; position: absolute; right: 0; top: 44px; min-width: 180px; background: var(--bs-body-bg, #fff); border: 1px solid var(--bs-border-color, #e4e6ef); z-index: 20;">
+                        <a href="javascript:void(0);" id="banner_change_option" class="d-flex align-items-center gap-2 px-4 py-2 text-gray-700 text-hover-primary fw-semibold fs-7" style="text-decoration: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Change Banner
+                        </a>
+                        <a href="javascript:void(0);" id="banner_delete_option" class="d-flex align-items-center gap-2 px-4 py-2 text-danger text-hover-danger fw-semibold fs-7" style="text-decoration: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            Delete Banner
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            <div class="card-body pt-0 pb-9 px-9">
-                <div class="d-flex flex-column flex-xl-row flex-stack gap-4 pb-8">
-                    <div class="d-flex align-items-center gap-4">
-                        <div class="position-relative symbol symbol-120px symbol-circle shadow-sm" style="margin-top: -72px;">
-                            <img id="profile_avatar_preview"
-                                src="{% if request.user.profile.profile_picture %}{{ request.user.profile.profile_picture.url }}{% else %}{% static 'assets/images/default-avatar.svg' %}{% endif %}"
-                                alt="Profile picture"
-                                style="object-fit: cover; width: 120px; height: 120px; border-radius: 50%;"
-                                onerror="this.onerror=null;this.src='{% static 'assets/images/default-avatar.svg' %}'" />
-                            <form method="POST" enctype="multipart/form-data" class="position-absolute bottom-0 end-0" style="transform: translate(25%, 25%);">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="update_profile_picture">
-                                <label class="btn btn-icon btn-sm btn-light btn-active-light-primary shadow-sm" aria-label="Change profile picture" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;">
-                                    <i class="ki-duotone ki-pencil fs-5 text-primary" style="line-height:1;">
-                                        <span class="path1"></span>
-                                        <span class="path2"></span>
-                                    </i>
-                                    <input type="file" name="profile_picture" id="profile_picture_input" class="d-none" accept="image/*" />
-                                </label>
-                            </form>
+            <div class="card-body profile-card-body pt-0 pb-6 pb-md-9 px-4 px-md-9">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center align-items-lg-start w-100 gap-4">
+
+                    <!-- Left Spacer -->
+                    <div class="d-none d-lg-block" style="flex: 1;"></div>
+
+                    <!-- Center Profile Info -->
+                    <div class="d-flex flex-column align-items-center justify-content-center gap-2" style="flex: 1;">
+                        <form id="pfp_upload_form" method="POST" enctype="multipart/form-data" style="display: none;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_profile_picture">
+                            <input type="file" accept=".png, .jpg, .jpeg" name="profile_picture" id="profile_picture_input" style="display: none;" />
+                        </form>
+                        <form id="delete_pfp_form" method="POST" style="display:none;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_profile_picture">
+                        </form>
+                        <div class="position-relative profile-avatar-offset" style="margin-top: -72px; z-index: 10;">
+                            <div class="d-flex flex-column align-items-center">
+                                <div class="profile-avatar-wrap" style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; position: relative; cursor: pointer; box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);" id="avatar_container">
+                                    <div id="profile_avatar_preview" style="width: 100%; height: 100%; border-radius: 50%; background-image: url('{% if request.user.profile.profile_picture %}{{ request.user.profile.profile_picture.url }}{% else %}{% static 'assets/images/default-avatar.svg' %}{% endif %}'); background-size: cover; background-position: center;"></div>
+                                    <div class="profile-avatar-cam d-flex align-items-center justify-content-center" style="position: absolute; left: 0; right: 0; bottom: 0; height: 34px; background-color: rgba(0,0,0,0.38); z-index: 3;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                                    </div>
+                                </div>
+                                <!-- Avatar popup menu -->
+                                <div id="avatar_menu_popup" class="rounded-3 shadow-lg py-2" style="display:none; position: absolute; top: 55px; min-width: 180px; background: var(--bs-body-bg, #fff); border: 1px solid var(--bs-border-color, #e4e6ef); z-index: 20;">
+                                    <a href="javascript:void(0);" id="avatar_change_option" class="d-flex align-items-center gap-2 px-4 py-2 text-gray-700 text-hover-primary fw-semibold fs-7" style="text-decoration: none;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                        Change Picture
+                                    </a>
+                                    <a href="javascript:void(0);" id="avatar_delete_option" class="d-flex align-items-center gap-2 px-4 py-2 text-danger text-hover-danger fw-semibold fs-7" style="text-decoration: none;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                        Delete Picture
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mt-6">
-                            <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="text-center mt-2 pb-5 profile-user-meta">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-2 profile-user-title">
                                 <h2 class="text-gray-900 fw-bold mb-0">{{ user.username }}</h2>
-                                <span class="badge badge-light-primary">{% if user.is_superuser %}Admin{% else %}User{% endif %}</span>
+                                <span class="badge badge-light-primary">{{ user.profile.role|title }}</span>
                             </div>
                             <div class="text-gray-500 mb-1">{{ user.get_full_name|default:user.username }}</div>
                             <div class="text-gray-500 fs-7">{{ user.email }}</div>
                         </div>
                     </div>
 
-                    <div class="d-flex flex-column justify-content-center align-items-xl-end gap-3 mt-6">
-                        <div class="w-100">
-                            <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 gap-2">
+                    <!-- Right Profile Completion -->
+                    <div class="d-flex justify-content-center justify-content-lg-end align-items-start mt-0 pt-0 pt-lg-4 w-100" style="flex: 1;">
+                        <div class="w-100 profile-completion-section" style="max-width: 250px;">
+                            <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-center justify-content-between mb-3 gap-2 text-center text-sm-start">
                                 <div>
                                     <div class="fw-semibold text-gray-600 fs-8 text-uppercase">Profile Completion</div>
                                 </div>
                                 <div class="fw-bold text-gray-900 fs-6">{{ profile_strength }}%</div>
                             </div>
-                            <div class="progress h-8 bg-light-success rounded-3 overflow-hidden">
-                                <div class="progress-bar bg-success rounded-3" role="progressbar" style="width: {{ profile_strength }}%;" aria-valuenow="{{ profile_strength }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress w-100 bg-light-primary overflow-hidden" style="height: 8px; border-radius: 4px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ profile_strength }}%;" aria-valuenow="{{ profile_strength }}" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         </div>
                     </div>
+
                 </div>
 
             </div>
         </div>
 
-        <div class="row g-7 align-items-start">
+        <div class="row g-7 justify-content-center align-items-start">
 
             <!-- Personal Information Card -->
-            <div class="col-lg-6">
-                <div class="card h-100" style="border: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); border-radius: 12px; overflow: hidden;">
+            <div class="col-12 col-md-10 col-lg-8 mb-2">
+                <div class="card h-100 profile-detail-card" style="border: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); border-radius: 12px; overflow: hidden;">
                     <!-- Card Header -->
-                    <div class="card-header d-flex align-items-center justify-content-between py-5 px-7" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); min-height: unset;">
+                    <div class="card-header d-flex align-items-center justify-content-between py-4 py-md-5 px-4 px-md-7" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); min-height: unset;">
                         <h3 class="fw-bold fs-5 m-0">Personal Information</h3>
                         <a href="javascript:void(0);" onclick="document.getElementById('personal_info_view').classList.add('d-none'); document.getElementById('personal_info_edit').classList.remove('d-none');" class="btn btn-icon btn-active-light-primary btn-sm w-30px h-30px">
                             <i class="ki-duotone ki-pencil fs-4"><span class="path1"></span><span class="path2"></span></i>
                         </a>
                     </div>
                     <!-- Card Body -->
-                    <div class="card-body px-7 py-5">
+                    <div class="card-body px-4 px-md-7 py-4 py-md-5">
                         <div id="personal_info_view" class="d-flex flex-column {% if active_section == 'profile_edit' %}d-none{% endif %}">
                             <div class="py-3" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.06));">
                                 <div class="fw-semibold text-muted fs-8 text-uppercase mb-1">Full Name</div>
@@ -125,7 +184,7 @@
                             </div>
                             <div class="py-3" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.06));">
                                 <div class="fw-semibold text-muted fs-8 text-uppercase mb-1">Account Type</div>
-                                <div class="fs-7 fw-semibold">{% if user.is_superuser %}Admin{% else %}User{% endif %}</div>
+                                <div class="fs-7 fw-semibold">{{ user.profile.role|title }}</div>
                             </div>
                             <div class="py-3" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.06));">
                                 <div class="fw-semibold text-muted fs-8 text-uppercase mb-1">Status</div>
@@ -148,12 +207,12 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="update_profile_details">
                                 <div class="row g-3 mb-4 mt-2">
-                                    <div class="col-6">
+                                    <div class="col-12 col-md-6">
                                         <label class="form-label fw-semibold fs-7 mb-1">First Name</label>
                                         <input type="text" name="first_name" class="form-control form-control-sm form-control-solid {% if errors.first_name %}is-invalid{% endif %}" placeholder="First name" value="{{ user.first_name }}" />
                                         {% if errors.first_name %}<div class="invalid-feedback d-block">{{ errors.first_name }}</div>{% endif %}
                                     </div>
-                                    <div class="col-6">
+                                    <div class="col-12 col-md-6">
                                         <label class="form-label fw-semibold fs-7 mb-1">Last Name</label>
                                         <input type="text" name="last_name" class="form-control form-control-sm form-control-solid {% if errors.last_name %}is-invalid{% endif %}" placeholder="Last name" value="{{ user.last_name }}" />
                                         {% if errors.last_name %}<div class="invalid-feedback d-block">{{ errors.last_name }}</div>{% endif %}
@@ -164,7 +223,7 @@
                                     <input type="text" name="username" class="form-control form-control-sm form-control-solid {% if errors.username %}is-invalid{% endif %}" placeholder="Username" value="{{ user.username }}" />
                                     {% if errors.username %}<div class="invalid-feedback d-block">{{ errors.username }}</div>{% endif %}
                                 </div>
-                                <div class="d-flex justify-content-end gap-2">
+                                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
                                     <button type="button" onclick="document.getElementById('personal_info_edit').classList.add('d-none'); document.getElementById('personal_info_view').classList.remove('d-none');" class="btn btn-sm btn-light">Cancel</button>
                                     <button type="submit" class="btn btn-sm btn-primary">Save Changes</button>
                                 </div>
@@ -175,14 +234,14 @@
             </div>
 
             <!-- Account Security Card -->
-            <div class="col-lg-6">
-                <div class="card h-100" style="border: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); border-radius: 12px; overflow: hidden;">
+            <div class="col-12 col-md-10 col-lg-8 mt-4 mt-md-7">
+                <div class="card h-100 profile-detail-card" style="border: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); border-radius: 12px; overflow: hidden;">
                     <!-- Card Header -->
-                    <div class="card-header d-flex align-items-center py-5 px-7" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); min-height: unset;">
+                    <div class="card-header d-flex align-items-center py-4 py-md-5 px-4 px-md-7" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); min-height: unset;">
                         <h3 class="fw-bold fs-5 m-0">Account Security</h3>
                     </div>
                     <!-- Card Body -->
-                    <div class="card-body px-7 py-6">
+                    <div class="card-body px-4 px-md-7 py-4 py-md-6">
 
                         <!-- Password Section -->
                         <div class="fw-semibold text-muted fs-8 text-uppercase mb-5 mt-2">Change Password</div>
@@ -195,12 +254,12 @@
                                 {% if errors.password_current_password %}<div class="invalid-feedback d-block">{{ errors.password_current_password }}</div>{% endif %}
                             </div>
                             <div class="row g-3 mb-5">
-                                <div class="col-6">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label fw-semibold fs-7 mb-1">New Password</label>
                                     <input type="password" name="new_password" class="form-control form-control-sm form-control-solid {% if errors.new_password %}is-invalid{% endif %}" placeholder="New password" />
                                     {% if errors.new_password %}<div class="invalid-feedback d-block">{{ errors.new_password }}</div>{% endif %}
                                 </div>
-                                <div class="col-6">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label fw-semibold fs-7 mb-1">Confirm Password</label>
                                     <input type="password" name="confirm_password" class="form-control form-control-sm form-control-solid {% if errors.confirm_password %}is-invalid{% endif %}" placeholder="Confirm password" />
                                     {% if errors.confirm_password %}<div class="invalid-feedback d-block">{{ errors.confirm_password }}</div>{% endif %}
@@ -220,7 +279,7 @@
 </div>
 
 <script>
-    function updateImagePreview(inputId, previewId, isBackground, autoSubmitForm) {
+    function updateImagePreview(inputId, previewId, autoSubmitForm) {
         const input = document.getElementById(inputId);
         const preview = document.getElementById(previewId);
         if (!input || !preview) return;
@@ -229,11 +288,7 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function (e) {
-                if (isBackground) {
-                    preview.style.backgroundImage = `url('${e.target.result}')`;
-                } else {
-                    preview.src = e.target.result;
-                }
+                preview.style.backgroundImage = "url('" + e.target.result + "')";
             };
             reader.readAsDataURL(file);
             if (autoSubmitForm && input.form) {
@@ -242,8 +297,65 @@
         });
     }
 
-    updateImagePreview('profile_picture_input', 'profile_avatar_preview', false, true);
-    updateImagePreview('banner_image_input', 'profile_banner_preview', true, true);
+    updateImagePreview('profile_picture_input', 'profile_avatar_preview', true);
+    updateImagePreview('banner_image_input', 'profile_banner_preview', true);
+
+    // ── Popup menu logic ──
+    function closeAllPopups() {
+        document.getElementById('banner_menu_popup').style.display = 'none';
+        document.getElementById('avatar_menu_popup').style.display = 'none';
+    }
+
+    // Banner menu
+    document.getElementById('banner_menu_btn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        var popup = document.getElementById('banner_menu_popup');
+        var isOpen = popup.style.display !== 'none';
+        closeAllPopups();
+        if (!isOpen) popup.style.display = 'block';
+    });
+
+    document.getElementById('banner_change_option').addEventListener('click', function() {
+        closeAllPopups();
+        document.getElementById('banner_image_input').click();
+    });
+
+    document.getElementById('banner_delete_option').addEventListener('click', function() {
+        closeAllPopups();
+        if (confirm('Are you sure you want to delete the banner image?')) {
+            document.getElementById('delete_banner_form').submit();
+        }
+    });
+
+    // Avatar menu
+    document.getElementById('avatar_container').addEventListener('click', function(e) {
+        e.stopPropagation();
+        var popup = document.getElementById('avatar_menu_popup');
+        var isOpen = popup.style.display !== 'none';
+        closeAllPopups();
+        if (!isOpen) popup.style.display = 'block';
+    });
+
+    document.getElementById('avatar_change_option').addEventListener('click', function() {
+        closeAllPopups();
+        document.getElementById('profile_picture_input').click();
+    });
+
+    document.getElementById('avatar_delete_option').addEventListener('click', function() {
+        closeAllPopups();
+        if (confirm('Are you sure you want to delete your profile picture?')) {
+            document.getElementById('delete_pfp_form').submit();
+        }
+    });
+
+    // Close popups on outside click
+    document.addEventListener('click', function() {
+        closeAllPopups();
+    });
+
+    // Prevent popup clicks from bubbling
+    document.getElementById('banner_menu_popup').addEventListener('click', function(e) { e.stopPropagation(); });
+    document.getElementById('avatar_menu_popup').addEventListener('click', function(e) { e.stopPropagation(); });
 
     document.querySelectorAll('.security-toggle').forEach(function(button) {
         button.addEventListener('click', function() {

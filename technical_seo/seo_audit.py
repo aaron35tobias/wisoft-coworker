@@ -1,12 +1,15 @@
-import json
+﻿import json
 import os
+import re
+import socket
 import time
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict, deque
+from decimal import Decimal
 from html.parser import HTMLParser
 from urllib import robotparser
 from urllib.error import HTTPError, URLError
-from urllib.parse import urldefrag, urljoin, urlparse, urlunparse
+from urllib.parse import urlencode, urldefrag, urljoin, urlparse, urlunparse
 from urllib.request import Request, urlopen
 
 from django.utils import timezone
@@ -18,6 +21,11 @@ from .search_console import run_search_console_collection
 USER_AGENT = 'WisoftCoWorkerTechnicalSEOAudit/1.0'
 HTML_CONTENT_TYPES = ('text/html', 'application/xhtml+xml')
 DEFAULT_HTML_READ_LIMIT_BYTES = 5 * 1024 * 1024
+HREFLANG_PATTERN = re.compile(r'^(x-default|[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8})?)$')
+DEFAULT_AI_MAX_TOKENS = 1200
+DEFAULT_AI_TIMEOUT_SECONDS = 240
+DEFAULT_AI_RETRY_ATTEMPTS = 2
+PAGESPEED_API_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed'
 
 
 def get_html_read_limit_bytes():
@@ -25,6 +33,133 @@ def get_html_read_limit_bytes():
         return int(os.environ.get('TECHNICAL_SEO_HTML_READ_LIMIT_BYTES', DEFAULT_HTML_READ_LIMIT_BYTES))
     except (TypeError, ValueError):
         return DEFAULT_HTML_READ_LIMIT_BYTES
+
+
+def get_env_int(name, default):
+    try:
+        return int(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def is_timeout_error(exc):
+    return isinstance(exc, (TimeoutError, socket.timeout)) or 'timed out' in str(exc).lower()
+
+
+def execute_json_request(request_factory, timeout, attempts):
+    max_attempts = max(1, attempts)
+    for attempt in range(max_attempts):
+        try:
+            with urlopen(request_factory(), timeout=max(1, timeout)) as response:
+                return json.loads(response.read().decode('utf-8'))
+        except Exception as exc:
+            if attempt >= max_attempts - 1 or not is_timeout_error(exc):
+                raise
+            time.sleep(2 * (attempt + 1))
+
+
+def get_decimal_audit_value(data, audit_key):
+    value = (
+        data.get('lighthouseResult', {})
+        .get('audits', {})
+        .get(audit_key, {})
+        .get('numericValue')
+    )
+    if value is None:
+        return None
+    return Decimal(str(value))
+
+
+def decimal_to_string(value, places):
+    if value is None:
+        return ''
+    return str(value.quantize(Decimal(places)))
+
+
+def get_pagespeed_category_score(data, category_key):
+    score = (
+        data.get('lighthouseResult', {})
+        .get('categories', {})
+        .get(category_key, {})
+        .get('score')
+    )
+    if score is None:
+        return None
+    return round(score * 100)
+
+
+def parse_pagespeed_response(data, strategy):
+    fcp = get_decimal_audit_value(data, 'first-contentful-paint')
+    lcp = get_decimal_audit_value(data, 'largest-contentful-paint')
+    inp = get_decimal_audit_value(data, 'interaction-to-next-paint')
+    cls = get_decimal_audit_value(data, 'cumulative-layout-shift')
+    tbt = get_decimal_audit_value(data, 'total-blocking-time')
+    speed_index = get_decimal_audit_value(data, 'speed-index')
+    ttfb = get_decimal_audit_value(data, 'server-response-time')
+
+    return {
+        'strategy': strategy,
+        'performance_score': get_pagespeed_category_score(data, 'performance'),
+        'accessibility_score': get_pagespeed_category_score(data, 'accessibility'),
+        'best_practices_score': get_pagespeed_category_score(data, 'best-practices'),
+        'seo_score': get_pagespeed_category_score(data, 'seo'),
+        'first_contentful_paint': decimal_to_string(fcp / Decimal('1000') if fcp is not None else None, '0.01'),
+        'largest_contentful_paint': decimal_to_string(lcp / Decimal('1000') if lcp is not None else None, '0.01'),
+        'interaction_to_next_paint': decimal_to_string(inp, '0.01'),
+        'cumulative_layout_shift': decimal_to_string(cls, '0.0001'),
+        'total_blocking_time': decimal_to_string(tbt, '0.01'),
+        'speed_index': decimal_to_string(speed_index / Decimal('1000') if speed_index is not None else None, '0.01'),
+        'time_to_first_byte': decimal_to_string(ttfb / Decimal('1000') if ttfb is not None else None, '0.01'),
+        'final_url': (
+            data.get('lighthouseResult', {})
+            .get('finalDisplayedUrl', '')
+        ),
+        'fetched_at': timezone.now().isoformat(),
+    }
+
+
+def fetch_pagespeed_data(url, strategy, api_key):
+    params = urlencode({
+        'url': url,
+        'strategy': strategy,
+        'key': api_key,
+        'category': ['performance', 'accessibility', 'best-practices', 'seo'],
+    }, doseq=True)
+    request_url = f'{PAGESPEED_API_URL}?{params}'
+
+    request = Request(request_url, headers={'User-Agent': USER_AGENT})
+    with urlopen(request, timeout=get_env_int('PAGESPEED_API_TIMEOUT_SECONDS', 120)) as response:
+        return json.loads(response.read().decode('utf-8'))
+
+
+def run_pagespeed_collection(audit):
+    api_key = os.environ.get('GOOGLE_PAGESPEED_API_KEY', '').strip()
+    audit.pagespeed_mobile = {}
+    audit.pagespeed_desktop = {}
+    audit.pagespeed_error = ''
+
+    if not api_key:
+        audit.pagespeed_status = 'not_configured'
+        audit.pagespeed_error = 'GOOGLE_PAGESPEED_API_KEY is not set.'
+        audit.save(update_fields=['pagespeed_status', 'pagespeed_error', 'pagespeed_mobile', 'pagespeed_desktop'])
+        return
+
+    audit.pagespeed_status = 'running'
+    audit.save(update_fields=['pagespeed_status', 'pagespeed_error', 'pagespeed_mobile', 'pagespeed_desktop'])
+
+    errors = []
+    update_fields = ['pagespeed_status', 'pagespeed_error', 'pagespeed_mobile', 'pagespeed_desktop']
+    for strategy, field_name in (('mobile', 'pagespeed_mobile'), ('desktop', 'pagespeed_desktop')):
+        try:
+            data = fetch_pagespeed_data(audit.website.website_url, strategy, api_key)
+            setattr(audit, field_name, parse_pagespeed_response(data, strategy))
+        except Exception as exc:
+            errors.append(f'{strategy}: {exc}')
+            setattr(audit, field_name, {})
+
+    audit.pagespeed_status = 'failed' if errors and not (audit.pagespeed_mobile or audit.pagespeed_desktop) else 'completed'
+    audit.pagespeed_error = '; '.join(errors)
+    audit.save(update_fields=update_fields)
 
 
 class PageSEOParser(HTMLParser):
@@ -35,6 +170,7 @@ class PageSEOParser(HTMLParser):
         self.meta_description = ''
         self.robots_directives = ''
         self.canonical_url = ''
+        self.hreflang_links = []
         self.h1_texts = []
         self.h2_count = 0
         self.links = []
@@ -59,10 +195,21 @@ class PageSEOParser(HTMLParser):
             if name == 'robots':
                 self.robots_directives = content
 
-        if tag == 'link' and attrs_dict.get('rel', '').lower() == 'canonical':
+        rel_values = set(attrs_dict.get('rel', '').lower().split())
+
+        if tag == 'link' and 'canonical' in rel_values:
             href = attrs_dict.get('href', '').strip()
             if href:
                 self.canonical_url = normalize_url(urljoin(self.base_url, href))
+
+        if tag == 'link' and 'alternate' in rel_values:
+            hreflang = attrs_dict.get('hreflang', '').strip()
+            href = attrs_dict.get('href', '').strip()
+            if hreflang or href:
+                self.hreflang_links.append({
+                    'hreflang': hreflang.lower(),
+                    'href': normalize_url(urljoin(self.base_url, href)) if href else '',
+                })
 
         if tag == 'a':
             href = attrs_dict.get('href', '').strip()
@@ -289,6 +436,10 @@ def add_issue(audit, page, issue_type, severity, title, evidence, recommendation
     )
 
 
+def normalize_text(value):
+    return ' '.join((value or '').split()).strip().lower()
+
+
 def detect_page_issues(audit, page):
     status_code = page.status_code or 0
     html_truncated = page.raw_data.get('html_truncated', False)
@@ -474,12 +625,19 @@ def detect_duplicate_issues(audit):
     pages = list(audit.pages.filter(status_code__lt=400))
     title_groups = defaultdict(list)
     description_groups = defaultdict(list)
+    h1_groups = defaultdict(list)
+    h1_display_values = {}
 
     for page in pages:
         if page.title:
             title_groups[page.title.strip().lower()].append(page)
         if page.meta_description:
             description_groups[page.meta_description.strip().lower()].append(page)
+        for h1_text in page.raw_data.get('h1_texts', []):
+            normalized_h1 = normalize_text(h1_text)
+            if normalized_h1:
+                h1_groups[normalized_h1].append(page)
+                h1_display_values.setdefault(normalized_h1, ' '.join(h1_text.split()))
 
     for group in title_groups.values():
         if len(group) < 2:
@@ -511,6 +669,118 @@ def detect_duplicate_issues(audit):
                 'Write unique descriptions for pages that target distinct topics or intents.',
             )
 
+    for h1_text, group in h1_groups.items():
+        unique_pages = list({page.id: page for page in group}.values())
+        if len(unique_pages) < 2:
+            continue
+        urls = ', '.join(page.url for page in unique_pages[:5])
+        display_h1 = h1_display_values.get(h1_text, h1_text)
+        for page in unique_pages:
+            add_issue(
+                audit,
+                page,
+                'duplicate_h1',
+                TechnicalSEOIssue.SEVERITY_LOW,
+                'Duplicate H1 across pages',
+                f'The H1 "{display_h1}" is shared by {len(unique_pages)} pages. Examples: {urls}',
+                'Make the primary H1 unique enough to describe this page topic and distinguish it from related pages.',
+            )
+
+
+def detect_hreflang_issues(audit):
+    pages = list(audit.pages.filter(status_code__lt=400))
+    all_pages = list(audit.pages.all())
+    pages_by_url = {}
+    for page in all_pages:
+        pages_by_url[normalize_url(page.final_url or page.url)] = page
+        pages_by_url[normalize_url(page.url)] = page
+
+    for page in pages:
+        hreflang_links = page.raw_data.get('hreflang_links', []) or []
+        if not hreflang_links:
+            continue
+
+        seen_langs = defaultdict(list)
+        for link in hreflang_links:
+            hreflang = (link.get('hreflang') or '').strip().lower()
+            href = (link.get('href') or '').strip()
+            if not hreflang:
+                add_issue(
+                    audit,
+                    page,
+                    'hreflang_missing_language',
+                    TechnicalSEOIssue.SEVERITY_LOW,
+                    'Hreflang language is missing',
+                    f'Hreflang alternate points to {href or "an empty URL"} without a language value.',
+                    'Add a valid hreflang value such as en, en-ae, ar, or x-default.',
+                )
+            elif not HREFLANG_PATTERN.match(hreflang):
+                add_issue(
+                    audit,
+                    page,
+                    'hreflang_invalid_language',
+                    TechnicalSEOIssue.SEVERITY_LOW,
+                    'Invalid hreflang value',
+                    f'Hreflang value "{hreflang}" does not match a valid language or language-region pattern.',
+                    'Use valid ISO language codes and optional region codes, for example en, en-ae, ar-ae, or x-default.',
+                )
+
+            if not href:
+                add_issue(
+                    audit,
+                    page,
+                    'hreflang_missing_href',
+                    TechnicalSEOIssue.SEVERITY_LOW,
+                    'Hreflang URL is missing',
+                    f'Hreflang value "{hreflang or "-"}" has no href URL.',
+                    'Add the absolute URL for the alternate language page.',
+                )
+                continue
+
+            seen_langs[hreflang].append(href)
+            target_page = pages_by_url.get(normalize_url(href))
+            if target_page and (target_page.status_code or 0) >= 400:
+                add_issue(
+                    audit,
+                    page,
+                    'hreflang_target_error',
+                    TechnicalSEOIssue.SEVERITY_MEDIUM,
+                    'Hreflang target is not crawlable',
+                    f'Hreflang target {href} returned HTTP {target_page.status_code}.',
+                    'Point hreflang to live, indexable pages that return a successful status code.',
+                )
+                continue
+
+            if not target_page or target_page.id == page.id:
+                continue
+
+            target_links = target_page.raw_data.get('hreflang_links', []) or []
+            source_url = normalize_url(page.final_url or page.url)
+            has_return_link = any(normalize_url(item.get('href', '')) == source_url for item in target_links if item.get('href'))
+            if not has_return_link:
+                add_issue(
+                    audit,
+                    page,
+                    'hreflang_missing_return',
+                    TechnicalSEOIssue.SEVERITY_MEDIUM,
+                    'Hreflang return link missing',
+                    f'{page.url} references {href}, but the target page does not link back to this URL with hreflang.',
+                    'Add reciprocal hreflang annotations on every alternate page in the language cluster.',
+                )
+
+        for hreflang, hrefs in seen_langs.items():
+            unique_hrefs = set(hrefs)
+            if hreflang and len(hrefs) > 1 and len(unique_hrefs) > 1:
+                add_issue(
+                    audit,
+                    page,
+                    'hreflang_duplicate_language',
+                    TechnicalSEOIssue.SEVERITY_LOW,
+                    'Duplicate hreflang language target',
+                    f'Hreflang "{hreflang}" points to multiple URLs: {", ".join(sorted(unique_hrefs)[:5])}',
+                    'Keep one URL per hreflang value on each page to avoid sending conflicting alternate signals.',
+                )
+
 
 def summarize_without_ai(audit):
     counts = Counter(audit.issues.values_list('severity', flat=True))
@@ -533,10 +803,6 @@ def build_ai_payload(audit):
         audit.issues.select_related('page')
         .order_by('severity', 'issue_type')[:80]
         .values('severity', 'issue_type', 'title', 'evidence', 'recommendation', 'page__url')
-    )
-    gsc_rows = list(
-        audit.gsc_rows.order_by('-clicks', '-impressions')[:40]
-        .values('page_url', 'query', 'device', 'country', 'clicks', 'impressions', 'ctr', 'position')
     )
     gsc_inspections = list(
         audit.gsc_url_inspections.select_related('page').order_by('inspection_url')[:40]
@@ -581,8 +847,13 @@ def build_ai_payload(audit):
                 'start': audit.gsc_start_date.isoformat() if audit.gsc_start_date else '',
                 'end': audit.gsc_end_date.isoformat() if audit.gsc_end_date else '',
             },
-            'top_rows': list(gsc_rows),
             'url_inspections': list(gsc_inspections),
+        },
+        'pagespeed': {
+            'status': audit.pagespeed_status,
+            'error': audit.pagespeed_error,
+            'mobile': audit.pagespeed_mobile,
+            'desktop': audit.pagespeed_desktop,
         },
     }
 
@@ -610,11 +881,15 @@ def extract_anthropic_response_text(data):
 def build_ai_prompt(audit):
     return (
         'You are a senior technical SEO consultant. Analyze this structured crawl audit. '
-        'Return a concise client-ready summary with: Executive summary, top priorities, '
-        'corrective actions, Search Console insights, and developer notes. Be specific, do not invent facts. '
-        'Use Google Search Console rows only when present, connecting low CTR, weak average position, '
+        f'Return a complete client-ready summary that fits within {get_env_int("ANTHROPIC_MAX_TOKENS", DEFAULT_AI_MAX_TOKENS)} output tokens. '
+        'Use exactly these sections: Executive summary, Top priorities, Corrective actions, '
+        'Search Console insights, Developer notes. Keep each section concise. '
+        'Use no more than 5 bullets per section and no more than 18 words per bullet. '
+        'Prioritize the highest-impact findings instead of trying to mention every issue. '
+        'End with the exact line: Summary complete. Be specific, do not invent facts. '
+        'Use Google URL Inspection data only when present, connecting '
         'indexing verdicts, canonical differences, and crawl issues to practical fixes. '
-        'Prioritize crawlability, indexability, metadata duplication, canonicalization, and performance.\n\n'
+        'Prioritize crawlability, indexability, metadata duplication, H1 duplication, hreflang, canonicalization, and performance.\n\n'
         f'{json.dumps(build_ai_payload(audit), indent=2)}'
     )
 
@@ -622,33 +897,36 @@ def build_ai_prompt(audit):
 def generate_anthropic_summary(audit, prompt):
     api_key = os.environ.get('ANTHROPIC_API_KEY', '').strip()
     model = os.environ.get('ANTHROPIC_MODEL', 'claude-3-5-sonnet-20241022').strip()
+    max_tokens = get_env_int('ANTHROPIC_MAX_TOKENS', DEFAULT_AI_MAX_TOKENS)
+    timeout = get_env_int('AI_SUMMARY_TIMEOUT_SECONDS', DEFAULT_AI_TIMEOUT_SECONDS)
+    attempts = get_env_int('AI_SUMMARY_RETRY_ATTEMPTS', DEFAULT_AI_RETRY_ATTEMPTS)
     if not api_key:
         return False
 
-    body = json.dumps({
-        'model': model,
-        'max_tokens': 1200,
-        'messages': [
-            {
-                'role': 'user',
-                'content': prompt,
+    def request_factory():
+        body = json.dumps({
+            'model': model,
+            'max_tokens': max(1, max_tokens),
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': prompt,
+                },
+            ],
+        }).encode('utf-8')
+        return Request(
+            'https://api.anthropic.com/v1/messages',
+            data=body,
+            headers={
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+                'Content-Type': 'application/json',
             },
-        ],
-    }).encode('utf-8')
-    request = Request(
-        'https://api.anthropic.com/v1/messages',
-        data=body,
-        headers={
-            'x-api-key': api_key,
-            'anthropic-version': '2023-06-01',
-            'Content-Type': 'application/json',
-        },
-        method='POST',
-    )
+            method='POST',
+        )
 
     try:
-        with urlopen(request, timeout=45) as response:
-            data = json.loads(response.read().decode('utf-8'))
+        data = execute_json_request(request_factory, timeout, attempts)
         ai_summary = extract_anthropic_response_text(data)
         audit.ai_summary = ai_summary or summarize_without_ai(audit)
         audit.ai_model = f'anthropic:{model}'
@@ -664,26 +942,28 @@ def generate_anthropic_summary(audit, prompt):
 def generate_openai_summary(audit, prompt):
     api_key = os.environ.get('OPENAI_API_KEY', '').strip()
     model = os.environ.get('OPENAI_MODEL', 'gpt-4.1').strip()
+    timeout = get_env_int('AI_SUMMARY_TIMEOUT_SECONDS', DEFAULT_AI_TIMEOUT_SECONDS)
+    attempts = get_env_int('AI_SUMMARY_RETRY_ATTEMPTS', DEFAULT_AI_RETRY_ATTEMPTS)
     if not api_key:
         return False
 
-    body = json.dumps({
-        'model': model,
-        'input': prompt,
-    }).encode('utf-8')
-    request = Request(
-        'https://api.openai.com/v1/responses',
-        data=body,
-        headers={
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json',
-        },
-        method='POST',
-    )
+    def request_factory():
+        body = json.dumps({
+            'model': model,
+            'input': prompt,
+        }).encode('utf-8')
+        return Request(
+            'https://api.openai.com/v1/responses',
+            data=body,
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+            },
+            method='POST',
+        )
 
     try:
-        with urlopen(request, timeout=45) as response:
-            data = json.loads(response.read().decode('utf-8'))
+        data = execute_json_request(request_factory, timeout, attempts)
         ai_summary = extract_openai_response_text(data)
         audit.ai_summary = ai_summary or summarize_without_ai(audit)
         audit.ai_model = f'openai:{model}'
@@ -806,6 +1086,7 @@ def run_technical_seo_audit(audit):
                 error_message=result['error_message'],
                 raw_data={
                     'h1_texts': parsed_page.h1_texts[:10] if parsed_page else [],
+                    'hreflang_links': parsed_page.hreflang_links[:50] if parsed_page else [],
                     'content_type': result['content_type'],
                     'final_url': result['final_url'],
                     'html_truncated': result['html_truncated'],
@@ -816,8 +1097,14 @@ def run_technical_seo_audit(audit):
             detect_page_issues(audit, page)
 
         detect_duplicate_issues(audit)
+        detect_hreflang_issues(audit)
         update_audit_counts(audit)
+        audit.status = TechnicalSEOAudit.STATUS_CRAWL_COMPLETED
+        audit.gsc_status = 'queued'
+        audit.pagespeed_status = 'queued'
+        audit.save(update_fields=['status', 'gsc_status', 'pagespeed_status'])
         run_search_console_collection(audit)
+        run_pagespeed_collection(audit)
         generate_ai_summary(audit)
         audit.status = TechnicalSEOAudit.STATUS_COMPLETED
         audit.completed_at = timezone.now()

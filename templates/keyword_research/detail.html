@@ -1,42 +1,690 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
-
 {% block title %}Keyword Research Detail | Wisoft Co-Worker{% endblock %}
-
 {% block extra_css_scripts %}
-<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
-<style>.kr-url-cell{max-width:360px;white-space:normal;word-break:break-word}.kr-copy{white-space:pre-line}.kr-planner-value{font-size:.78rem}</style>
-{% endblock %}
+    <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
+          rel="stylesheet"
+          type="text/css" />
+    <style>
+.keyword-loading-overlay {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.92);
+    bottom: 0;
+    display: none;
+    justify-content: center;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1090;
+}
 
+[data-bs-theme="dark"] .keyword-loading-overlay {
+    background: rgba(18, 18, 23, 0.92);
+}
+
+.keyword-loading-panel {
+    max-width: 430px;
+    width: calc(100% - 32px);
+}
+
+.keyword-overview-card {
+    border: 0;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, #f8fbff 0%, #eef5ff 100%);
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    position: relative;
+}
+
+[data-bs-theme="dark"] .keyword-overview-card {
+    background: linear-gradient(135deg, #151923 0%, #1e2533 100%);
+}
+
+.keyword-overview-card::after {
+    content: "";
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    right: -100px;
+    top: -100px;
+    border-radius: 50%;
+    background: rgba(114, 57, 234, 0.13);
+}
+
+.keyword-overview-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(114, 57, 234, 0.13);
+}
+
+.keyword-metric-card {
+    border: 0;
+    border-radius: 1.15rem;
+    background: #ffffff;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+    transition: all 0.2s ease;
+}
+
+[data-bs-theme="dark"] .keyword-metric-card {
+    background: #1b1e2a;
+}
+
+.keyword-metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+}
+
+.keyword-metric-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.keyword-metric-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.keyword-pill-link {
+    display: inline-block;
+    max-width: 100%;
+    padding: 0.55rem 0.8rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.68);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+[data-bs-theme="dark"] .keyword-pill-link {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.keyword-seed-box {
+    padding: 0.85rem 1rem;
+    border-radius: 0.85rem;
+    background: rgba(255, 255, 255, 0.68);
+    border: 1px dashed rgba(148, 163, 184, 0.35);
+}
+
+[data-bs-theme="dark"] .keyword-seed-box {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.keyword-cart-list {
+    max-height: 260px;
+    overflow: auto;
+}
+    </style>
+{% endblock %}
 {% block header %}
-{% url 'keyword_research:history' as history_url %}
-{% include 'includes/header.html' with page_title='Keyword Research Detail' parent_title='Keyword Research' action_url=history_url action_label='History' %}
+    {% url 'keyword_research:history' as history_url %}
+    {% include 'includes/header.html' with page_title='Keyword Research Detail' parent_title='Keyword Research' action_url=history_url action_label='History' %}
 {% endblock %}
-
 {% block content %}
-<div class="content d-flex flex-column flex-column-fluid" id="kt_content"><div class="container-xxl" id="kt_content_container">
-<div class="card mb-5"><div class="card-body p-8"><div class="d-flex align-items-start justify-content-between flex-wrap gap-4"><div><div class="d-flex align-items-center gap-3 mb-3">{% if run.status == 'completed' %}<span class="badge badge-light-success">Completed</span>{% elif run.status == 'failed' %}<span class="badge badge-light-danger">Failed</span>{% else %}<span class="badge badge-light-primary">Running</span>{% endif %}<span class="text-muted">{{ run.started_at|date:"d M Y, g:i A" }}</span></div><h2 class="fw-bold text-gray-900 mb-2 text-break">{{ run.project.website_url }}</h2><div class="text-muted">{{ run.project.target_location }}{% if run.project.seed_topic %} | {{ run.project.seed_topic }}{% endif %}</div></div><form method="post" action="{% url 'keyword_research:delete' run.id %}" class="js-delete-keyword-run-form">{% csrf_token %}<input type="hidden" name="next" value="{% url 'keyword_research:history' %}" /><button type="submit" class="btn btn-sm btn-light-danger">Delete</button></form></div></div></div>
-{% if run.status == 'failed' %}<div class="alert alert-danger p-5 mb-5"><h4 class="mb-1 text-danger">Research failed</h4><span>{{ run.error_message|default:"The run could not be completed." }}</span></div>{% endif %}
-{% if run.ai_error %}<div class="alert alert-warning p-5 mb-5"><h4 class="mb-1 text-warning">AI note</h4><span>{{ run.ai_error }}</span></div>{% endif %}
-{% if run.planner_error %}<div class="alert alert-info p-5 mb-5"><h4 class="mb-1 text-info">Google Keyword Planner</h4><span>{{ run.planner_error }}</span></div>{% endif %}
-<div class="row g-5 mb-5"><div class="col-md-3"><div class="card card-flush h-100"><div class="card-body"><div class="text-muted fs-7 text-uppercase fw-bold mb-2">Pages</div><div class="fs-2 fw-bold text-gray-900">{{ run.pages_crawled }}</div></div></div></div><div class="col-md-3"><div class="card card-flush h-100"><div class="card-body"><div class="text-muted fs-7 text-uppercase fw-bold mb-2">AI Ideas</div><div class="fs-2 fw-bold text-gray-900">{{ keyword_ideas|length }}</div></div></div></div><div class="col-md-3"><div class="card card-flush h-100"><div class="card-body"><div class="text-muted fs-7 text-uppercase fw-bold mb-2">Clusters</div><div class="fs-2 fw-bold text-gray-900">{{ clusters|length }}</div></div></div></div><div class="col-md-3"><div class="card card-flush h-100"><div class="card-body"><div class="text-muted fs-7 text-uppercase fw-bold mb-2">Google Rows</div><div class="fs-2 fw-bold text-gray-900">{{ planner_metrics|length }}</div><div class="mt-2">{% if run.planner_status == 'completed' %}<span class="badge badge-light-success">Connected</span>{% elif run.planner_status == 'not_configured' %}<span class="badge badge-light-warning">Not Configured</span>{% elif run.planner_status == 'failed' %}<span class="badge badge-light-danger">Failed</span>{% elif run.planner_status %}<span class="badge badge-light-info">{{ run.planner_status|title }}</span>{% else %}<span class="badge badge-light">Not Run</span>{% endif %}</div></div></div></div></div>
-<div class="card mb-5"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">AI Summary</h3></div><div class="card-body"><div class="kr-copy text-gray-700 fs-6">{{ run.ai_summary|default:"No summary available." }}</div></div></div>
-<div class="card mb-5"><div class="card-header border-0 pt-6"><div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100"><h3 class="fw-bold m-0">AI Keyword Ideas</h3><div class="d-flex align-items-center position-relative my-1"><i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i><input type="text" id="kt_keyword_ideas_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Keywords" /></div></div></div><div class="card-body pt-0"><table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_keyword_ideas_table"><thead><tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0"><th>Keyword</th><th>Intent</th><th>Funnel</th><th>Priority</th><th>Suggested Page</th><th>Content Angle</th></tr></thead><tbody class="fw-semibold text-gray-600">{% for idea in keyword_ideas %}<tr data-keyword-row="true"><td class="text-gray-900">{{ idea.keyword }}</td><td>{{ idea.intent|default:"-" }}</td><td>{{ idea.funnel_stage|default:"-" }}</td><td><span class="badge badge-light-{% if idea.priority == 'High' %}danger{% elif idea.priority == 'Medium' %}warning{% else %}primary{% endif %}">{{ idea.priority|default:"-" }}</span></td><td class="kr-url-cell">{{ idea.suggested_page|default:"-" }}</td><td>{{ idea.content_angle|default:"-" }}</td></tr>{% empty %}<tr><td colspan="6" class="text-center text-muted py-10">No AI keyword ideas saved.</td></tr>{% endfor %}</tbody></table></div></div>
-<div class="card mb-5"><div class="card-header border-0 pt-6"><div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100"><h3 class="fw-bold m-0">Google Keyword Planner Results</h3><div class="d-flex align-items-center position-relative my-1"><i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i><input type="text" id="kt_google_planner_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search" /></div></div></div><div class="card-body pt-0"><table class="table align-middle table-row-dashed fs-7 gy-3" id="kt_google_planner_table"><thead><tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0"><th>Keyword</th><th>Avg Searches</th><th>Competition</th><th>Index</th><th>Bid Range</th></tr></thead><tbody class="fw-semibold text-gray-600">{% for metric in planner_metrics %}<tr data-planner-row="true"><td class="text-gray-900">{{ metric.keyword }}</td><td data-order="{{ metric.avg_monthly_searches|default:0 }}" class="text-{{ metric.search_badge_class }} fw-bold kr-planner-value">{{ metric.avg_monthly_searches|default:"-" }}</td><td><span class="badge badge-light-{{ metric.competition_badge_class }} fw-bold fs-8">{{ metric.competition|default:"-" }}</span></td><td data-order="{{ metric.competition_index|default:0 }}" class="text-{{ metric.index_badge_class }} fw-bold kr-planner-value">{{ metric.competition_index|default:"-" }}</td><td data-order="{{ metric.high_top_of_page_bid|default:metric.low_top_of_page_bid|default:0 }}" class="text-{{ metric.bid_badge_class }} fw-bold kr-planner-value">{% if metric.low_top_of_page_bid or metric.high_top_of_page_bid %}{{ metric.low_top_of_page_bid|default:"-" }} - {{ metric.high_top_of_page_bid|default:"-" }} {{ metric.currency_code }}{% else %}-{% endif %}</td></tr>{% empty %}<tr><td colspan="5" class="text-center text-muted py-10">{% if run.planner_status == 'not_configured' %}Google Keyword Planner is not configured.{% elif run.planner_status == 'failed' %}Google Keyword Planner could not return results for this run.{% else %}No Google Keyword Planner results saved.{% endif %}</td></tr>{% endfor %}</tbody></table></div></div>
-<div class="card mb-5"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">Intent Clusters</h3></div><div class="card-body">{% for cluster in clusters %}<div class="border-bottom border-gray-200 pb-4 mb-4"><div class="fw-bold text-gray-900">{{ cluster.cluster_name }}</div><div class="text-muted fs-7 mb-2">{{ cluster.intent }} | {{ cluster.recommended_page_type }}</div><div class="d-flex flex-wrap gap-2 mb-2">{% for keyword in cluster.keywords %}<span class="badge badge-light">{{ keyword }}</span>{% endfor %}</div><div class="text-gray-700 fs-7">{{ cluster.recommended_action }}</div></div>{% empty %}<div class="text-center text-muted py-10">No clusters saved.</div>{% endfor %}</div></div>
-<div class="card"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">Crawled Pages</h3></div><div class="card-body"><table class="table align-middle table-row-dashed fs-6 gy-5"><thead><tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0"><th>URL</th><th>Title</th><th>Words</th><th>Top Terms</th></tr></thead><tbody class="fw-semibold text-gray-600">{% for page in pages %}<tr><td class="kr-url-cell"><a href="{{ page.url }}" target="_blank" rel="noopener">{{ page.url }}</a></td><td>{{ page.title|default:"-"|truncatechars:90 }}</td><td>{{ page.word_count }}</td><td>{% for term in page.top_terms|slice:":5" %}<span class="badge badge-light me-1">{{ term.term }}</span>{% empty %}-{% endfor %}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-10">No pages crawled.</td></tr>{% endfor %}</tbody></table></div></div>
-</div></div>
-{% endblock %}
+    {% if run.status == 'running' %}
+        <div class="keyword-loading-overlay"
+             id="kt_keyword_loading_overlay"
+             style="display:flex">
+            <div class="card shadow-sm keyword-loading-panel">
+                <div class="card-body p-8 text-center">
+                    <div class="spinner-border text-primary mb-5" role="status"></div>
+                    <h3 class="fw-bold text-gray-900 mb-3">Running Keyword Research</h3>
+                    <div class="text-muted fs-6 mb-5">
+                        Generating AI keyword ideas, clustering search intent, and fetching Keyword Planner data.
+                    </div>
+                    <div class="mb-3 text-muted fs-7">
+                        Pages: <span id="keyword_pages_crawled">{{ run.pages_crawled }}</span>
+                        |
+                        AI Ideas: <span id="keyword_ideas_count">{{ keyword_ideas|length }}</span>
+                        |
+                        Planner Rows: <span id="keyword_planner_count">{{ planner_metrics|length }}</span>
+                    </div>
+                    <div class="progress h-8px bg-light-primary">
+                        <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+                             role="progressbar"
+                             style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+            <div class="container-xxl" id="kt_content_container">
+        <div class="row g-5 mb-5">
 
+            <div class="col-xl-6">
+                <div class="card keyword-overview-card h-100">
+                    <div class="card-body p-8 position-relative">
+                        <div class="d-flex align-items-start justify-content-between gap-4 mb-6">
+                            <div class="d-flex align-items-center gap-4 min-w-0">
+                                <div class="keyword-overview-icon flex-shrink-0">
+                                    <i class="ki-duotone ki-magnifier fs-2x text-primary">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+
+                                <div class="min-w-0">
+                                    <div class="text-muted fs-7 text-uppercase fw-bold">Keyword Research</div>
+
+                                    {% if run.project.website_url %}
+                                        <h2 class="fw-bold text-gray-900 mb-0 text-break">
+                                            <a href="{{ run.project.website_url }}" target="_blank" rel="noopener" class="text-gray-900 text-hover-primary">
+                                                {{ run.project.website_url }}
+                                            </a>
+                                        </h2>
+                                    {% else %}
+                                        <h2 class="fw-bold text-gray-900 mb-0 text-break">
+                                            Keyword Seed Research
+                                        </h2>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                {% if run.status == 'completed' %}
+                                    <span class="badge badge-light-success">Completed</span>
+                                {% elif run.status == 'failed' %}
+                                    <span class="badge badge-light-danger">Failed</span>
+                                {% else %}
+                                    <span class="badge badge-light-primary">Running</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-3 mb-6">
+                            <div class="badge badge-light fw-semibold">
+                                Started {{ run.started_at|date:"d M Y, g:i A" }}
+                            </div>
+
+                            {% if run.project.target_location %}
+                                <div class="badge badge-light-primary fw-semibold">
+                                    {{ run.project.target_location }}
+                                </div>
+                            {% endif %}
+
+                            {% if run.project.seed_topic %}
+                                <div class="badge badge-light-info fw-semibold">
+                                    {{ run.project.seed_topic }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if run.project.website_url %}
+                            <div class="mb-6">
+                                <div class="text-muted fs-8 text-uppercase fw-bold mb-2">Website URL</div>
+                                <a href="{{ run.project.website_url }}" target="_blank" rel="noopener" class="keyword-pill-link text-gray-800 text-hover-primary text-break">
+                                    {{ run.project.website_url }}
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="mb-6">
+                                <div class="text-muted fs-8 text-uppercase fw-bold mb-2">Seed Keywords</div>
+                                <div class="keyword-seed-box text-gray-700">
+                                    {{ run.project.seed_keywords|linebreaksbr }}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if run.status == 'failed' %}
+                            <div class="alert alert-danger mb-5">
+                                <h4 class="mb-1 text-danger">Research failed</h4>
+                                <span>{{ run.error_message|default:"The run could not be completed." }}</span>
+                            </div>
+                        {% endif %}
+
+                        {% if run.ai_error %}
+                            <div class="alert alert-warning mb-5">
+                                <h4 class="mb-1 text-warning">AI note</h4>
+                                <span>{{ run.ai_error }}</span>
+                            </div>
+                        {% endif %}
+
+                        {% if run.planner_error %}
+                            <div class="alert alert-info mb-5">
+                                <h4 class="mb-1 text-info">Google Keyword Planner</h4>
+                                <span>{{ run.planner_error }}</span>
+                            </div>
+                        {% endif %}
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{% url 'keyword_research:export-excel' run.id %}"
+                               class="btn btn-sm btn-success">
+                                <i class="ki-duotone ki-file-down fs-3">
+                                    <span class="path1"></span><span class="path2"></span>
+                                </i>
+                                Export Excel
+                            </a>
+                            <a href="{% url 'keyword_research:export-pdf' run.id %}"
+                               class="btn btn-sm btn-primary">
+                                <i class="ki-duotone ki-document fs-3">
+                                    <span class="path1"></span><span class="path2"></span>
+                                </i>
+                                Export PDF
+                            </a>
+                            <form method="post"
+                                action="{% url 'keyword_research:delete' run.id %}"
+                                class="js-delete-keyword-run-form">
+                                {% csrf_token %}
+                                <input type="hidden"
+                                    name="next"
+                                    value="{% url 'keyword_research:history' %}" />
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    Delete Research
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6">
+                <div class="row g-5 h-100">
+
+                    <div class="col-md-6">
+                        <div class="card keyword-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="keyword-metric-icon bg-light-primary mb-5">
+                                    <i class="ki-duotone ki-document fs-2x text-primary">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="keyword-metric-value text-gray-900">{{ run.pages_crawled }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Page</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card keyword-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="keyword-metric-icon bg-light-success mb-5">
+                                    <i class="ki-duotone ki-cloud fs-2x text-success">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="keyword-metric-value text-success">{{ keyword_ideas|length }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">AI Ideas</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card keyword-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="keyword-metric-icon bg-light-warning mb-5">
+                                    <i class="ki-duotone ki-abstract-26 fs-2x text-warning">
+                                        <span class="path1"></span><span class="path2"></span>
+                                    </i>
+                                </div>
+                                <div class="keyword-metric-value text-warning">{{ clusters|length }}</div>
+                                <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Clusters</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card keyword-metric-card h-100">
+                            <div class="card-body p-6">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="keyword-metric-icon bg-light-info mb-5">
+                                            <i class="ki-duotone ki-chart-line-up fs-2x text-info">
+                                                <span class="path1"></span><span class="path2"></span>
+                                            </i>
+                                        </div>
+                                        <div class="keyword-metric-value text-info">{{ planner_metrics|length }}</div>
+                                        <div class="text-muted fs-7 text-uppercase fw-bold mt-2">Google Rows</div>
+                                    </div>
+
+                                    <div>
+                                        {% if run.planner_status == 'completed' %}
+                                            <span class="badge badge-light-success">Connected</span>
+                                        {% elif run.planner_status == 'not_configured' %}
+                                            <span class="badge badge-light-warning">Not Configured</span>
+                                        {% elif run.planner_status == 'failed' %}
+                                            <span class="badge badge-light-danger">Failed</span>
+                                        {% elif run.planner_status %}
+                                            <span class="badge badge-light-info">{{ run.planner_status|title }}</span>
+                                        {% else %}
+                                            <span class="badge badge-light">Not Run</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+                <div class="card mb-5">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex align-items-center gap-3">
+                            <i class="ki-duotone ki-basket fs-2 text-primary">
+                                <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+                            </i>
+                            <h3 class="fw-bold m-0">Selected Keywords</h3>
+                            <span class="badge badge-light-primary" id="kt_keyword_cart_count">{{ cart_items|length }}</span>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="keyword-cart-list d-flex flex-wrap gap-2" id="kt_keyword_cart_list">
+                            {% for item in cart_items %}
+                                <div class="badge badge-light fw-semibold py-3 px-4 d-flex align-items-center gap-2"
+                                     data-cart-keyword="{{ item.keyword|lower }}">
+                                    <span class="text-gray-800">{{ item.keyword }}</span>
+                                    {% if item.source %}
+                                        <span class="text-muted fs-8">{{ item.get_source_display }}</span>
+                                    {% endif %}
+                                    <button type="button"
+                                            class="btn btn-icon btn-sm btn-light-danger js-remove-keyword-cart"
+                                            data-keyword="{{ item.keyword }}"
+                                            aria-label="Remove keyword">
+                                        <i class="ki-duotone ki-cross fs-3"><span class="path1"></span><span class="path2"></span></i>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                            <div class="text-muted {% if cart_items %}d-none{% endif %}" id="kt_keyword_cart_empty">
+                                No keywords selected yet.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-5">
+                    <div class="card-header">
+                        <h3 class="card-title fw-bold text-gray-900">AI Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-gray-700 fs-6">{{ run.ai_summary|default:"No summary available."|linebreaksbr }}</div>
+                    </div>
+                </div>
+                <div class="card mb-5">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+                            <h3 class="fw-bold m-0">AI Keyword Ideas</h3>
+                            <div class="d-flex align-items-center position-relative my-1">
+                                <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+                                <input type="text"
+                                       id="kt_keyword_ideas_search"
+                                       class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                       placeholder="Search Keywords" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="table-responsive">
+                            <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"
+                                   id="kt_keyword_ideas_table">
+                                <thead>
+                                    <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                        <th>Keyword</th>
+                                        <th>Intent</th>
+                                        <th>Funnel</th>
+                                        <th>Priority</th>
+                                        <th>Suggested Page</th>
+                                        <th>Content Angle</th>
+                                        <th class="w-70px text-end">Add</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-700">
+                                    {% for idea in keyword_ideas %}
+                                        <tr data-keyword-row="true">
+                                            <td class="text-gray-900">{{ idea.keyword }}</td>
+                                            <td>{{ idea.intent|default:"-" }}</td>
+                                            <td>{{ idea.funnel_stage|default:"-" }}</td>
+                                            <td><span class="badge badge-light-{% if idea.priority == 'High' %}danger{% elif idea.priority == 'Medium' %}warning{% else %}primary{% endif %}">{{ idea.priority|default:"-" }}</span></td>
+                                            <td class="text-break min-w-200px">{{ idea.suggested_page|default:"-" }}</td>
+                                            <td>{{ idea.content_angle|default:"-" }}</td>
+                                            <td class="text-end">
+                                                <button type="button"
+                                                        class="btn btn-sm btn-icon {% if idea.keyword|lower in cart_keyword_values %}btn-light-success{% else %}btn-light-primary{% endif %} js-add-keyword-cart"
+                                                        data-keyword="{{ idea.keyword }}"
+                                                        data-source="ai"
+                                                        aria-label="Add keyword">
+                                                    <i class="ki-duotone {% if idea.keyword|lower in cart_keyword_values %}ki-check{% else %}ki-plus{% endif %} fs-3"><span class="path1"></span><span class="path2"></span></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-10">No AI keyword ideas saved.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-5">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+                            <h3 class="fw-bold m-0">Google Keyword Planner Results</h3>
+                            <div class="d-flex align-items-center position-relative my-1">
+                                <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+                                <input type="text"
+                                       id="kt_google_planner_search"
+                                       class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                       placeholder="Search" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="table-responsive">
+                            <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"
+                                   id="kt_google_planner_table">
+                                <thead>
+                                    <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                        <th>Keyword</th>
+                                        <th>Avg Searches</th>
+                                        <th>Competition</th>
+                                        <th>Index</th>
+                                        <th>Bid Range</th>
+                                        <th class="w-70px text-end">Add</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-700">
+                                    {% for metric in planner_metrics %}
+                                        <tr data-planner-row="true">
+                                            <td class="text-gray-900">{{ metric.keyword }}</td>
+                                            <td data-order="{{ metric.avg_monthly_searches|default:0 }}"
+                                                class="text-{{ metric.search_badge_class }} fw-bold fs-8">{{ metric.avg_monthly_searches|default:"-" }}</td>
+                                            <td><span class="badge badge-light-{{ metric.competition_badge_class }} fw-bold fs-8">{{ metric.competition|default:"-" }}</span></td>
+                                            <td data-order="{{ metric.competition_index|default:0 }}"
+                                                class="text-{{ metric.index_badge_class }} fw-bold fs-8">{{ metric.competition_index|default:"-" }}</td>
+                                            <td data-order="{{ metric.high_top_of_page_bid|default:metric.low_top_of_page_bid|default:0 }}"
+                                                class="text-{{ metric.bid_badge_class }} fw-bold fs-8">
+                                                {% if metric.low_top_of_page_bid or metric.high_top_of_page_bid %}
+                                                    {{ metric.low_top_of_page_bid|default:"-" }} - {{ metric.high_top_of_page_bid|default:"-" }} {{ metric.currency_code }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                <button type="button"
+                                                        class="btn btn-sm btn-icon {% if metric.keyword|lower in cart_keyword_values %}btn-light-success{% else %}btn-light-primary{% endif %} js-add-keyword-cart"
+                                                        data-keyword="{{ metric.keyword }}"
+                                                        data-source="google"
+                                                        aria-label="Add keyword">
+                                                    <i class="ki-duotone {% if metric.keyword|lower in cart_keyword_values %}ki-check{% else %}ki-plus{% endif %} fs-3"><span class="path1"></span><span class="path2"></span></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-10">
+                                                {% if run.planner_status == 'not_configured' %}
+                                                    Google Keyword Planner is not configured.
+                                                {% elif run.planner_status == 'failed' %}
+                                                    Google Keyword Planner could not return results for this run.
+                                                {% else %}
+                                                    No Google Keyword Planner results saved.
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-5">
+                    <div class="card-header">
+                        <h3 class="card-title fw-bold text-gray-900">Intent Clusters</h3>
+                    </div>
+                    <div class="card-body">
+                        {% for cluster in clusters %}
+                            <div class="border-bottom border-gray-200 pb-4 mb-4">
+                                <div class="fw-bold text-gray-900">{{ cluster.cluster_name }}</div>
+                                <div class="text-muted fs-7 mb-2">{{ cluster.intent }} | {{ cluster.recommended_page_type }}</div>
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    {% for keyword in cluster.keywords %}<span class="badge badge-light">{{ keyword }}</span>{% endfor %}
+                                </div>
+                                <div class="text-gray-700 fs-7">{{ cluster.recommended_action }}</div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center text-muted py-10">No clusters saved.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if run.project.website_url %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title fw-bold text-gray-900">Submitted Page Signals</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6">
+                                    <thead>
+                                        <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                            <th>URL</th>
+                                            <th>Meta Title</th>
+                                            <th>Words</th>
+                                            <th>Top Terms</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="fw-semibold text-gray-700">
+                                        {% for page in pages %}
+                                            <tr>
+                                                <td class="text-break min-w-200px"><a href="{{ page.url }}" target="_blank" rel="noopener">{{ page.url }}</a></td>
+                                                <td>{{ page.title|default:"-"|truncatechars:90 }}</td>
+                                                <td>{{ page.word_count }}</td>
+                                                <td>
+                                                    {% for term in page.top_terms|slice:":5" %}
+                                                        <span class="badge badge-light me-1">{{ term.term }}</span>{% empty %}-
+                                                    {% endfor %}
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-10">No page signals saved.</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% for page in pages %}
+                                <div class="modal fade"
+                                     tabindex="-1"
+                                     id="kt_keyword_internal_links_{{ page.id }}">
+                                    <div class="modal-dialog modal-dialog-scrollable">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Internal Links</h5>
+                                                <div class="btn btn-icon btn-sm btn-active-light-primary ms-2"
+                                                     data-bs-dismiss="modal"
+                                                     aria-label="Close">
+                                                    <i class="ki-duotone ki-cross fs-2x"><span class="path1"></span><span class="path2"></span></i>
+                                                </div>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="text-muted fs-7 mb-4 text-break">{{ page.url }}</div>
+                                                {% if page.raw_data.internal_links %}
+                                                    <div class="d-flex flex-column gap-3">
+                                                        {% for link in page.raw_data.internal_links %}<a href="{{ link }}"
+   target="_blank"
+   rel="noopener"
+   class="text-gray-800 text-hover-primary text-break">{{ link }}</a>{% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    <div class="text-muted">Internal link URLs were not captured for this run. Run the keyword research again to save the link list.</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
 {% block extra_js_scripts %}
-<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
-<script>
+    <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+    <script>
 jQuery(function(){
+{% if run.status == 'running' %}
+function checkKeywordRunStatus() {
+    fetch("{% url 'keyword_research:run-status' run.id %}?t=" + Date.now(), {
+        cache: "no-store",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest"
+        }
+    })
+    .then(function (response) {
+        return response.json();
+    })
+    .then(function (data) {
+        console.log("Keyword run status:", data);
+
+        var status = (data.status || "").toLowerCase().trim();
+
+        $("#keyword_pages_crawled").text(data.pages_crawled || 0);
+        $("#keyword_ideas_count").text(data.keyword_ideas_count || 0);
+        $("#keyword_planner_count").text(data.planner_metrics_count || 0);
+
+        if (status === "completed" || status === "failed") {
+            window.location.replace(data.detail_url + "?t=" + Date.now());
+            return;
+        }
+
+        setTimeout(checkKeywordRunStatus, 5000);
+    })
+    .catch(function () {
+        setTimeout(checkKeywordRunStatus, 5000);
+    });
+}
+
+checkKeywordRunStatus();{% endif %}
 var tableElement=document.querySelector("#kt_keyword_ideas_table");
-if(tableElement&&tableElement.querySelector("[data-keyword-row='true']")){var table=jQuery(tableElement).DataTable({pageLength:10,lengthMenu:[[10,25,50,100,-1],[10,25,50,100,"All"]],dom:"rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>"});jQuery("#kt_keyword_ideas_search").on("keyup",function(){table.search(this.value).draw();});}
+if(tableElement&&tableElement.querySelector("[data-keyword-row='true']")){var table=jQuery(tableElement).DataTable({pageLength:10,lengthMenu:[[10,25,50,100,-1],[10,25,50,100,"All"]],columnDefs:[{orderable:false,searchable:false,targets:6}],dom:"rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>"});jQuery("#kt_keyword_ideas_search").on("keyup",function(){table.search(this.value).draw();});}
 var plannerTableElement=document.querySelector("#kt_google_planner_table");
-if(plannerTableElement&&plannerTableElement.querySelector("[data-planner-row='true']")){var plannerTable=jQuery(plannerTableElement).DataTable({pageLength:10,lengthMenu:[[10,25,50,100,-1],[10,25,50,100,"All"]],order:[[1,"desc"]],dom:"rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>"});jQuery("#kt_google_planner_search").on("keyup",function(){plannerTable.search(this.value).draw();});}
+if(plannerTableElement&&plannerTableElement.querySelector("[data-planner-row='true']")){var plannerTable=jQuery(plannerTableElement).DataTable({pageLength:10,lengthMenu:[[10,25,50,100,-1],[10,25,50,100,"All"]],order:[[1,"desc"]],columnDefs:[{orderable:false,searchable:false,targets:5}],dom:"rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>"});jQuery("#kt_google_planner_search").on("keyup",function(){plannerTable.search(this.value).draw();});}
+function getCookie(name){var value="; "+document.cookie;var parts=value.split("; "+name+"=");if(parts.length===2){return parts.pop().split(";").shift();}return "";}
+function getCsrfToken(){return getCookie("csrftoken")||jQuery("[name=csrfmiddlewaretoken]").first().val()||"";}
+function escapeHtml(value){return String(value||"").replace(/[&<>"']/g,function(char){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char];});}
+function normalizeKeyword(value){return String(value||"").trim().toLowerCase();}
+function updateCartCount(count){jQuery("#kt_keyword_cart_count").text(count);}
+function toggleEmptyCart(){jQuery("#kt_keyword_cart_empty").toggleClass("d-none",jQuery("#kt_keyword_cart_list [data-cart-keyword]").length>0);}
+function setKeywordButtonState(keyword,selected){var normalized=normalizeKeyword(keyword);jQuery(".js-add-keyword-cart").filter(function(){return normalizeKeyword(this.dataset.keyword)===normalized;}).each(function(){jQuery(this).toggleClass("btn-light-success",selected).toggleClass("btn-light-primary",!selected);var icon=jQuery(this).find("i");icon.toggleClass("ki-check",selected).toggleClass("ki-plus",!selected);});}
+function addCartBadge(keyword,source){var normalized=normalizeKeyword(keyword);var exists=jQuery("#kt_keyword_cart_list [data-cart-keyword]").filter(function(){return normalizeKeyword(jQuery(this).data("cart-keyword"))===normalized;}).length;if(!normalized||exists){return;}var sourceLabel=source==="google"?"Google":"AI";var html='<div class="badge badge-light fw-semibold py-3 px-4 d-flex align-items-center gap-2" data-cart-keyword="'+escapeHtml(normalized)+'"><span class="text-gray-800">'+escapeHtml(keyword)+'</span><span class="text-muted fs-8">'+sourceLabel+'</span><button type="button" class="btn btn-icon btn-sm btn-light-danger js-remove-keyword-cart" data-keyword="'+escapeHtml(keyword)+'" aria-label="Remove keyword"><i class="ki-duotone ki-cross fs-3"><span class="path1"></span><span class="path2"></span></i></button></div>';jQuery("#kt_keyword_cart_list").append(html);toggleEmptyCart();}
+function removeCartBadge(keyword){var normalized=normalizeKeyword(keyword);jQuery("#kt_keyword_cart_list [data-cart-keyword]").filter(function(){return normalizeKeyword(jQuery(this).data("cart-keyword"))===normalized;}).remove();toggleEmptyCart();}
+jQuery(document).on("click",".js-add-keyword-cart",function(){var button=jQuery(this);var keyword=button.data("keyword");var source=button.data("source");if(!keyword){return;}button.prop("disabled",true);jQuery.ajax({url:"{% url 'keyword_research:cart-add' run.id %}",method:"POST",headers:{"X-CSRFToken":getCsrfToken()},data:{keyword:keyword,source:source}}).done(function(response){addCartBadge(response.keyword||keyword,response.source||source);setKeywordButtonState(response.keyword||keyword,true);updateCartCount(response.cart_count||0);}).always(function(){button.prop("disabled",false);});});
+jQuery(document).on("click",".js-remove-keyword-cart",function(){var button=jQuery(this);var keyword=button.data("keyword");if(!keyword){return;}button.prop("disabled",true);jQuery.ajax({url:"{% url 'keyword_research:cart-remove' run.id %}",method:"POST",headers:{"X-CSRFToken":getCsrfToken()},data:{keyword:keyword}}).done(function(response){removeCartBadge(response.keyword||keyword);setKeywordButtonState(response.keyword||keyword,false);updateCartCount(response.cart_count||0);}).always(function(){button.prop("disabled",false);});});
 jQuery(document).on("submit",".js-delete-keyword-run-form",function(event){if(!window.confirm("Delete this keyword research run?")){event.preventDefault();}});
 });
-</script>
+    </script>
 {% endblock %}

@@ -1,9 +1,10 @@
-from django.conf import settings
+﻿from django.conf import settings
 from django.db import models
 
 
 class KeywordResearchProject(models.Model):
-    website_url = models.URLField(max_length=500)
+    website_url = models.URLField(max_length=500, blank=True)
+    seed_keywords = models.TextField(blank=True)
     target_location = models.CharField(max_length=255)
     language = models.CharField(max_length=100, blank=True)
     seed_topic = models.CharField(max_length=255, blank=True)
@@ -23,7 +24,8 @@ class KeywordResearchProject(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.website_url} - {self.target_location}'
+        subject = self.website_url or self.seed_keywords
+        return f'{subject} - {self.target_location}'
 
 
 class KeywordResearchRun(models.Model):
@@ -72,7 +74,8 @@ class KeywordResearchRun(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.project.website_url} - Keyword Research - {self.started_at:%Y-%m-%d %H:%M}'
+        subject = self.project.website_url or self.project.seed_keywords
+        return f'{subject} - Keyword Research - {self.started_at:%Y-%m-%d %H:%M}'
 
 
 class KeywordResearchPage(models.Model):
@@ -180,6 +183,43 @@ class KeywordPlannerMetric(models.Model):
         indexes = [
             models.Index(fields=['run']),
             models.Index(fields=['keyword']),
+        ]
+
+    def __str__(self):
+        return self.keyword
+
+
+class KeywordCartItem(models.Model):
+    SOURCE_AI = 'ai'
+    SOURCE_GOOGLE = 'google'
+
+    SOURCE_CHOICES = [
+        (SOURCE_AI, 'AI Keyword Ideas'),
+        (SOURCE_GOOGLE, 'Google Keyword Planner'),
+    ]
+
+    run = models.ForeignKey(
+        KeywordResearchRun,
+        on_delete=models.CASCADE,
+        related_name='cart_items',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='keyword_cart_items',
+    )
+    keyword = models.CharField(max_length=255)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['keyword']
+        constraints = [
+            models.UniqueConstraint(fields=['run', 'user', 'keyword'], name='unique_keyword_cart_item'),
+        ]
+        indexes = [
+            models.Index(fields=['run', 'user'], name='keyword_res_run_id_7d4d6b_idx'),
+            models.Index(fields=['keyword'], name='keyword_res_keyword_0f783b_idx'),
         ]
 
     def __str__(self):
