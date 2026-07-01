@@ -11,6 +11,11 @@ urlpatterns = [
     path('websites/update/', views.update_view, name='website-update'),
     path('websites/<int:website_id>/delete/', views.delete_view, name='website-delete'),
     path('websites/validate/', views.validate_website_view, name='website-validate'),
+
+    path('reports/', views.simple_reports_view, name='reports'),
+    path('websites/<int:website_id>/reports/', views.simple_reports_view, name='website-reports'),
+    path('websites/<int:website_id>/reports/<int:report_index_id>/', views.simple_report_detail_view, name='website-report-detail'),
+
     path('websites/<int:website_id>/overview/', views.reports_view, name='website-overview'),
     path('websites/<int:website_id>/overview/run-scan/', views.run_website_scan_view, name='website-overview-run-scan'),
     path('websites/<int:website_id>/overview/page/<int:page_id>/', views.page_report_history_view, name='website-overview-page-history'),

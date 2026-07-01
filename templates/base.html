@@ -214,7 +214,7 @@ flex-direction: column;
 height: 100vh;
 min-width: 0;
 overflow: hidden;
-padding: 2.25rem 0;
+padding: 1rem 0;
 transition: opacity 0.16s ease, transform 0.16s ease;
 width: 268px;
 }
@@ -236,7 +236,7 @@ display: block;
 align-items: center;
 display: flex;
 flex: 0 0 auto;
-margin-bottom: 1.5rem !important;
+margin-bottom: 0.5rem !important;
 min-height: 58px;
 padding-left: 2rem !important;
 padding-right: 1.25rem !important;
@@ -245,7 +245,7 @@ padding-right: 1.25rem !important;
 display: flex;
 flex: 1 1 auto;
 flex-direction: column;
-margin-bottom: 1rem !important;
+margin-bottom: 0.5rem !important;
 min-height: 0;
 overflow: hidden;
 padding-left: 1.25rem !important;
@@ -267,6 +267,8 @@ margin-top: 0 !important;
 border-radius: 0.75rem;
 color: #4b5b7c;
 margin-bottom: 0.15rem;
+padding-top: 0.35rem !important;
+padding-bottom: 0.35rem !important;
 transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
 }
 #kt_aside .aside-menu .menu .menu-item .menu-link .menu-title {
@@ -481,6 +483,23 @@ padding-left: 1rem !important;
 padding-right: 1rem !important;
 }
 }
+body.has-top-alert #header-limit-alert {
+    position: sticky;
+    top: 0;
+    z-index: 1200;
+}
+body.has-top-alert #kt_header {
+    top: var(--top-alert-h, 0px) !important;
+}
+body.has-top-alert #kt_aside {
+    top: var(--top-alert-h, 0px) !important;
+}
+body.has-top-alert .seo-sidebar-rail,
+body.has-top-alert .seo-sidebar-panel,
+body.has-top-alert #kt_aside {
+    height: calc(100vh - var(--top-alert-h, 0px)) !important;
+    min-height: calc(100vh - var(--top-alert-h, 0px)) !important;
+}
 </style>
 <script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
 </head>
@@ -493,12 +512,87 @@ padding-right: 1rem !important;
 <!--begin::Main-->
 <!--begin::Root-->
 <div class="d-flex flex-column flex-root">
+        {% if global_limit_exceeded %}
+        <!-- Global API limit alert bar: full width, top of page, pushes the app down -->
+        <!-- Hidden on billing page via JS marker element -->
+        <div id="header-limit-alert" class="alert alert-danger d-flex align-items-center justify-content-center p-4 mb-0 rounded-0 d-none">
+            <i class="ki-duotone ki-warning fs-2hx text-danger me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+            <div class="d-flex flex-column text-center">
+                <h4 class="mb-1 text-danger">Action Required: API Limit Exceeded</h4>
+                <span class="text-gray-800">Your AI API usage for <strong>{{ api_provider }}</strong> has exceeded the limit. Please <a href="{% url 'billing' %}" class="fw-bold text-danger text-decoration-underline">upgrade your plan</a> to restore access.</span>
+            </div>
+        </div>
+        {% endif %}
 <!--begin::Page-->
 <div class="page d-flex flex-row flex-column-fluid">
 {% include 'includes/sidebar.html' %}
 <!--begin::Wrapper-->
 <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper">
 {% block header %}{% endblock %}
+
+                {% if global_limit_exceeded %}
+                <!-- Full Page Modal -->
+                <div class="modal fade" id="global_limit_modal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content border-0 shadow-lg rounded-4">
+                            <div class="modal-body d-flex flex-column align-items-center text-center p-10">
+                                <i class="ki-duotone ki-information-5 fs-4x text-danger mb-5">
+                                    <span class="path1"></span><span class="path2"></span><span class="path3"></span>
+                                </i>
+                                <h1 class="fw-bold text-danger mb-4">Action Required: API Limit Exceeded</h1>
+                                <p class="text-gray-600 fs-4 mb-8" style="max-width: 600px;">
+                                    Your AI API token usage for <strong>{{ api_provider }}</strong> has exceeded the allowed limits.
+                                    You must upgrade your plan or add more credits to continue using AI features in Wisoft Co-Worker.
+                                </p>
+                                <div class="d-flex gap-4">
+                                    <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal" onclick="dismissGlobalAlert()">Dismiss for now</button>
+                                    <a href="{% url 'billing' %}" class="btn btn-primary btn-lg">View Billing</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    function showTopAlert() {
+                        var el = document.getElementById('header-limit-alert');
+                        if (!el) return;
+                        el.classList.remove('d-none');
+                        document.body.classList.add('has-top-alert');
+                        var syncHeight = function () {
+                            document.documentElement.style.setProperty('--top-alert-h', el.offsetHeight + 'px');
+                        };
+                        syncHeight();
+                        window.addEventListener('resize', syncHeight);
+                    }
+
+                    function dismissGlobalAlert() {
+                        // Closing the modal also means it won't pop up again this session
+                        sessionStorage.setItem('limit_modal_shown', 'true');
+                    }
+
+                    document.addEventListener("DOMContentLoaded", function () {
+                        // On the billing page, the top alert is suppressed (page shows its own inline alert).
+                        // Check for a marker element that billing.html injects.
+                        var isBillingPage = document.getElementById('billing-page-marker');
+                        if (!isBillingPage) {
+                            // The top banner stays visible the whole time the limit is exceeded
+                            showTopAlert();
+                        }
+
+                        // Show the full-screen popup only ONCE per browser session
+                        // (on first visit after the app/server is opened), not on every refresh
+                        if (sessionStorage.getItem('limit_modal_shown') !== 'true') {
+                            var modalElement = document.getElementById('global_limit_modal');
+                            if (modalElement) {
+                                new bootstrap.Modal(modalElement).show();
+                                sessionStorage.setItem('limit_modal_shown', 'true');
+                            }
+                        }
+                    });
+                </script>
+                {% endif %}
+
 {% block content %}
 {% endblock %}
 <!--begin::Footer-->

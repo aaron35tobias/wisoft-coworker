@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile Settings - Wisoft Co-Worker{% endblock %}
+
+{% block header %}
+{% include 'includes/header.html' with page_title='Profile Settings' %}
+{% endblock %}
+
+{% block content %}
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <!--begin::Container-->
+    <div class="container-xxl" id="kt_content_container">
+
+        {% if success_message %}
+        <div class="alert alert-success d-flex align-items-center p-5 mb-10">
+            <i class="ki-duotone ki-shield-tick fs-2hx text-success me-4"><span class="path1"></span><span
+                    class="path2"></span></i>
+            <div class="d-flex flex-column">
+                <h4 class="mb-1 text-success">Success</h4>
+                <span>{{ success_message }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <h2 class="fw-bold mb-5">Profile Settings</h2>
+
+        <!-- Update Profile Picture -->
+        <div class="card mb-5 mb-xl-10">
+            <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse"
+                data-bs-target="#kt_account_profile_picture" aria-expanded="true"
+                aria-controls="kt_account_profile_picture">
+                <div class="card-title m-0">
+                    <h3 class="fw-bold m-0">Update Profile Picture</h3>
+                </div>
+            </div>
+            <div id="kt_account_settings_profile_picture" class="collapse show">
+                <form id="kt_account_profile_picture_form" class="form" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_profile_picture">
+                    <div class="card-body border-top p-9">
+                        <div class="row mb-6">
+                            <label class="col-lg-4 col-form-label fw-semibold fs-6">Profile Picture</label>
+                            <div class="col-lg-8 fv-row d-flex align-items-center">
+                                <div class="me-7">
+                                    <div class="symbol symbol-100px symbol-circle mb-3">
+                                        <img id="profile_picture_preview"
+                                            src="{% if request.user.profile.profile_picture %}{{ request.user.profile.profile_picture.url }}{% else %}{% static 'assets/media/avatars/300-1.jpg' %}{% endif %}"
+                                            alt="image"
+                                            style="object-fit: cover; width: 100px; height: 100px; border: 3px solid #eee; border-radius: 50%;" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="btn btn-light-primary btn-sm mb-0 cursor-pointer">
+                                        <span>Select New Picture</span>
+                                        <input type="file" name="profile_picture" id="profile_picture_input"
+                                            class="d-none" accept=".png, .jpg, .jpeg" />
+                                    </label>
+                                    <div class="text-muted fs-7 mt-2">Allowed file types: png, jpg, jpeg.</div>
+                                    {% if errors.profile_picture %}
+                                    <div class="text-danger mt-2">{{ errors.profile_picture }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-end py-6 px-9">
+                        <button type="submit" class="btn btn-primary">Update Picture</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Account Security -->
+        <div class="card mb-5 mb-xl-10">
+            <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse"
+                data-bs-target="#kt_account_security" aria-expanded="true"
+                aria-controls="kt_account_security">
+                <div class="card-title m-0">
+                    <h3 class="fw-bold m-0">Account Security</h3>
+                </div>
+            </div>
+            <div id="kt_account_security" class="collapse show">
+                <div class="card-body border-top p-0">
+                    <div class="d-flex">
+                        <!-- Vertical Side Tabs -->
+                        <div class="flex-shrink-0 border-end" style="width: 180px;">
+                            <ul class="nav nav-pills flex-column p-4 gap-1" role="tablist" id="account_security_tabs">
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link active rounded px-4 py-3 fw-semibold fs-7" id="username_tab"
+                                        data-bs-toggle="tab" href="#username_pane" role="tab" aria-selected="true">
+                                        Username
+                                    </a>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link rounded px-4 py-3 fw-semibold fs-7" id="password_tab"
+                                        data-bs-toggle="tab" href="#password_pane" role="tab" aria-selected="false" tabindex="-1">
+                                        Password
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="flex-grow-1 p-9">
+                            <div class="tab-content" id="account_security_content">
+
+                                <!-- Username Tab -->
+                                <div class="tab-pane fade show active" id="username_pane" role="tabpanel" aria-labelledby="username_tab">
+                                    <form id="kt_account_profile_details_form" class="form" method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="update_username">
+                                        <div class="mb-6">
+                                            <label class="form-label required fw-semibold fs-6 mb-2">New Username</label>
+                                            <input type="text" name="username"
+                                                class="form-control form-control-lg form-control-solid {% if errors.username %}is-invalid{% endif %}"
+                                                placeholder="Enter new username" />
+                                            {% if errors.username %}
+                                            <div class="invalid-feedback d-block mt-1">{{ errors.username }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="d-flex justify-content-end pt-2">
+                                            <button type="submit" class="btn btn-primary">Update Username</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- Password Tab -->
+                                <div class="tab-pane fade" id="password_pane" role="tabpanel" aria-labelledby="password_tab">
+                                    <form id="kt_signin_change_password" class="form" method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="update_password">
+                                        <!-- Current Password — full width on top -->
+                                        <div class="mb-6">
+                                            <label class="form-label required fw-semibold fs-6 mb-2">Current Password</label>
+                                            <input type="password" name="current_password"
+                                                class="form-control form-control-lg form-control-solid {% if errors.password_current_password %}is-invalid{% endif %}"
+                                                placeholder="Enter your current password" />
+                                            {% if errors.password_current_password %}
+                                            <div class="invalid-feedback d-block mt-1">{{ errors.password_current_password }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <!-- New + Confirm side by side below -->
+                                        <div class="row mb-6">
+                                            <div class="col-md-6">
+                                                <label class="form-label required fw-semibold fs-6 mb-2">New Password</label>
+                                                <input type="password" name="new_password"
+                                                    class="form-control form-control-lg form-control-solid {% if errors.new_password %}is-invalid{% endif %}"
+                                                    placeholder="Enter new password" />
+                                                {% if errors.new_password %}
+                                                <div class="invalid-feedback d-block mt-1">{{ errors.new_password }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label required fw-semibold fs-6 mb-2">Confirm New Password</label>
+                                                <input type="password" name="confirm_password"
+                                                    class="form-control form-control-lg form-control-solid {% if errors.confirm_password %}is-invalid{% endif %}"
+                                                    placeholder="Confirm new password" />
+                                                {% if errors.confirm_password %}
+                                                <div class="invalid-feedback d-block mt-1">{{ errors.confirm_password }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-end pt-2">
+                                            <button type="submit" class="btn btn-primary">Update Password</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.getElementById('profile_picture_input').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('profile_picture_preview').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %}

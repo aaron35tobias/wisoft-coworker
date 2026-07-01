@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - Wisoft Co-Worker{% endblock %}
+
+{% block header %}
+{% include 'includes/header.html' with page_title='My Profile' %}
+{% endblock %}
+
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <div class="container-xxl" id="kt_content_container">
+        {% if success_message %}
+        <div class="alert alert-success d-flex align-items-center p-5 mb-10">
+            <i class="ki-duotone ki-shield-tick fs-2hx text-success me-4"><span class="path1"></span><span class="path2"></span></i>
+            <div class="d-flex flex-column">
+                <h4 class="mb-1 text-success">Success</h4>
+                <span>{{ success_message }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <style>
+            .profile-completion-ring circle.track { stroke: rgba(255,255,255,0.18); }
+            .profile-completion-ring circle.fill { fill: rgba(255,255,255,0.08); }
+            .profile-completion-ring text { fill: #ffffff; }
+            [data-bs-theme="light"] .profile-completion-ring circle.track { stroke: rgba(0,0,0,0.12); }
+            [data-bs-theme="light"] .profile-completion-ring circle.fill { fill: rgba(255,255,255,0.96); }
+            [data-bs-theme="light"] .profile-completion-ring text { fill: #0d6efd; }
+        </style>
+        <div class="card mb-10 overflow-hidden">
+            <div class="position-relative">
+                <div id="profile_banner_preview" class="bgi-no-repeat bgi-position-center" style="height: 280px; background-image: {% if request.user.profile.banner_image %}url('{{ request.user.profile.banner_image.url }}'){% else %}linear-gradient(135deg, rgba(13,110,253,0.95) 0%, rgba(77,199,255,0.9) 100%){% endif %}; background-size: cover; background-position: center; background-repeat: no-repeat;"></div>
+                <div class="position-absolute top-0 start-0 end-0 bottom-0 bg-dark bg-opacity-25"></div>
+                <div class="position-absolute top-0 end-0 p-4" style="z-index: 10;">
+                    <form id="banner_upload_form" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_banner_image">
+                        <label class="btn btn-icon btn-sm btn-light btn-active-light-primary shadow-sm" aria-label="Change banner image" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;">
+                            <i class="ki-duotone ki-pencil fs-5 text-primary" style="line-height:1;">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                            </i>
+                            <input type="file" name="banner_image" id="banner_image_input" class="d-none" accept="image/*" />
+                        </label>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card-body pt-0 pb-9 px-9">
+                <div class="d-flex flex-column flex-xl-row flex-stack gap-4 pb-8">
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="position-relative symbol symbol-120px symbol-circle shadow-sm" style="margin-top: -72px;">
+                            <img id="profile_avatar_preview"
+                                src="{% if request.user.profile.profile_picture %}{{ request.user.profile.profile_picture.url }}{% else %}{% static 'assets/images/default-avatar.svg' %}{% endif %}"
+                                alt="Profile picture"
+                                style="object-fit: cover; width: 120px; height: 120px; border-radius: 50%;"
+                                onerror="this.onerror=null;this.src='{% static 'assets/images/default-avatar.svg' %}'" />
+                            <form method="POST" enctype="multipart/form-data" class="position-absolute bottom-0 end-0" style="transform: translate(25%, 25%);">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_profile_picture">
+                                <label class="btn btn-icon btn-sm btn-light btn-active-light-primary shadow-sm" aria-label="Change profile picture" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                    <i class="ki-duotone ki-pencil fs-5 text-primary" style="line-height:1;">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+                                    <input type="file" name="profile_picture" id="profile_picture_input" class="d-none" accept="image/*" />
+                                </label>
+                            </form>
+                        </div>
+                        <div class="mt-6">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <h2 class="text-gray-900 fw-bold mb-0">{{ user.username }}</h2>
+                                <span class="badge badge-light-primary">{% if user.is_superuser %}Admin{% else %}User{% endif %}</span>
+                            </div>
+                            <div class="text-gray-500 mb-1">{{ user.get_full_name|default:user.username }}</div>
+                            <div class="text-gray-500 fs-7">{{ user.email }}</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column justify-content-center align-items-xl-end gap-3 mt-6">
+                        <div class="w-100">
+                            <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between mb-3 gap-2">
+                                <div>
+                                    <div class="fw-semibold text-gray-600 fs-8 text-uppercase">Profile Completion</div>
+                                </div>
+                                <div class="fw-bold text-gray-900 fs-6">{{ profile_strength }}%</div>
+                            </div>
+                            <div class="progress h-8 bg-light-success rounded-3 overflow-hidden">
+                                <div class="progress-bar bg-success rounded-3" role="progressbar" style="width: {{ profile_strength }}%;" aria-valuenow="{{ profile_strength }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="row g-7 align-items-start">
+
+            <!-- Personal Information Card -->
+            <div class="col-lg-6">
+                <div class="card h-100" style="border: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); border-radius: 12px; overflow: hidden;">
+                    <!-- Card Header -->
+                    <div class="card-header d-flex align-items-center justify-content-between py-5 px-7" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); min-height: unset;">
+                        <h3 class="fw-bold fs-5 m-0">Personal Information</h3>
+                        <a href="javascript:void(0);" onclick="document.getElementById('personal_info_view').classList.add('d-none'); document.getElementById('personal_info_edit').classList.remove('d-none');" class="btn btn-icon btn-active-light-primary btn-sm w-30px h-30px">
+                            <i class="ki-duotone ki-pencil fs-4"><span class="path1"></span><span class="path2"></span></i>
+                        </a>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body px-7 py-5">
+                        <div id="personal_info_view" class="d-flex flex-column {% if active_section == 'profile_edit' %}d-none{% endif %}">
+                            <div class="py-3" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.06));">
+                                <div class="fw-semibold text-muted fs-8 text-uppercase mb-1">Full Name</div>
+                                <div class="fs-7 fw-semibold">{{ user.get_full_name|default:'Not set' }}</div>
+                            </div>
+                            <div class="py-3" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.06));">
+                                <div class="fw-semibold text-muted fs-8 text-uppercase mb-1">Username</div>
+                                <div class="fs-7 fw-semibold">{{ user.username }}</div>
+                            </div>
+                            <div class="py-3" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.06));">
+                                <div class="fw-semibold text-muted fs-8 text-uppercase mb-1">Email Address</div>
+                                <div class="fs-7 fw-semibold">{{ user.email }}</div>
+                            </div>
+                            <div class="py-3" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.06));">
+                                <div class="fw-semibold text-muted fs-8 text-uppercase mb-1">Account Type</div>
+                                <div class="fs-7 fw-semibold">{% if user.is_superuser %}Admin{% else %}User{% endif %}</div>
+                            </div>
+                            <div class="py-3" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.06));">
+                                <div class="fw-semibold text-muted fs-8 text-uppercase mb-1">Status</div>
+                                <div class="fs-7 fw-semibold">
+                                    {% if user.is_active %}
+                                    <span class="badge badge-light-success">Active</span>
+                                    {% else %}
+                                    <span class="badge badge-light-danger">Pending</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="py-3">
+                                <div class="fw-semibold text-muted fs-8 text-uppercase mb-1">Last Login</div>
+                                <div class="fs-7 fw-semibold">{% if user.last_login %}{{ user.last_login|date:"M d, Y" }}{% else %}Never{% endif %}</div>
+                            </div>
+                        </div>
+
+                        <div id="personal_info_edit" class="{% if active_section != 'profile_edit' %}d-none{% endif %}">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_profile_details">
+                                <div class="row g-3 mb-4 mt-2">
+                                    <div class="col-6">
+                                        <label class="form-label fw-semibold fs-7 mb-1">First Name</label>
+                                        <input type="text" name="first_name" class="form-control form-control-sm form-control-solid {% if errors.first_name %}is-invalid{% endif %}" placeholder="First name" value="{{ user.first_name }}" />
+                                        {% if errors.first_name %}<div class="invalid-feedback d-block">{{ errors.first_name }}</div>{% endif %}
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-semibold fs-7 mb-1">Last Name</label>
+                                        <input type="text" name="last_name" class="form-control form-control-sm form-control-solid {% if errors.last_name %}is-invalid{% endif %}" placeholder="Last name" value="{{ user.last_name }}" />
+                                        {% if errors.last_name %}<div class="invalid-feedback d-block">{{ errors.last_name }}</div>{% endif %}
+                                    </div>
+                                </div>
+                                <div class="mb-5">
+                                    <label class="form-label fw-semibold fs-7 mb-1">Username</label>
+                                    <input type="text" name="username" class="form-control form-control-sm form-control-solid {% if errors.username %}is-invalid{% endif %}" placeholder="Username" value="{{ user.username }}" />
+                                    {% if errors.username %}<div class="invalid-feedback d-block">{{ errors.username }}</div>{% endif %}
+                                </div>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button" onclick="document.getElementById('personal_info_edit').classList.add('d-none'); document.getElementById('personal_info_view').classList.remove('d-none');" class="btn btn-sm btn-light">Cancel</button>
+                                    <button type="submit" class="btn btn-sm btn-primary">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Security Card -->
+            <div class="col-lg-6">
+                <div class="card h-100" style="border: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); border-radius: 12px; overflow: hidden;">
+                    <!-- Card Header -->
+                    <div class="card-header d-flex align-items-center py-5 px-7" style="border-bottom: 1px solid var(--bs-border-color, rgba(255,255,255,0.08)); min-height: unset;">
+                        <h3 class="fw-bold fs-5 m-0">Account Security</h3>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body px-7 py-6">
+
+                        <!-- Password Section -->
+                        <div class="fw-semibold text-muted fs-8 text-uppercase mb-5 mt-2">Change Password</div>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_password">
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold fs-7 mb-1">Current Password</label>
+                                <input type="password" name="current_password" class="form-control form-control-sm form-control-solid {% if errors.password_current_password %}is-invalid{% endif %}" placeholder="Current password" />
+                                {% if errors.password_current_password %}<div class="invalid-feedback d-block">{{ errors.password_current_password }}</div>{% endif %}
+                            </div>
+                            <div class="row g-3 mb-5">
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold fs-7 mb-1">New Password</label>
+                                    <input type="password" name="new_password" class="form-control form-control-sm form-control-solid {% if errors.new_password %}is-invalid{% endif %}" placeholder="New password" />
+                                    {% if errors.new_password %}<div class="invalid-feedback d-block">{{ errors.new_password }}</div>{% endif %}
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold fs-7 mb-1">Confirm Password</label>
+                                    <input type="password" name="confirm_password" class="form-control form-control-sm form-control-solid {% if errors.confirm_password %}is-invalid{% endif %}" placeholder="Confirm password" />
+                                    {% if errors.confirm_password %}<div class="invalid-feedback d-block">{{ errors.confirm_password }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-sm btn-primary">Change Password</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateImagePreview(inputId, previewId, isBackground, autoSubmitForm) {
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+        if (!input || !preview) return;
+        input.addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                if (isBackground) {
+                    preview.style.backgroundImage = `url('${e.target.result}')`;
+                } else {
+                    preview.src = e.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
+            if (autoSubmitForm && input.form) {
+                input.form.submit();
+            }
+        });
+    }
+
+    updateImagePreview('profile_picture_input', 'profile_avatar_preview', false, true);
+    updateImagePreview('banner_image_input', 'profile_banner_preview', true, true);
+
+    document.querySelectorAll('.security-toggle').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var targetId = this.getAttribute('data-security-target');
+            document.querySelectorAll('.security-section').forEach(function(section) {
+                section.classList.add('d-none');
+            });
+            document.querySelectorAll('.security-toggle').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            var target = document.getElementById(targetId);
+            if (target) {
+                target.classList.remove('d-none');
+            }
+            this.classList.add('active');
+        });
+    });
+</script>
+{% endblock %}

@@ -661,3 +661,70 @@ def discover_pages_view(request):
 
     messages.success(request, f'{len(discovered_urls)} pages discovered successfully.')
     return redirect(page_list_redirect(website.id))
+
+
+@login_required(login_url='sign-in')
+def simple_reports_view(request, website_id=None):
+    website = None
+    report_indexes = WebsiteSpeedReportAiIndex.objects.filter(
+        website__added_by=request.user,
+    ).select_related('website').prefetch_related('reports')
+
+    if website_id is not None:
+        website = get_object_or_404(
+            Website,
+            id=website_id,
+            added_by=request.user,
+        )
+        report_indexes = report_indexes.filter(website=website)
+
+    for report_index in report_indexes:
+        reports = list(report_index.reports.all())
+        report_index.mobile_report = next(
+            (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_MOBILE),
+            None,
+        )
+        report_index.desktop_report = next(
+            (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_DESKTOP),
+            None,
+        )
+
+    context = {
+        'website': website,
+        'report_indexes': report_indexes,
+        'back_to_websites_url': reverse('page_speed_and_cwv:website-list') if website else '',
+    }
+    return render(request, 'page_speed_and_cwv/reports.html', context)
+
+
+@login_required(login_url='sign-in')
+def simple_report_detail_view(request, website_id, report_index_id):
+    website = get_object_or_404(
+        Website,
+        id=website_id,
+        added_by=request.user,
+    )
+    report_index = get_object_or_404(
+        WebsiteSpeedReportAiIndex.objects.prefetch_related('reports'),
+        id=report_index_id,
+        website=website,
+    )
+    reports = list(report_index.reports.all())
+    mobile_report = next(
+        (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_MOBILE),
+        None,
+    )
+    desktop_report = next(
+        (report for report in reports if report.device_type == WebsiteSpeedReport.DEVICE_DESKTOP),
+        None,
+    )
+
+    context = {
+        'website': website,
+        'report_index': report_index,
+        'reports': reports,
+        'mobile_report': mobile_report,
+        'desktop_report': desktop_report,
+        'back_to_reports_url': reverse('page_speed_and_cwv:website-reports', args=[website.id]),
+    }
+    return render(request, 'page_speed_and_cwv/report_detail.html', context)
