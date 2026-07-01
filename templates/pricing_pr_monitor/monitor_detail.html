@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Pricing & PR Monitor Detail | Wisoft Co-Worker{% endblock %}
+
+{% block header %}
+{% url 'pricing_pr_monitor:monitors' as monitors_url %}
+{% include 'includes/header.html' with page_title=monitor.competitor_name parent_title='Pricing & PR Monitor' action_url=monitors_url action_label='Monitors' %}
+{% endblock %}
+
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content"><div class="container-xxl" id="kt_content_container">
+<div class="card mb-5"><div class="card-body p-8 d-flex justify-content-between flex-wrap gap-4">
+<div><h2 class="fw-bold text-gray-900 mb-2">{{ monitor.competitor_name }}</h2><a href="{{ monitor.competitor_website }}" target="_blank" rel="noopener">{{ monitor.competitor_website }}</a><div class="text-muted mt-2">{{ monitor.notes|default:"No notes" }}</div></div>
+<form method="post" action="{% url 'pricing_pr_monitor:monitor-run-existing' monitor.id %}">{% csrf_token %}<button type="submit" class="btn btn-sm btn-primary">Run Check</button></form>
+</div></div>
+<div class="card"><div class="card-header"><h3 class="card-title fw-bold text-gray-900">Run History</h3></div><div class="card-body">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"><thead><tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary"><th>Status</th><th>Pages</th><th>Changes</th><th>News</th><th>Started</th><th>Actions</th></tr></thead><tbody class="fw-semibold text-gray-700">
+{% for run in runs %}
+<tr><td>{{ run.get_status_display }}</td><td>{{ run.pages_checked }}</td><td>{{ run.changes_found }}</td><td>{{ run.news_mentions_found }}</td><td>{{ run.started_at|date:"d M Y, g:i A" }}</td><td><a href="{% url 'pricing_pr_monitor:run-detail' run.id %}" class="btn btn-sm btn-light-primary">View</a></td></tr>
+{% empty %}
+<tr><td colspan="6" class="text-center text-muted py-10">No runs yet.</td></tr>
+{% endfor %}
+</tbody></table>
+</div></div>
+</div></div>
+{% endblock %}
+

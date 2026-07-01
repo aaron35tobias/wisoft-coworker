@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reports | Wisoft Co-Worker{% endblock %}
+
+{% block extra_css_scripts %}
+<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block header %}
+{% include 'includes/header.html' with page_title='Reports' parent_title='Page Speed & CWV' action_url=back_to_websites_url action_label='Back to Websites' %}
+{% endblock %}
+
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+<div class="container-xxl" id="kt_content_container">
+
+<div class="card">
+<div class="card-header border-0 pt-6">
+<div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+<div class="d-flex align-items-center position-relative my-1">
+<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
+<span class="path1"></span>
+<span class="path2"></span>
+</i>
+<input type="text" id="kt_reports_table_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Reports" />
+</div>
+{% if website %}
+<div class="fw-bold fs-4 text-end">
+SITE: <a href="{{ website.website_url }}" target="_blank" rel="noopener" class="text-primary text-hover-gray-900">{{ website.website_url }}</a>
+</div>
+{% endif %}
+</div>
+</div>
+<div class="card-body pt-0">
+<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_reports_table">
+<thead>
+<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<th class="w-50px">#</th>
+<th>Website</th>
+<th>Scanned At</th>
+<th>Mobile Score</th>
+<th>Desktop Score</th>
+<th>Devices</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody class="fw-semibold text-gray-600">
+{% for report_index in report_indexes %}
+<tr data-report-row="true">
+<td>{{ forloop.counter }}</td>
+<td>
+<a href="{{ report_index.website.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary">{{ report_index.website.website_url }}</a>
+</td>
+<td>{{ report_index.scanned_at|date:"d M Y, g:i A" }}</td>
+<td>
+{% if report_index.mobile_report %}
+<span class="badge badge-light-primary">{{ report_index.mobile_report.performance_score|default:"-" }}</span>
+{% else %}
+<span class="text-muted">-</span>
+{% endif %}
+</td>
+<td>
+{% if report_index.desktop_report %}
+<span class="badge badge-light-info">{{ report_index.desktop_report.performance_score|default:"-" }}</span>
+{% else %}
+<span class="text-muted">-</span>
+{% endif %}
+</td>
+<td>
+{% if report_index.mobile_report %}<span class="badge badge-light-primary me-2">Mobile</span>{% endif %}
+{% if report_index.desktop_report %}<span class="badge badge-light-info">Desktop</span>{% endif %}
+</td>
+<td>
+<a href="{% url 'page_speed_and_cwv:website-report-detail' report_index.website.id report_index.id %}" class="btn btn-sm btn-primary">View</a>
+</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="7" class="text-center text-muted py-10">No reports available yet. Run the PageSpeed fetch command first.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js_scripts %}
+<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<script>
+jQuery(function () {
+var reportsTableElement = document.querySelector("#kt_reports_table");
+if (reportsTableElement && reportsTableElement.querySelector("[data-report-row='true']")) {
+var reportsTable = jQuery(reportsTableElement).DataTable({
+info: false,
+order: [[2, "desc"]],
+columnDefs: [
+{ orderable: false, targets: [0, 6] }
+]
+});
+
+jQuery("#kt_reports_table_search").on("keyup", function () {
+reportsTable.search(this.value).draw();
+});
+}
+});
+</script>
+{% endblock %}

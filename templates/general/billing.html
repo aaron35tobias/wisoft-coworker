@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AI API Usage | Wisoft Co-Worker{% endblock %}
+
+{% block header %}
+{% include 'includes/header.html' with page_title='AI API Usage' %}
+{% endblock %}
+
+{% block content %}
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <!--begin::Container-->
+    <div class="container-xxl" id="kt_content_container">
+
+        <!-- Marker element: tells base.html JS to suppress the top header alert on billing page -->
+        <div id="billing-page-marker" class="d-none"></div>
+
+        {% if error %}
+        <div class="alert alert-danger mb-8" role="alert">
+            <strong>API Error:</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        {% if limit_exceeded %}
+        <!--begin::Limit Exceeded Notice-->
+        <div class="notice d-flex bg-light-danger rounded border-danger border border-dashed p-6 mb-8">
+            <!--begin::Icon-->
+            <i class="ki-duotone ki-warning fs-2tx text-danger me-4">
+                <span class="path1"></span>
+                <span class="path2"></span>
+                <span class="path3"></span>
+            </i>
+            <!--end::Icon-->
+            <!--begin::Wrapper-->
+            <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
+                <!--begin::Content-->
+                <div class="fw-semibold mb-3 mb-md-0">
+                    <h4 class="text-gray-900 fw-bold">Token Limit Exceeded</h4>
+                    <div class="fs-6 text-gray-700 mt-1">You have used <strong>{{ usage_data.total_tokens }}</strong> of
+                        <strong>{{ usage_data.limit }}</strong> tokens. Renew your plan on the <strong>{{ api_provider
+                            }}</strong> billing platform to continue using AI features.
+                    </div>
+                </div>
+                <!--end::Content-->
+                <!--begin::Action-->
+                <a href="{{ api_upgrade_url }}" class="btn btn-danger btn-sm px-6 align-self-center ms-4 text-nowrap"
+                    target="_blank">Renew Plan</a>
+                <!--end::Action-->
+            </div>
+            <!--end::Wrapper-->
+        </div>
+        <!--end::Limit Exceeded Notice-->
+        {% endif %}
+
+        <!--begin::Row-->
+        <div class="row gy-5 g-xl-10">
+            <!--begin::Col-->
+            <div class="col-xl-8 mx-auto">
+                <!--begin::Card-->
+                <div class="card card-xl-stretch mb-xl-10">
+                    <!--begin::Header-->
+                    <div class="card-header border-0 pt-5">
+                        <h3 class="card-title align-items-start flex-column">
+                            <span class="card-label fw-bold fs-3 mb-1">Token Usage Overview</span>
+                            <span class="text-muted mt-1 fw-semibold fs-7">Monthly API usage limits for {{ api_provider }}</span>
+                        </h3>
+
+                    </div>
+                    <!--end::Header-->
+                    <!--begin::Body-->
+                    <div class="card-body d-flex flex-column">
+                        {% if usage_data %}
+                        <div class="d-flex flex-column mb-7">
+                            <div class="d-flex flex-stack mb-2">
+                                <span class="text-gray-800 fw-bold fs-6">Usage ({{ usage_data.usage_percent|floatformat:1 }}%)</span>
+                                <span class="text-gray-600 fw-bold fs-6">{{ usage_data.total_tokens }} / {{ usage_data.limit }} Tokens</span>
+                            </div>
+                            <div class="progress h-8px w-100 bg-light-primary">
+                                <div class="progress-bar bg-primary" role="progressbar"
+                                    style="--progress-width: {{ usage_data.usage_percent }}%; width: var(--progress-width);"
+                                    aria-valuenow="{{ usage_data.usage_percent }}" aria-valuemin="0"
+                                    aria-valuemax="100"></div>
+                            </div>
+                        </div>
+
+                        <div class="row g-0">
+                            <!--begin::Col-->
+                            <div class="col-6">
+                                <div class="d-flex align-items-center mb-9 me-2">
+                                    <div class="symbol symbol-40px me-3">
+                                        <div class="symbol-label bg-light-success">
+                                            <i class="ki-duotone ki-arrow-up-right fs-1 text-success">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                            </i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.input_tokens }}</div>
+                                        <div class="fs-7 text-gray-600 fw-bold">Input Tokens</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Col-->
+                            <!--begin::Col-->
+                            <div class="col-6">
+                                <div class="d-flex align-items-center mb-9 ms-2">
+                                    <div class="symbol symbol-40px me-3">
+                                        <div class="symbol-label bg-light-info">
+                                            <i class="ki-duotone ki-arrow-down-left fs-1 text-info">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                            </i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.output_tokens }}
+                                        </div>
+                                        <div class="fs-7 text-gray-600 fw-bold">Output Tokens</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Col-->
+                            <!--begin::Col-->
+                            <div class="col-6">
+                                <div class="d-flex align-items-center me-2">
+                                    <div class="symbol symbol-40px me-3">
+                                        <div class="symbol-label bg-light-warning">
+                                            <i class="ki-duotone ki-abstract-26 fs-1 text-warning">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                            </i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.total_tokens }}</div>
+                                        <div class="fs-7 text-gray-600 fw-bold">Total Used</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Col-->
+                            <!--begin::Col-->
+                            <div class="col-6">
+                                <div class="d-flex align-items-center ms-2">
+                                    <div class="symbol symbol-40px me-3">
+                                        <div class="symbol-label bg-light-primary">
+                                            <i class="ki-duotone ki-abstract-44 fs-1 text-primary">
+                                                <span class="path1"></span>
+                                                <span class="path2"></span>
+                                            </i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.remaining }}</div>
+                                        <div class="fs-7 text-gray-600 fw-bold">Remaining</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Col-->
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted">Usage data is not available.</div>
+                        {% endif %}
+                    </div>
+                    <!--end::Body-->
+                </div>
+                <!--end::Card-->
+            </div>
+            <!--end::Col-->
+
+        </div>
+        <!--end::Row-->
+    </div>
+    <!--end::Container-->
+</div>
+{% endblock %}

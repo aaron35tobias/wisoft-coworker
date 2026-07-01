@@ -1,0 +1,144 @@
+import django.db.models.deletion
+from django.conf import settings
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    initial = True
+
+    dependencies = [
+        ('page_speed_and_cwv', '0007_technicalseowebsite_alter_technicalseoaudit_website_and_more'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.CreateModel(
+                    name='TechnicalSEOWebsite',
+                    fields=[
+                        ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                        ('website_url', models.URLField(max_length=500)),
+                        ('note', models.TextField(blank=True)),
+                        ('is_active', models.BooleanField(default=True)),
+                        ('date_added', models.DateTimeField(auto_now_add=True)),
+                        ('date_modified', models.DateTimeField(auto_now=True)),
+                        ('added_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='technical_seo_websites', to=settings.AUTH_USER_MODEL)),
+                    ],
+                    options={
+                        'db_table': 'page_speed_and_cwv_technicalseowebsite',
+                        'ordering': ['-date_added'],
+                    },
+                ),
+                migrations.CreateModel(
+                    name='TechnicalSEOAudit',
+                    fields=[
+                        ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                        ('status', models.CharField(choices=[('running', 'Running'), ('completed', 'Completed'), ('failed', 'Failed')], default='running', max_length=20)),
+                        ('max_pages', models.PositiveSmallIntegerField(default=50)),
+                        ('pages_crawled', models.PositiveSmallIntegerField(default=0)),
+                        ('issues_found', models.PositiveSmallIntegerField(default=0)),
+                        ('critical_issues', models.PositiveSmallIntegerField(default=0)),
+                        ('high_issues', models.PositiveSmallIntegerField(default=0)),
+                        ('medium_issues', models.PositiveSmallIntegerField(default=0)),
+                        ('low_issues', models.PositiveSmallIntegerField(default=0)),
+                        ('ai_summary', models.TextField(blank=True)),
+                        ('ai_model', models.CharField(blank=True, max_length=100)),
+                        ('ai_error', models.TextField(blank=True)),
+                        ('error_message', models.TextField(blank=True)),
+                        ('started_at', models.DateTimeField(auto_now_add=True)),
+                        ('completed_at', models.DateTimeField(blank=True, null=True)),
+                        ('requested_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='technical_seo_audits', to=settings.AUTH_USER_MODEL)),
+                        ('website', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='technical_seo_audits', to='technical_seo.technicalseowebsite')),
+                    ],
+                    options={
+                        'db_table': 'page_speed_and_cwv_technicalseoaudit',
+                        'ordering': ['-started_at'],
+                    },
+                ),
+                migrations.CreateModel(
+                    name='TechnicalSEOPage',
+                    fields=[
+                        ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                        ('url', models.URLField(max_length=1000)),
+                        ('status_code', models.PositiveSmallIntegerField(blank=True, null=True)),
+                        ('final_url', models.URLField(blank=True, max_length=1000)),
+                        ('content_type', models.CharField(blank=True, max_length=255)),
+                        ('title', models.CharField(blank=True, max_length=500)),
+                        ('meta_description', models.TextField(blank=True)),
+                        ('canonical_url', models.URLField(blank=True, max_length=1000)),
+                        ('robots_directives', models.CharField(blank=True, max_length=255)),
+                        ('h1_count', models.PositiveSmallIntegerField(default=0)),
+                        ('h2_count', models.PositiveSmallIntegerField(default=0)),
+                        ('internal_links_count', models.PositiveSmallIntegerField(default=0)),
+                        ('external_links_count', models.PositiveSmallIntegerField(default=0)),
+                        ('images_count', models.PositiveSmallIntegerField(default=0)),
+                        ('images_missing_alt_count', models.PositiveSmallIntegerField(default=0)),
+                        ('depth', models.PositiveSmallIntegerField(default=0)),
+                        ('load_time_ms', models.PositiveIntegerField(blank=True, null=True)),
+                        ('error_message', models.TextField(blank=True)),
+                        ('raw_data', models.JSONField(blank=True, default=dict)),
+                        ('scanned_at', models.DateTimeField(auto_now_add=True)),
+                        ('audit', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pages', to='technical_seo.technicalseoaudit')),
+                    ],
+                    options={
+                        'db_table': 'page_speed_and_cwv_technicalseopage',
+                        'ordering': ['depth', 'url'],
+                    },
+                ),
+                migrations.CreateModel(
+                    name='TechnicalSEOIssue',
+                    fields=[
+                        ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                        ('issue_type', models.CharField(max_length=100)),
+                        ('severity', models.CharField(choices=[('critical', 'Critical'), ('high', 'High'), ('medium', 'Medium'), ('low', 'Low')], max_length=20)),
+                        ('title', models.CharField(max_length=255)),
+                        ('evidence', models.TextField(blank=True)),
+                        ('recommendation', models.TextField()),
+                        ('status', models.CharField(choices=[('open', 'Open'), ('fixed', 'Fixed'), ('ignored', 'Ignored')], default='open', max_length=20)),
+                        ('created_at', models.DateTimeField(auto_now_add=True)),
+                        ('audit', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='issues', to='technical_seo.technicalseoaudit')),
+                        ('page', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='issues', to='technical_seo.technicalseopage')),
+                    ],
+                    options={
+                        'db_table': 'page_speed_and_cwv_technicalseoissue',
+                        'ordering': ['severity', 'issue_type', 'created_at'],
+                    },
+                ),
+                migrations.AddIndex(
+                    model_name='technicalseowebsite',
+                    index=models.Index(fields=['added_by', '-date_added'], name='page_speed__added_b_08922a_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='technicalseoaudit',
+                    index=models.Index(fields=['website', '-started_at'], name='page_speed__website_7d9537_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='technicalseoaudit',
+                    index=models.Index(fields=['requested_by', '-started_at'], name='page_speed__request_92d8b3_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='technicalseopage',
+                    index=models.Index(fields=['audit', 'status_code'], name='page_speed__audit_i_a16639_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='technicalseopage',
+                    index=models.Index(fields=['audit', 'depth'], name='page_speed__audit_i_2891eb_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='technicalseoissue',
+                    index=models.Index(fields=['audit', 'severity'], name='page_speed__audit_i_c09a7f_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='technicalseoissue',
+                    index=models.Index(fields=['audit', 'issue_type'], name='page_speed__audit_i_65c29a_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='technicalseoissue',
+                    index=models.Index(fields=['status'], name='page_speed__status_1ad9fd_idx'),
+                ),
+            ],
+        ),
+    ]

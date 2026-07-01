@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pricing & PR Monitor | Wisoft Co-Worker{% endblock %}
+
+{% block extra_css_scripts %}
+<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+<style>
+.pricing-pr-loading-overlay {
+align-items: center;
+background: rgba(255, 255, 255, 0.82);
+bottom: 0;
+display: none;
+justify-content: center;
+left: 0;
+position: fixed;
+right: 0;
+top: 0;
+z-index: 1090;
+}
+[data-bs-theme="dark"] .pricing-pr-loading-overlay {
+background: rgba(18, 18, 23, 0.82);
+}
+.pricing-pr-loading-panel {
+max-width: 440px;
+width: calc(100% - 32px);
+}
+</style>
+{% endblock %}
+
+{% block header %}
+{% url 'pricing_pr_monitor:history' as history_url %}
+{% include 'includes/header.html' with page_title='Pricing & PR Monitor' parent_title='SEO Co-Worker' action_url=history_url action_label='Run History' %}
+{% endblock %}
+
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+<div class="container-xxl" id="kt_content_container">
+
+<div class="row g-5 g-xl-10 mb-5">
+<div class="col-xl-5">
+<div class="card card-flush h-100">
+<div class="card-header"><h3 class="card-title fw-bold text-gray-900">Create Monitor & Run</h3></div>
+<div class="card-body">
+<form method="post" action="{% url 'pricing_pr_monitor:monitor-run' %}" id="kt_pricing_pr_form">
+{% csrf_token %}
+<div class="fv-row mb-5">
+<label class="required fs-6 fw-semibold mb-2">Competitor Name</label>
+<input type="text" name="competitor_name" class="form-control form-control-solid" placeholder="Competitor brand" required />
+</div>
+<div class="fv-row mb-5">
+<label class="required fs-6 fw-semibold mb-2">Competitor Website</label>
+<input type="url" name="competitor_website" class="form-control form-control-solid" placeholder="https://competitor.com" required />
+</div>
+<div class="fv-row mb-5">
+<label class="fs-6 fw-semibold mb-2">Pricing Page URL</label>
+<input type="url" name="pricing_url" class="form-control form-control-solid" placeholder="https://competitor.com/pricing" />
+</div>
+<div class="fv-row mb-5">
+<label class="fs-6 fw-semibold mb-2">Extra URLs to Monitor</label>
+<textarea name="monitored_urls" class="form-control form-control-solid" rows="4" placeholder="One URL per line"></textarea>
+</div>
+<div class="fv-row mb-5">
+<label class="fs-6 fw-semibold mb-2">Google News / PR Keywords</label>
+<textarea name="news_keywords" class="form-control form-control-solid" rows="3" placeholder="Optional. One keyword per line, e.g. funding, partnership, Dubai"></textarea>
+</div>
+<div class="fv-row mb-6">
+<label class="fs-6 fw-semibold mb-2">Notes</label>
+<textarea name="notes" class="form-control form-control-solid" rows="3" placeholder="Competitive context or what to watch for"></textarea>
+</div>
+<button type="submit" class="btn btn-sm btn-primary w-100" id="kt_pricing_pr_submit">
+<span class="indicator-label">Create Monitor & Run Check</span>
+<span class="indicator-progress">Running check...
+<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+</button>
+</form>
+</div>
+</div>
+</div>
+
+<div class="col-xl-7">
+<div class="card card-flush h-100">
+<div class="card-header"><h3 class="card-title fw-bold text-gray-900">What Gets Tracked</h3></div>
+<div class="card-body">
+<div class="row g-5">
+<div class="col-md-6"><div class="d-flex align-items-center mb-5"><i class="ki-duotone ki-chart-line fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i><div><div class="fw-bold text-gray-900">Pricing Updates</div><div class="text-muted fs-7">Price terms, packages, offers, and pricing page changes</div></div></div></div>
+<div class="col-md-6"><div class="d-flex align-items-center mb-5"><i class="ki-duotone ki-notification-status fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i><div><div class="fw-bold text-gray-900">Press Releases</div><div class="text-muted fs-7">Google News style press releases and announcements validated by AI</div></div></div></div>
+<div class="col-md-6"><div class="d-flex align-items-center"><i class="ki-duotone ki-document fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i><div><div class="fw-bold text-gray-900">Website Changes</div><div class="text-muted fs-7">Title, CTA, offer, service, and body copy changes</div></div></div></div>
+<div class="col-md-6"><div class="d-flex align-items-center"><i class="ki-duotone ki-abstract-26 fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i><div><div class="fw-bold text-gray-900">AI Interpretation</div><div class="text-muted fs-7">Business impact and response only when signals are found</div></div></div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header border-0 pt-6">
+<div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+<h3 class="fw-bold m-0">Monitors</h3>
+<div class="d-flex align-items-center position-relative my-1">
+<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+<input type="text" id="kt_pricing_pr_monitors_search" class="form-control form-control-solid border border-gray-400 w-250px ps-13" placeholder="Search Monitors" />
+</div>
+</div>
+</div>
+<div class="card-body pt-0">
+<table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6" id="kt_pricing_pr_monitors_table">
+<thead><tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary"><th>Competitor</th><th>Website</th><th>Runs</th><th>Latest Changes</th><th>Latest PR</th><th>Last Run</th><th>Actions</th></tr></thead>
+<tbody class="fw-semibold text-gray-700">
+{% for monitor in monitors %}
+<tr data-monitor-row="true">
+<td class="text-gray-900">{{ monitor.competitor_name }}</td>
+<td><a href="{{ monitor.competitor_website }}" target="_blank" rel="noopener">{{ monitor.competitor_website }}</a></td>
+<td>{{ monitor.run_count }}</td>
+<td><span class="badge badge-light-warning">{{ monitor.latest_changes_found }}</span></td>
+<td><span class="badge badge-light-info">{{ monitor.latest_news_mentions_found }}</span></td>
+<td>{% if monitor.latest_run %}{{ monitor.latest_run.started_at|date:"d M Y, g:i A" }}{% else %}<span class="text-muted">-</span>{% endif %}</td>
+<td><div class="d-flex gap-2">
+<form method="post" action="{% url 'pricing_pr_monitor:monitor-run-existing' monitor.id %}" class="js-pricing-pr-run-form">{% csrf_token %}<button type="submit" class="btn btn-sm btn-light-primary">Run Check</button></form>
+<a href="{% url 'pricing_pr_monitor:monitor-detail' monitor.id %}" class="btn btn-sm btn-light">History</a>
+</div></td>
+</tr>
+{% empty %}
+<tr><td colspan="7" class="text-center text-muted py-10">No Pricing & PR monitors yet.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="pricing-pr-loading-overlay" id="kt_pricing_pr_loading_overlay" aria-live="polite" aria-busy="true">
+<div class="card shadow-sm pricing-pr-loading-panel"><div class="card-body p-8 text-center">
+<div class="spinner-border text-primary mb-5" role="status"></div>
+<h3 class="fw-bold text-gray-900 mb-3">Running Monitor Check</h3>
+<div class="text-muted fs-6 mb-5">Fetching competitor pages, checking Google News press releases, and preparing change insights.</div>
+<div class="progress h-8px bg-light-primary"><div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div></div>
+</div></div>
+</div>
+{% endblock %}
+
+{% block extra_js_scripts %}
+<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<script>
+jQuery(function () {
+var loadingOverlay = document.querySelector("#kt_pricing_pr_loading_overlay");
+jQuery(document).on("submit", "#kt_pricing_pr_form, .js-pricing-pr-run-form", function () {
+var submit = this.querySelector("button[type='submit']");
+if (submit) {
+submit.setAttribute("data-kt-indicator", "on");
+submit.disabled = true;
+}
+if (loadingOverlay) {
+loadingOverlay.style.display = "flex";
+}
+});
+var tableElement = document.querySelector("#kt_pricing_pr_monitors_table");
+if (tableElement && tableElement.querySelector("[data-monitor-row='true']")) {
+var table = jQuery(tableElement).DataTable({
+pageLength: 10,
+lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+dom: "rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>",
+order: [[5, "desc"]],
+columnDefs: [{ orderable: false, targets: 6 }]
+});
+jQuery("#kt_pricing_pr_monitors_search").on("keyup", function () {
+table.search(this.value).draw();
+});
+}
+});
+</script>
+{% endblock %}
+

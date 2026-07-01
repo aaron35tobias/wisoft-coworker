@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}SERP Analysis | Wisoft Co-Worker{% endblock %}
+{% block extra_css_scripts %}
+    <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
+          rel="stylesheet"
+          type="text/css" />
+    <style>
+.serp-loading-overlay{align-items:center;background:rgba(255,255,255,.82);bottom:0;display:none;justify-content:center;left:0;position:fixed;right:0;top:0;z-index:1090}
+[data-bs-theme="dark"] .serp-loading-overlay{background:rgba(18,18,23,.82)}
+.serp-loading-panel{max-width:440px;width:calc(100% - 32px)}
+    </style>
+{% endblock %}
+{% block header %}
+    {% url 'serp_analysis:history' as history_url %}
+    {% include 'includes/header.html' with page_title='SERP Analysis' parent_title='SEO Co-Worker' action_url=history_url action_label='History' %}
+{% endblock %}
+{% block content %}
+    <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+        <div class="container-xxl" id="kt_content_container">
+            <div class="row g-5 g-xl-10 mb-5">
+                <div class="col-xl-5">
+                    <div class="card card-flush h-100">
+                        <div class="card-header">
+                            <h3 class="card-title fw-bold text-gray-900">Run SERP Analysis</h3>
+                        </div>
+                        <div class="card-body">
+                            <form class="form"
+                                  method="post"
+                                  action="{% url 'serp_analysis:run' %}"
+                                  id="kt_serp_analysis_form">
+                                {% csrf_token %}
+                                <div class="fv-row mb-5">
+                                    <label class="required fs-6 fw-semibold mb-2">Target Keyword</label>
+                                    <input type="text"
+                                           name="keyword"
+                                           class="form-control form-control-solid border border-gray-400"
+                                           placeholder="seo services dubai"
+                                           required />
+                                </div>
+                                <div class="fv-row mb-5">
+                                    <label class="fs-6 fw-semibold mb-2">Location</label>
+                                    <input type="text"
+                                           name="location"
+                                           class="form-control form-control-solid border border-gray-400"
+                                           placeholder="Dubai, UAE" />
+                                </div>
+                                <div class="fv-row mb-5">
+                                    <label class="required fs-6 fw-semibold mb-2">Own Target URL</label>
+                                    <input type="url"
+                                           name="target_url"
+                                           class="form-control form-control-solid border border-gray-400"
+                                           placeholder="https://example.com/service-page"
+                                           required />
+                                    <div class="text-muted fs-7 mt-2">Your page will be compared directly against the competitor SERP URLs below.</div>
+                                </div>
+                                <div class="separator separator-dashed my-6"></div>
+                                <div class="fw-bold text-gray-900 mb-4">Competitor SERP URLs</div>
+                                {% for index in "12345" %}
+                                    <div class="fv-row mb-4">
+                                        <input type="url"
+                                               name="competitor_url_{{ forloop.counter }}"
+                                               class="form-control form-control-solid border border-gray-400"
+                                               placeholder="https://competitor.com/ranking-page"
+                                               {% if forloop.first %}required{% endif %} />
+                                    </div>
+                                {% endfor %}
+                                <div class="separator separator-dashed mb-4"></div>
+                                <button type="submit"
+                                        class="btn btn-sm btn-primary w-100"
+                                        id="kt_serp_analysis_submit"><span class="indicator-label">Start SERP Analysis</span><span class="indicator-progress">Analyzing... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-7">
+                    <div class="card card-flush h-100">
+                        <div class="card-header">
+                            <h3 class="card-title fw-bold text-gray-900">What This Checks</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-5">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-5">
+                                        <i class="ki-duotone ki-document fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                        <div>
+                                            <div class="fw-bold text-gray-900">Content Strategy</div>
+                                            <div class="text-muted fs-7">Depth, headings, topics, media, schema, and SERP angles</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-5">
+                                        <i class="ki-duotone ki-subtitle fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                        <div>
+                                            <div class="fw-bold text-gray-900">Meta & Canonical</div>
+                                            <div class="text-muted fs-7">Titles, descriptions, robots, and canonical signals</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ki-duotone ki-speedometer fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                        <div>
+                                            <div class="fw-bold text-gray-900">PageSpeed Signal</div>
+                                            <div class="text-muted fs-7">Response-time based performance scoring for comparison</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ki-duotone ki-chart-line-up fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                        <div>
+                                            <div class="fw-bold text-gray-900">SERP Opportunities</div>
+                                            <div class="text-muted fs-7">Topics and sections competitors cover that your page can improve</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header border-0 pt-6">
+                    <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+                        <h3 class="fw-bold m-0">Recent SERP Analyses</h3>
+                        <div class="d-flex align-items-center position-relative my-1">
+                            <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+                            <input type="text"
+                                   id="kt_serp_recent_search"
+                                   class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                   placeholder="Search Analyses" />
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"
+                           id="kt_serp_recent_table">
+                        <thead>
+                            <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                <th>Keyword</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Competitors</th>
+                                <th>Opportunities</th>
+                                <th>Started</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fw-semibold text-gray-700">
+                            {% for analysis in analyses %}
+                                <tr data-serp-row="true">
+                                    <td class="text-gray-900">{{ analysis.keyword }}</td>
+                                    <td>{{ analysis.location|default:"-" }}</td>
+                                    <td>
+                                        {% if analysis.status == 'completed' %}
+                                            <span class="badge badge-light-success">Completed</span>
+                                        {% elif analysis.status == 'failed' %}
+                                            <span class="badge badge-light-danger">Failed</span>
+                                        {% else %}
+                                            <span class="badge badge-light-primary">Running</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ analysis.competitor_count }}</td>
+                                    <td><span class="badge badge-light-warning">{{ analysis.serp_opportunities|length }}</span></td>
+                                    <td>{{ analysis.started_at|date:"d M Y, g:i A" }}</td>
+                                    <td><a href="{% url 'serp_analysis:detail' analysis.id %}"
+   class="btn btn-sm btn-light-primary">View</a></td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-10">No SERP analyses yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="serp-loading-overlay" id="kt_serp_loading_overlay">
+        <div class="card shadow-sm serp-loading-panel">
+            <div class="card-body p-8 text-center">
+                <div class="spinner-border text-primary mb-5"></div>
+                <h3 class="fw-bold text-gray-900 mb-3">Running SERP Analysis</h3>
+                <div class="text-muted fs-6 mb-5">Fetching competitor pages, extracting content and technical signals, and preparing recommendations.</div>
+                <div class="progress h-8px bg-light-primary">
+                    <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+                         style="width:100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block extra_js_scripts %}
+    <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+    <script>
+jQuery(function(){
+var form=document.querySelector("#kt_serp_analysis_form"), submit=document.querySelector("#kt_serp_analysis_submit"), overlay=document.querySelector("#kt_serp_loading_overlay");
+if(form){form.addEventListener("submit",function(){if(submit){submit.setAttribute("data-kt-indicator","on");submit.disabled=true;}if(overlay){overlay.style.display="flex";}});}
+var tableElement=document.querySelector("#kt_serp_recent_table");
+if(tableElement&&tableElement.querySelector("[data-serp-row='true']")){var table=jQuery(tableElement).DataTable({pageLength:10,lengthMenu:[[10,25,50,100,-1],[10,25,50,100,"All"]],dom:"rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>",order:[[5,"desc"]]});jQuery("#kt_serp_recent_search").on("keyup",function(){table.search(this.value).draw();});}
+});
+    </script>
+{% endblock %}

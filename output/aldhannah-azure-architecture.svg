@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#344054"/>
+    </marker>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #182230; }
+      .section { font: 700 18px Arial, sans-serif; fill: #344054; }
+      .node { font: 600 18px Arial, sans-serif; fill: #182230; text-anchor: middle; }
+      .small { font: 500 14px Arial, sans-serif; fill: #344054; text-anchor: middle; }
+      .edge { fill: none; stroke: #344054; stroke-width: 2.2; marker-end: url(#arrow); }
+      .dashed { fill: none; stroke: #667085; stroke-width: 2; stroke-dasharray: 8 7; marker-end: url(#arrow); }
+      .edge-label { font: 500 13px Arial, sans-serif; fill: #182230; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" fill="#ffffff"/>
+  <text x="800" y="52" class="title" text-anchor="middle">Al Dhannah Hospital Website - Azure Architecture</text>
+
+  <!-- User group -->
+  <rect x="45" y="105" width="275" height="555" rx="14" fill="#eefbea" stroke="#a8d5a2" stroke-width="2"/>
+  <rect x="62" y="122" width="72" height="30" rx="5" fill="#b9e6b3"/>
+  <text x="98" y="143" class="section" text-anchor="middle">Users</text>
+
+  <ellipse cx="182" cy="260" rx="92" ry="62" fill="#ccebc8" stroke="#609b68" stroke-width="2"/>
+  <text x="182" y="250" class="node">
+    <tspan x="182" dy="0">Hospital Content</tspan>
+    <tspan x="182" dy="24">Administrators</tspan>
+  </text>
+
+  <ellipse cx="182" cy="485" rx="92" ry="62" fill="#ccebc8" stroke="#609b68" stroke-width="2"/>
+  <text x="182" y="479" class="node">
+    <tspan x="182" dy="0">Website</tspan>
+    <tspan x="182" dy="24">Visitors</tspan>
+  </text>
+
+  <!-- Front Door -->
+  <rect x="395" y="342" width="190" height="145" rx="10" fill="#ffffff" stroke="#344054" stroke-width="2"/>
+  <text x="490" y="388" class="node">
+    <tspan x="490" dy="0">Azure Front Door</tspan>
+    <tspan x="490" dy="26">CDN and WAF</tspan>
+  </text>
+  <text x="490" y="453" class="small">Security and routing</text>
+
+  <!-- Application services group -->
+  <rect x="680" y="95" width="530" height="570" rx="14" fill="#f3effd" stroke="#c8b8eb" stroke-width="2"/>
+  <rect x="697" y="112" width="235" height="31" rx="5" fill="#d9c9f3"/>
+  <text x="814" y="134" class="section" text-anchor="middle">Azure Application Services</text>
+
+  <rect x="735" y="338" width="205" height="150" rx="9" fill="#d7c4ef" stroke="#74569c" stroke-width="2"/>
+  <text x="837" y="384" class="node">
+    <tspan x="837" dy="0">Next.js Web App</tspan>
+    <tspan x="837" dy="26">Azure App Service</tspan>
+  </text>
+  <text x="837" y="453" class="small">Public website</text>
+
+  <rect x="975" y="178" width="195" height="155" rx="9" fill="#d7c4ef" stroke="#74569c" stroke-width="2"/>
+  <text x="1072" y="220" class="node">
+    <tspan x="1072" dy="0">WordPress CMS</tspan>
+    <tspan x="1072" dy="25">Azure App Service</tspan>
+  </text>
+  <text x="1072" y="296" class="small">Content management and API</text>
+
+  <!-- Data stores -->
+  <ellipse cx="1400" cy="176" rx="135" ry="35" fill="#d9ecfb" stroke="#3973a4" stroke-width="2"/>
+  <rect x="1265" y="176" width="270" height="82" fill="#d9ecfb" stroke="#3973a4" stroke-width="2"/>
+  <ellipse cx="1400" cy="258" rx="135" ry="35" fill="#c8e2f7" stroke="#3973a4" stroke-width="2"/>
+  <text x="1400" y="205" class="node">
+    <tspan x="1400" dy="0">Azure Database</tspan>
+    <tspan x="1400" dy="25">for MySQL</tspan>
+  </text>
+
+  <rect x="1265" y="525" width="270" height="115" rx="8" fill="#f8fafc" stroke="#667085" stroke-width="2"/>
+  <text x="1400" y="568" class="node">
+    <tspan x="1400" dy="0">Azure Monitor and</tspan>
+    <tspan x="1400" dy="25">Application Insights</tspan>
+  </text>
+  <text x="1400" y="615" class="small">Logs, errors and performance</text>
+
+  <ellipse cx="1400" cy="713" rx="135" ry="35" fill="#d9ecfb" stroke="#3973a4" stroke-width="2"/>
+  <rect x="1265" y="713" width="270" height="82" fill="#d9ecfb" stroke="#3973a4" stroke-width="2"/>
+  <ellipse cx="1400" cy="795" rx="135" ry="35" fill="#c8e2f7" stroke="#3973a4" stroke-width="2"/>
+  <text x="1400" y="755" class="node">
+    <tspan x="1400" dy="0">Azure Blob</tspan>
+    <tspan x="1400" dy="25">Storage</tspan>
+  </text>
+
+  <!-- Connections -->
+  <path class="edge" d="M274 260 H345 Q365 260 365 280 V365 Q365 382 395 382"/>
+  <text x="337" y="246" class="edge-label">Secure HTTPS</text>
+
+  <path class="edge" d="M274 485 H345 Q365 485 365 445 H395"/>
+  <text x="333" y="472" class="edge-label">HTTPS</text>
+
+  <path class="edge" d="M585 414 H735"/>
+  <text x="660" y="398" class="edge-label">Public website</text>
+
+  <path class="edge" d="M940 383 H955 Q965 383 965 350 V273 Q965 255 975 255"/>
+  <text x="938" y="366" class="edge-label">Fetches content</text>
+
+  <path class="edge" d="M585 375 H640 Q655 375 655 210 H975"/>
+  <text x="803" y="196" class="edge-label">CMS admin</text>
+
+  <path class="edge" d="M1170 220 H1265"/>
+  <text x="1217" y="204" class="edge-label">Reads and writes content</text>
+
+  <path class="dashed" d="M940 468 H1115 Q1140 468 1140 565 H1265"/>
+  <text x="1100" y="548" class="edge-label">Application telemetry</text>
+
+  <path class="dashed" d="M1170 315 H1190 Q1215 315 1215 602 H1265"/>
+  <text x="1194" y="514" class="edge-label">CMS telemetry</text>
+
+  <path class="edge" d="M1170 300 H1185 Q1200 300 1200 754 H1265"/>
+  <text x="1214" y="706" class="edge-label">Stores media</text>
+
+  <text x="45" y="865" font-family="Arial, sans-serif" font-size="14" fill="#667085">
+    Proposed production architecture. Final Azure sizing and costs depend on traffic, availability, security and integration requirements.
+  </text>
+</svg>

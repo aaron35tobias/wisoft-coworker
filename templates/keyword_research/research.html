@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Keyword Research | Wisoft Co-Worker{% endblock %}
+{% block extra_css_scripts %}
+    <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
+          rel="stylesheet"
+          type="text/css" />
+    <style>
+.keyword-loading-overlay{align-items:center;background:rgba(255,255,255,.82);bottom:0;display:none;justify-content:center;left:0;position:fixed;right:0;top:0;z-index:1090}
+[data-bs-theme="dark"] .keyword-loading-overlay{background:rgba(18,18,23,.82)}
+.keyword-loading-panel{max-width:440px;width:calc(100% - 32px)}
+    </style>
+{% endblock %}
+{% block header %}
+    {% url 'keyword_research:history' as history_url %}
+    {% include 'includes/header.html' with page_title='Keyword Research' parent_title='SEO Co-Worker' action_url=history_url action_label='History' %}
+{% endblock %}
+{% block content %}
+    <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+        <div class="container-xxl" id="kt_content_container">
+            <div class="row g-5 g-xl-10 mb-5">
+                <div class="col-xl-5">
+                    <div class="card card-flush h-100">
+                        <div class="card-header">
+                            <h3 class="card-title fw-bold text-gray-900">Run Keyword Research</h3>
+                        </div>
+                        <div class="card-body">
+                            <form class="form"
+                                  method="post"
+                                  action="{% url 'keyword_research:run' %}"
+                                  id="kt_keyword_research_form">
+                                {% csrf_token %}
+                                <div class="fv-row mb-5">
+                                    <label class="fs-6 fw-semibold mb-2">Page URL</label>
+                                    <input type="url"
+                                           name="website_url"
+                                           class="form-control form-control-solid border border-gray-400"
+                                           placeholder="https://example.com/service-page" />
+                                    <div class="text-muted fs-7 mt-2">Use this when you want AI to read one specific page.</div>
+                                </div>
+                                <div class="fv-row mb-5">
+                                    <label class="fs-6 fw-semibold mb-2">Keywords</label>
+                                    <textarea name="seed_keywords"
+                                              class="form-control form-control-solid border border-gray-400"
+                                              rows="3"
+                                              placeholder="SEO services Dubai&#10;digital marketing agency&#10;PPC management"></textarea>
+                                    <div class="text-muted fs-7 mt-2">Use this when you do not have a URL. Add one keyword per line or separate with commas.</div>
+                                </div>
+                                <div class="row g-4 mb-5">
+                                    <div class="col-md-6">
+                                        <label class="required fs-6 fw-semibold mb-2">Location</label>
+                                        <input type="text"
+                                               name="target_location"
+                                               class="form-control form-control-solid border border-gray-400"
+                                               placeholder="Dubai, UAE"
+                                               required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="fs-6 fw-semibold mb-2">Language</label>
+                                        <input type="text"
+                                               name="language"
+                                               class="form-control form-control-solid border border-gray-400"
+                                               placeholder="English" />
+                                    </div>
+                                </div>
+                                <div class="fv-row mb-5">
+                                    <label class="fs-6 fw-semibold mb-2">Seed Topic</label>
+                                    <input type="text"
+                                           name="seed_topic"
+                                           class="form-control form-control-solid border border-gray-400"
+                                           placeholder="SEO services" />
+                                </div>
+                                <div class="fv-row mb-6">
+                                    <label class="fs-6 fw-semibold mb-2">Notes</label>
+                                    <textarea name="notes"
+                                              class="form-control form-control-solid border border-gray-400"
+                                              rows="3"
+                                              placeholder="Audience, market, or services to prioritize"></textarea>
+                                </div>
+                                <div class="separator separator-dashed mb-4"></div>
+                                <button type="submit"
+                                        class="btn btn-sm btn-primary w-100"
+                                        id="kt_keyword_research_submit"><span class="indicator-label">Start Keyword Research</span><span class="indicator-progress">Researching... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-7">
+                    <div class="card card-flush h-100">
+                        <div class="card-header">
+                            <h3 class="card-title fw-bold text-gray-900">Research Output</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-5">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-5">
+                                        <i class="ki-duotone ki-magnifier fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                        <div>
+                                            <div class="fw-bold text-gray-900">AI Keyword Ideas</div>
+                                            <div class="text-muted fs-7">Intent, funnel stage, priority, and page mapping</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-5">
+                                        <i class="ki-duotone ki-chart-line fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                        <div>
+                                            <div class="fw-bold text-gray-900">Google Keyword Planner</div>
+                                            <div class="text-muted fs-7">Search volume, competition, and bid range when Google Ads is configured</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ki-duotone ki-row-horizontal fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                        <div>
+                                            <div class="fw-bold text-gray-900">Intent Clusters</div>
+                                            <div class="text-muted fs-7">Grouped themes and recommended page types</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ki-duotone ki-document fs-2x text-primary me-4"><span class="path1"></span><span class="path2"></span></i>
+                                        <div>
+                                            <div class="fw-bold text-gray-900">Page or Keyword Signals</div>
+                                            <div class="text-muted fs-7">Context from the submitted page URL or direct keyword inputs</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header border-0 pt-6">
+                    <div class="card-title d-flex align-items-center justify-content-between flex-wrap gap-4 w-100">
+                        <h3 class="fw-bold m-0">Keyword Research Projects</h3>
+                        <div class="d-flex align-items-center position-relative my-1">
+                            <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5"><span class="path1"></span><span class="path2"></span></i>
+                            <input type="text"
+                                   id="kt_keyword_projects_search"
+                                   class="form-control form-control-solid border border-gray-400 w-250px ps-13"
+                                   placeholder="Search Projects" />
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <table class="table table-row-dashed table-row-gray-300 table-hover table-rounded border table-striped align-middle w-100 gs-5 fs-6"
+                           id="kt_keyword_projects_table">
+                        <thead>
+                            <tr class="text-start fw-bold fs-6 text-uppercase gs-5 bg-secondary">
+                                <th>Page / Keywords</th>
+                                <th>Location</th>
+                                <th>Topic</th>
+                                <th>Runs</th>
+                                <th>Keywords</th>
+                                <th>Planner</th>
+                                <th>Last Run</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fw-semibold text-gray-700">
+                            {% for project in projects %}
+                                <tr data-project-row="true">
+                                    <td>
+                                        {% if project.website_url %}
+                                            <a href="{{ project.website_url }}" target="_blank" rel="noopener">{{ project.website_url }}</a>
+                                        {% else %}
+                                            <span class="text-gray-800">{{ project.seed_keywords|truncatechars:80 }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ project.target_location }}</td>
+                                    <td>{{ project.seed_topic|default:"-" }}</td>
+                                    <td>{{ project.run_count }}</td>
+                                    <td><span class="badge badge-light-primary">{{ project.latest_keywords_count }}</span></td>
+                                    <td><span class="badge badge-light-info">{{ project.latest_planner_count }}</span></td>
+                                    <td>
+                                        {% if project.latest_run %}
+                                            <a href="{% url 'keyword_research:detail' project.latest_run.id %}"
+                                               class="btn btn-sm btn-light-primary">View Latest</a>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-10">No keyword research projects yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="keyword-loading-overlay" id="kt_keyword_loading_overlay">
+        <div class="card shadow-sm keyword-loading-panel">
+            <div class="card-body p-8 text-center">
+                <div class="spinner-border text-primary mb-5"></div>
+                <h3 class="fw-bold text-gray-900 mb-3">Running Keyword Research</h3>
+                <div class="text-muted fs-6 mb-5">Reading the submitted page or keyword inputs, generating AI keyword ideas, and fetching Google Keyword Planner results when configured.</div>
+                <div class="progress h-8px bg-light-primary">
+                    <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+                         style="width:100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block extra_js_scripts %}
+    <script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+    <script>
+jQuery(function(){
+var form=document.querySelector("#kt_keyword_research_form"), submit=document.querySelector("#kt_keyword_research_submit"), overlay=document.querySelector("#kt_keyword_loading_overlay");
+if(form){form.addEventListener("submit",function(){if(submit){submit.setAttribute("data-kt-indicator","on");submit.disabled=true;}if(overlay){overlay.style.display="flex";}});}
+var tableElement=document.querySelector("#kt_keyword_projects_table");
+if(tableElement&&tableElement.querySelector("[data-project-row='true']")){var table=jQuery(tableElement).DataTable({pageLength:10,lengthMenu:[[10,25,50,100,-1],[10,25,50,100,"All"]],dom:"rt<'row align-items-center mt-4'<'col-sm-12 col-md-4 d-flex align-items-center'l><'col-sm-12 col-md-4 d-flex align-items-center justify-content-md-center'i><'col-sm-12 col-md-4 d-flex justify-content-md-end'p>>",order:[[6,"desc"]]});jQuery("#kt_keyword_projects_search").on("keyup",function(){table.search(this.value).draw();});}
+});
+    </script>
+{% endblock %}

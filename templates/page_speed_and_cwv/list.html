@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Websites | Wisoft Co-Worker{% endblock %}
+{% block extra_css_scripts %}
+<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+{% block header %}
+{% include 'includes/header.html' with page_title='Websites' parent_title='Page Speed & CWV' %}
+{% endblock %}
+{% block content %}
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+<!--begin::Container-->
+<div class="container-xxl" id="kt_content_container">
+<!--begin::Card-->
+<div class="card">
+<!--begin::Card header-->
+<div class="card-header border-0 pt-6">
+<!--begin::Card title-->
+<div class="card-title">
+<!--begin::Search-->
+<div class="d-flex align-items-center position-relative my-1">
+<i class="ki-duotone ki-magnifier fs-3 position-absolute ms-5">
+<span class="path1"></span>
+<span class="path2"></span>
+</i>
+<input type="text" id="kt_websites_table_search" class="form-control form-control-solid w-250px ps-13" placeholder="Search Websites" />
+</div>
+<!--end::Search-->
+</div>
+<!--begin::Card title-->
+<!--begin::Card toolbar-->
+<div class="card-toolbar">
+<!--begin::Toolbar-->
+<div class="d-flex justify-content-end">
+<!--begin::Add website-->
+<button type="button" class="btn btn-sm btn-primary" id="kt_add_website_toggle">Add Website</button>
+<!--end::Add website-->
+</div>
+<!--end::Toolbar-->
+</div>
+<!--end::Card toolbar-->
+</div>
+<!--end::Card header-->
+<!--begin::Card body-->
+<div class="card-body pt-0">
+<!--begin::Table-->
+<table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_websites_table">
+<thead>
+<tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+<th class="w-50px">#</th>
+<th class="min-w-250px">Website URL</th>
+<th class="min-w-250px">Note</th>
+<th class="min-w-125px">Status</th>
+<th class="min-w-175px">Last Scan</th>
+<th class="min-w-175px">Date Modified</th>
+<th class="min-w-100px">Actions</th>
+</tr>
+</thead>
+<tbody class="fw-semibold text-gray-600">
+{% for website in websites %}
+<tr data-website-row="true">
+<td>{{ forloop.counter }}</td>
+<td>
+<a href="{{ website.website_url }}" target="_blank" rel="noopener" class="text-gray-800 text-hover-primary mb-1">{{ website.website_url }}</a>
+</td>
+<td>{{ website.note|default:"-"|truncatechars:80 }}</td>
+<td>
+{% if website.is_active %}
+<span class="badge badge-light-primary">Active</span>
+{% else %}
+<span class="badge badge-light-danger">Inactive</span>
+{% endif %}
+</td>
+<td>
+{% if website.latest_report %}
+{{ website.latest_report.scanned_at|date:"d M Y, G:I A" }}
+{% else %}
+<span class="text-muted">Not scanned</span>
+{% endif %}
+</td>
+<td>{{ website.date_modified|date:"d M Y, G:I A" }}</td>
+<td>
+<div class="d-flex">
+<a href="{% url 'page_speed_and_cwv:website-reports' website.id %}" class="btn btn-sm btn-info me-2">Reports</a>
+<a href="#" class="btn btn-sm btn-primary me-2 js-edit-website" data-website='{"id":{{ website.id }},"website_url":"{{ website.website_url|escapejs }}","note":"{{ website.note|escapejs }}","is_active":{{ website.is_active|yesno:"true,false" }}}'>Edit</a>
+<form method="post" action="{% url 'page_speed_and_cwv:website-delete' website.id %}" class="js-delete-website-form">
+{% csrf_token %}
+<button type="submit" class="btn btn-sm btn-danger">Delete</button>
+</form>
+</div>
+</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="7" class="text-center text-muted py-10">No websites added yet.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+<!--end::Table-->
+</div>
+<!--end::Card body-->
+</div>
+<!--end::Card-->
+</div>
+<!--end::Container-->
+</div>
+<!--end::Content-->
+
+<!--begin::Add website drawer-->
+<div id="kt_add_website_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="add-website" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'300px', 'md': '500px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_add_website_toggle" data-kt-drawer-close="#kt_add_website_close">
+<div class="card shadow-none rounded-0 w-100">
+<!--begin::Header-->
+<div class="card-header" id="kt_add_website_header">
+<h3 class="card-title fw-bold text-gray-900" id="kt_add_website_title">Add Website</h3>
+<div class="card-toolbar">
+<button type="button" class="btn btn-sm btn-icon btn-active-light-primary" id="kt_add_website_close">
+<i class="ki-duotone ki-cross fs-1">
+<span class="path1"></span>
+<span class="path2"></span>
+</i>
+</button>
+</div>
+</div>
+<!--end::Header-->
+<!--begin::Body-->
+<div class="card-body position-relative">
+<form class="form" method="post" action="{% url 'page_speed_and_cwv:website-create' %}" id="kt_add_website_form" novalidate>
+{% csrf_token %}
+<div class="fv-row mb-8">
+<label class="required fs-6 fw-semibold mb-2">Website URL</label>
+<input type="url" name="website_url" class="form-control form-control-solid" placeholder="https://example.com" autocomplete="url" />
+</div>
+<div class="fv-row mb-8">
+<label class="fs-6 fw-semibold mb-2">Note</label>
+<textarea name="note" class="form-control form-control-solid" rows="5" placeholder="Optional note"></textarea>
+</div>
+<div class="fv-row mb-8">
+<label class="form-check form-switch form-check-custom form-check-solid">
+<input class="form-check-input" type="checkbox" name="is_active" value="1" checked />
+<span class="form-check-label fw-semibold text-gray-700">Active</span>
+</label>
+</div>
+<div class="d-flex justify-content-end">
+<button type="button" class="btn btn-sm btn-light me-3" id="kt_add_website_cancel">Discard</button>
+<button type="submit" class="btn btn-sm btn-primary" id="kt_add_website_submit">
+<span class="indicator-label">Submit</span>
+<span class="indicator-progress">Please wait...
+<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+</button>
+</div>
+</form>
+</div>
+<!--end::Body-->
+</div>
+</div>
+<!--end::Add website drawer-->
+
+<!--begin::Edit website drawer-->
+<div id="kt_edit_website_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="edit-website" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'300px', 'md': '500px'}" data-kt-drawer-direction="end" data-kt-drawer-close="#kt_edit_website_close">
+<div class="card shadow-none rounded-0 w-100">
+<!--begin::Header-->
+<div class="card-header" id="kt_edit_website_header">
+<h3 class="card-title fw-bold text-gray-900">Edit Website</h3>
+<div class="card-toolbar">
+<button type="button" class="btn btn-sm btn-icon btn-active-light-primary" id="kt_edit_website_close">
+<i class="ki-duotone ki-cross fs-1">
+<span class="path1"></span>
+<span class="path2"></span>
+</i>
+</button>
+</div>
+</div>
+<!--end::Header-->
+<!--begin::Body-->
+<div class="card-body position-relative">
+<form class="form" method="post" action="{% url 'page_speed_and_cwv:website-update' %}" id="kt_edit_website_form" novalidate>
+{% csrf_token %}
+<input type="hidden" name="website_id" />
+<div class="fv-row mb-8">
+<label class="required fs-6 fw-semibold mb-2">Website URL</label>
+<input type="url" name="website_url" class="form-control form-control-solid" placeholder="https://example.com" autocomplete="url" />
+</div>
+<div class="fv-row mb-8">
+<label class="fs-6 fw-semibold mb-2">Note</label>
+<textarea name="note" class="form-control form-control-solid" rows="5" placeholder="Optional note"></textarea>
+</div>
+<div class="fv-row mb-8">
+<label class="form-check form-switch form-check-custom form-check-solid">
+<input class="form-check-input" type="checkbox" name="is_active" value="1" />
+<span class="form-check-label fw-semibold text-gray-700">Active</span>
+</label>
+</div>
+<div class="d-flex justify-content-end">
+<button type="button" class="btn btn-sm btn-light me-3" id="kt_edit_website_cancel">Discard</button>
+<button type="submit" class="btn btn-sm btn-primary" id="kt_edit_website_submit">
+<span class="indicator-label">Update</span>
+<span class="indicator-progress">Please wait...
+<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+</button>
+</div>
+</form>
+</div>
+<!--end::Body-->
+</div>
+</div>
+<!--end::Edit website drawer-->
+{% endblock %}
+
+{% block extra_js_scripts %}
+<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
+<script src="{% static 'assets/js/custom/widgets.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-validation/dist/jquery.validate.min.js"></script>
+<script>
+jQuery(function () {
+var addDrawerElement = document.querySelector("#kt_add_website_drawer");
+var addFormElement = document.querySelector("#kt_add_website_form");
+var editDrawerElement = document.querySelector("#kt_edit_website_drawer");
+var editFormElement = document.querySelector("#kt_edit_website_form");
+var addValidator = jQuery("#kt_add_website_form").validate({
+rules: {
+website_url: {
+required: true,
+url: true
+},
+note: {
+maxlength: 1000
+}
+},
+messages: {
+website_url: {
+required: "Website URL is required.",
+url: "Enter a valid website URL."
+},
+note: {
+maxlength: "Note must be 1000 characters or less."
+}
+},
+errorClass: "text-danger mt-2",
+errorElement: "div"
+});
+
+var editValidator = jQuery("#kt_edit_website_form").validate({
+rules: {
+website_url: {
+required: true,
+url: true
+},
+note: {
+maxlength: 1000
+}
+},
+messages: {
+website_url: {
+required: "Website URL is required.",
+url: "Enter a valid website URL."
+},
+note: {
+maxlength: "Note must be 1000 characters or less."
+}
+},
+errorClass: "text-danger mt-2",
+errorElement: "div"
+});
+
+function resetAddWebsiteDrawer() {
+if (!addFormElement) {
+return;
+}
+
+addFormElement.reset();
+addValidator.resetForm();
+}
+
+jQuery("#kt_add_website_toggle").on("click", function () {
+resetAddWebsiteDrawer();
+});
+
+jQuery(document).on("click", ".js-edit-website", function (event) {
+event.preventDefault();
+
+var website = JSON.parse(this.dataset.website);
+jQuery("#kt_edit_website_form [name='website_id']").val(website.id);
+jQuery("#kt_edit_website_form [name='website_url']").val(website.website_url);
+jQuery("#kt_edit_website_form [name='note']").val(website.note);
+jQuery("#kt_edit_website_form [name='is_active']").prop("checked", website.is_active);
+editValidator.resetForm();
+
+var drawer = editDrawerElement ? KTDrawer.getInstance(editDrawerElement) || new KTDrawer(editDrawerElement) : null;
+if (drawer) {
+drawer.show();
+}
+});
+
+jQuery("#kt_add_website_cancel").on("click", function () {
+resetAddWebsiteDrawer();
+var drawer = addDrawerElement ? KTDrawer.getInstance(addDrawerElement) || new KTDrawer(addDrawerElement) : null;
+if (drawer) {
+drawer.hide();
+}
+});
+
+jQuery("#kt_edit_website_cancel").on("click", function () {
+if (editFormElement) {
+editFormElement.reset();
+editValidator.resetForm();
+}
+
+var drawer = editDrawerElement ? KTDrawer.getInstance(editDrawerElement) || new KTDrawer(editDrawerElement) : null;
+if (drawer) {
+drawer.hide();
+}
+});
+
+jQuery("#kt_add_website_form, #kt_edit_website_form").on("submit", function () {
+if (!jQuery(this).valid()) {
+return false;
+}
+
+var submitButton = this.querySelector("button[type='submit']");
+if (submitButton) {
+submitButton.setAttribute("data-kt-indicator", "on");
+submitButton.disabled = true;
+}
+});
+
+jQuery(document).on("submit", ".js-delete-website-form", function (event) {
+if (!window.confirm("Are you sure you want to delete this website?")) {
+event.preventDefault();
+}
+});
+
+var websitesTableElement = document.querySelector("#kt_websites_table");
+if (websitesTableElement && websitesTableElement.querySelector("[data-website-row='true']")) {
+var websitesTable = jQuery(websitesTableElement).DataTable({
+info: false,
+order: [],
+columnDefs: [
+{ orderable: false, targets: 6 }
+]
+});
+
+jQuery("#kt_websites_table_search").on("keyup", function () {
+websitesTable.search(this.value).draw();
+});
+}
+});
+</script>
+{% endblock %}
