@@ -64,24 +64,36 @@
 <div class="card-body d-flex flex-column">
 <div class="d-flex align-items-center mb-5">
 <div class="symbol symbol-40px me-3"><span class="symbol-label bg-light-info"><i class="ki-duotone ki-tag fs-2 text-info"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i></span></div>
-<div>
+<div class="min-w-0">
 <div class="text-gray-900 fw-bold fs-4">Pricing &amp; PR Monitor</div>
-<div class="text-gray-500 fw-semibold fs-8">Competitor Tracking</div>
+<div class="text-gray-500 fw-semibold fs-8 text-truncate">{% if pricing %}{{ pricing.website }}{% else %}Competitor Tracking{% endif %}</div>
 </div>
+{% if pricing %}<span class="badge badge-light-{{ pricing.status_cls }} fw-bold ms-auto">{{ pricing.status }}</span>{% endif %}
 </div>
+{% if pricing %}
 <div class="row g-4 mb-3">
 <div class="col-7">
 <div class="fw-bold text-gray-800 fs-8 mb-2">Competitor Price Changes</div>
-<div class="d-flex justify-content-between align-items-center mb-2"><span class="text-gray-700 fs-8">Price: $290</span><span class="badge badge-light-danger fs-8 fw-bold">▼ 0.6%</span></div>
-<div class="d-flex justify-content-between align-items-center mb-2"><span class="text-gray-700 fs-8">Price: $250</span><span class="badge badge-light-success fs-8 fw-bold">▲ 0.3%</span></div>
-<div class="d-flex justify-content-between align-items-center"><span class="text-gray-700 fs-8">Price: $1,200</span><span class="badge badge-light-success fs-8 fw-bold">▲ 0.3%</span></div>
+{% for change in pricing.changes %}
+<div class="d-flex justify-content-between align-items-center mb-2"><span class="text-gray-700 fs-8 text-truncate" style="max-width: 150px;">{{ change.title }}</span><span class="badge badge-light-{{ change.cls }} fs-8 fw-bold">{{ change.severity }}</span></div>
+{% empty %}
+<div class="text-gray-500 fs-8">No pricing changes detected.</div>
+{% endfor %}
 </div>
 <div class="col-5">
 <div class="fw-bold text-gray-800 fs-8 mb-2">Recent PR Mentions</div>
-<div class="text-gray-600 fs-8 mb-2">Brand named in industry roundup…</div>
-<div class="text-gray-600 fs-8">Team mention on trade blog…</div>
+{% for mention in pricing.mentions %}
+<div class="text-gray-600 fs-8 mb-2 text-truncate">{{ mention.title }}</div>
+{% empty %}
+<div class="text-gray-500 fs-8">No PR mentions found.</div>
+{% endfor %}
 </div>
 </div>
+{% else %}
+<div class="d-flex flex-column flex-grow-1 justify-content-center align-items-center text-center py-5">
+<span class="text-gray-600 fw-semibold fs-7">No monitors analysed yet</span>
+</div>
+{% endif %}
 <a href="{% url 'pricing_pr_monitor:monitors' %}" class="stretched-link"></a>
 </div>
 </div>
