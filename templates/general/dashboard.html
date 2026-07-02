@@ -28,6 +28,7 @@
 <div class="row gy-5 g-xl-10 mb-5 mb-xl-10 seo-feature-cards">
 
 <!--begin::Page Speed & CWV-->
+{% if request.user.is_superuser or perms.page_speed_and_cwv %}
 <div class="col-md-6 col-xl-4">
 <div class="card h-100 shadow-sm hover-elevate-up position-relative">
 <div class="card-body d-flex flex-column">
@@ -56,9 +57,11 @@
 </div>
 </div>
 </div>
+{% endif %}
 <!--end::Page Speed & CWV-->
 
 <!--begin::Pricing & PR Monitor-->
+{% if request.user.is_superuser or perms.pricing_pr_monitor %}
 <div class="col-md-6 col-xl-4">
 <div class="card h-100 shadow-sm hover-elevate-up position-relative">
 <div class="card-body d-flex flex-column">
@@ -86,9 +89,11 @@
 </div>
 </div>
 </div>
+{% endif %}
 <!--end::Pricing & PR Monitor-->
 
 <!--begin::Keyword Research-->
+{% if request.user.is_superuser or perms.keyword_research %}
 <div class="col-md-6 col-xl-4">
 <div class="card h-100 shadow-sm hover-elevate-up position-relative">
 <div class="card-body d-flex flex-column">
@@ -119,9 +124,11 @@
 </div>
 </div>
 </div>
+{% endif %}
 <!--end::Keyword Research-->
 
 <!--begin::Technical SEO Audit-->
+{% if request.user.is_superuser or perms.technical_seo %}
 <div class="col-md-6 col-xl-4">
 <div class="card h-100 shadow-sm hover-elevate-up position-relative">
 <div class="card-body d-flex flex-column">
@@ -155,9 +162,11 @@
 </div>
 </div>
 </div>
+{% endif %}
 <!--end::Technical SEO Audit-->
 
 <!--begin::Content Gaps-->
+{% if request.user.is_superuser or perms.content_gap %}
 <div class="col-md-6 col-xl-4">
 <div class="card h-100 shadow-sm hover-elevate-up position-relative">
 <div class="card-body d-flex flex-column">
@@ -188,9 +197,11 @@
 </div>
 </div>
 </div>
+{% endif %}
 <!--end::Content Gaps-->
 
 <!--begin::SERP Analysis-->
+{% if request.user.is_superuser or perms.serp_analysis %}
 <div class="col-md-6 col-xl-4">
 <div class="card h-100 shadow-sm hover-elevate-up position-relative">
 <div class="card-body d-flex flex-column">
@@ -213,6 +224,7 @@
 </div>
 </div>
 </div>
+{% endif %}
 <!--end::SERP Analysis-->
 
 <!--begin::Internal Linking-->
@@ -242,6 +254,7 @@
 <!--end::Internal Linking-->
 
 <!--begin::Bulk Alt Text-->
+{% if request.user.is_superuser or perms.bulk_alt_text %}
 <div class="col-md-6 col-xl-4">
 <div class="card h-100 shadow-sm hover-elevate-up position-relative">
 <div class="card-body d-flex flex-column">
@@ -267,6 +280,7 @@
 </div>
 </div>
 </div>
+{% endif %}
 <!--end::Bulk Alt Text-->
 
 <!--begin::Brand Mentions-->

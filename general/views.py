@@ -1,6 +1,8 @@
 import os
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User, Group, Permission
+from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import render, redirect
 from django.core.mail import send_mail
 from django.conf import settings
 import anthropic
@@ -11,7 +13,7 @@ from pricing_pr_monitor.models import PricingPRRun
 from content_gap.models import ContentGapAnalysis
 from keyword_research.models import KeywordResearchRun, KeywordIdea
 from bulk_alt_text.models import BulkAltTextAnalysis
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.http import JsonResponse
 
 def _domain(url):
@@ -145,7 +147,7 @@ def billing_view(request):
     else:
         limit = 50000
         if selected_api == 'anthropic':
-            total_used = 57688
+            total_used = 47688
             usage_data = {
                 'input_tokens': 34000, 'output_tokens': 14500, 'total_tokens': total_used, 'limit': limit,
                 'remaining': max(0, limit - total_used), 'usage_percent': min((total_used / limit) * 100, 100)
@@ -233,3 +235,55 @@ def token_usage_chart_api(request):
         else:
             data = {"categories": ["Week 1", "Week 2", "Week 3", "Current"], "series": [{"name": "API Tokens Used", "data": [0, 0, 0, 0]}]}
     return JsonResponse(data)
+
+@user_passes_test(lambda u: u.is_superuser)
+def roles_permissions_view(request):
+    apps_to_manage = ['technical_seo', 'page_speed_and_cwv', 'pricing_pr_monitor', 'keyword_research', 'content_gap', 'bulk_alt_text', 'serp_analysis']
+    permissions = Permission.objects.filter(content_type__app_label__in=apps_to_manage)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'create_user':
+            username = request.POST.get('username')
+            email = request.POST.get('email')
+            password = request.POST.get('password')
+            role_id = request.POST.get('role_id')
+            if username and password:
+                user = User.objects.create_user(username=username, email=email, password=password)
+                if role_id:
+                    group = Group.objects.filter(id=role_id).first()
+                    if group:
+                        user.groups.add(group)
+        elif action == 'create_role':
+            role_name = request.POST.get('role_name')
+            perm_ids = request.POST.getlist('permissions')
+            if role_name:
+                group, created = Group.objects.get_or_create(name=role_name)
+                group.permissions.set(perm_ids)
+        elif action == 'update_user_role':
+            user_id = request.POST.get('user_id')
+            role_id = request.POST.get('role_id')
+            user = User.objects.filter(id=user_id).first()
+            if user:
+                user.groups.clear()
+                if role_id:
+                    group = Group.objects.filter(id=role_id).first()
+                    if group:
+                        user.groups.add(group)
+        elif action == 'approve_user':
+            user_id = request.POST.get('user_id')
+            user = User.objects.filter(id=user_id).first()
+            if user:
+                user.is_active = True
+                user.save()
+        return redirect('roles-permissions')
+
+    users = User.objects.prefetch_related('groups').all()
+    groups = Group.objects.prefetch_related('permissions').all()
+    
+    context = {
+        'users': users,
+        'groups': groups,
+        'permissions': permissions,
+    }
+    return render(request, 'general/roles_permissions.html', context)
