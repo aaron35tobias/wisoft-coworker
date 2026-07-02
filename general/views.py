@@ -1,4 +1,4 @@
-﻿import json
+import json
 import os
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
@@ -58,7 +58,7 @@ def _build_content_gap(user):
     gaps = []
     for gap in (analysis.content_gaps or [])[:3]:
         priority = (gap.get('priority') or '').strip()
-        gaps.append({'topic': gap.get('topic') or 'Content gap', 'priority': priority or 'â€”', 'cls': priority_class.get(priority, 'secondary')})
+        gaps.append({'topic': gap.get('topic') or 'Content gap', 'priority': priority or '—', 'cls': priority_class.get(priority, 'secondary')})
     url = analysis.own_url or (analysis.project.website_url if analysis.project else '')
     return {'website': _domain(url), 'status': analysis.get_status_display(), 'started': analysis.started_at, 'gaps': gaps, 'gaps_total': len(analysis.content_gaps or []), 'keywords_total': len(analysis.keyword_opportunities or [])}
 
@@ -69,7 +69,7 @@ def _build_keyword(user):
     ideas = []
     for idea in KeywordIdea.objects.filter(run=run)[:3]:
         priority = (idea.priority or '').strip()
-        ideas.append({'keyword': idea.keyword, 'intent': idea.intent or 'â€”', 'priority': priority or 'â€”', 'cls': priority_class.get(priority, 'secondary')})
+        ideas.append({'keyword': idea.keyword, 'intent': idea.intent or '—', 'priority': priority or '—', 'cls': priority_class.get(priority, 'secondary')})
     return {'website': _domain(run.project.website_url), 'seed': run.project.seed_topic, 'status': run.get_status_display(), 'started': run.started_at, 'ideas': ideas, 'ideas_total': KeywordIdea.objects.filter(run=run).count()}
 
 def _build_bulk_alt_text(user):
@@ -150,7 +150,7 @@ def billing_view(request):
     else:
         limit = 50000
         if selected_api == 'anthropic':
-            total_used = 57688
+            total_used = 47688
             usage_data = {
                 'input_tokens': 34000, 'output_tokens': 14500, 'total_tokens': total_used, 'limit': limit,
                 'remaining': max(0, limit - total_used), 'usage_percent': min((total_used / limit) * 100, 100)

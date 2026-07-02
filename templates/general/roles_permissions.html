@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <div class="container-xxl" id="kt_content_container">
+        
+        <div class="card mb-5 mb-xl-10">
+            <div class="card-header border-0 cursor-pointer">
+                <div class="card-title m-0">
+                    <h3 class="fw-bold m-0">User & Role Management</h3>
+                </div>
+            </div>
+            
+            <div class="card-body border-top p-9">
+                <ul class="nav nav-tabs nav-line-tabs mb-5 fs-6">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#kt_tab_users">Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#kt_tab_roles">Roles</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="myTabContent">
+                    <!-- Users Tab -->
+                    <div class="tab-pane fade show active" id="kt_tab_users" role="tabpanel">
+                        <div class="d-flex justify-content-end mb-4">
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#kt_modal_add_user">
+                                <i class="ki-duotone ki-plus fs-2"></i> Add User
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+                                <thead>
+                                    <tr class="fw-bold text-muted">
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Assigned Role</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr>
+                                        <td>
+                                            <span class="text-dark fw-bold fs-6">{{ user.username }}</span>
+                                            {% if user.is_superuser %}
+                                            <span class="badge badge-light-primary ms-2">Admin</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ user.email }}</td>
+                                        <td>
+                                            {% if user.is_active %}
+                                                <span class="badge badge-light-success">Active</span>
+                                            {% else %}
+                                                <span class="badge badge-light-warning">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% for group in user.groups.all %}
+                                                <span class="badge badge-light-info">{{ group.name }}</span>
+                                            {% empty %}
+                                                <span class="badge badge-light-secondary">No Role</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% if not user.is_superuser %}
+                                            <div class="d-flex align-items-center gap-2">
+                                                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#kt_modal_assign_role_{{ user.id }}">
+                                                    Change Role
+                                                </button>
+                                                {% if not user.is_active %}
+                                                <form method="post" action="{% url 'roles-permissions' %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="approve_user">
+                                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Assign Role Modal -->
+                                            <div class="modal fade" tabindex="-1" id="kt_modal_assign_role_{{ user.id }}">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Assign Role to {{ user.username }}</h5>
+                                                            <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                                                                <i class="ki-duotone ki-cross fs-2x"><span class="path1"></span><span class="path2"></span></i>
+                                                            </div>
+                                                        </div>
+                                                        <form method="post" action="{% url 'roles-permissions' %}">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="action" value="update_user_role">
+                                                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                                                            <div class="modal-body">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Select Role</label>
+                                                                    <select name="role_id" class="form-select">
+                                                                        <option value="">-- No Role --</option>
+                                                                        {% for group in groups %}
+                                                                        <option value="{{ group.id }}">{{ group.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Roles Tab -->
+                    <div class="tab-pane fade" id="kt_tab_roles" role="tabpanel">
+                        <div class="d-flex justify-content-end mb-4">
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#kt_modal_add_role">
+                                <i class="ki-duotone ki-plus fs-2"></i> Create Role
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+                                <thead>
+                                    <tr class="fw-bold text-muted">
+                                        <th>Role Name</th>
+                                        <th>Assigned Permissions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for group in groups %}
+                                    <tr>
+                                        <td>
+                                            <span class="text-dark fw-bold fs-6">{{ group.name }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                {% for perm in group.permissions.all %}
+                                                    <span class="badge badge-light-success">{{ perm.name }}</span>
+                                                {% empty %}
+                                                    <span class="badge badge-light-secondary">No Permissions</span>
+                                                {% endfor %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" tabindex="-1" id="kt_modal_add_user">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New User</h5>
+                <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="ki-duotone ki-cross fs-2x"><span class="path1"></span><span class="path2"></span></i>
+                </div>
+            </div>
+            <form method="post" action="{% url 'roles-permissions' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_user">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Initial Role</label>
+                        <select name="role_id" class="form-select">
+                            <option value="">-- No Role --</option>
+                            {% for group in groups %}
+                            <option value="{{ group.id }}">{{ group.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Role Modal -->
+<div class="modal fade" tabindex="-1" id="kt_modal_add_role">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Role</h5>
+                <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="ki-duotone ki-cross fs-2x"><span class="path1"></span><span class="path2"></span></i>
+                </div>
+            </div>
+            <form method="post" action="{% url 'roles-permissions' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_role">
+                <div class="modal-body">
+                    <div class="mb-5">
+                        <label class="form-label">Role Name (e.g. SEO Specialist)</label>
+                        <input type="text" name="role_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Select Tool Permissions for this Role</label>
+                        <div class="row mt-3">
+                            {% for perm in permissions %}
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-check-custom form-check-solid">
+                                    <input class="form-check-input" type="checkbox" value="{{ perm.id }}" id="perm_{{ perm.id }}" name="permissions"/>
+                                    <label class="form-check-label" for="perm_{{ perm.id }}">
+                                        {{ perm.name }} ({{ perm.content_type.app_label }})
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Create Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

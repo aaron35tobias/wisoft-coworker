@@ -28,11 +28,13 @@
             data-sidebar-group="billing" title="Billing" aria-label="Billing menu">
             <i class="la la-credit-card"></i>
         </button>
+        {% if request.user.is_superuser %}
         <button type="button"
             class="seo-rail-link{% if request.resolver_match.url_name == 'roles-permissions' %} active{% endif %}"
             data-sidebar-group="roles" title="Roles & Permissions" aria-label="Roles & Permissions menu">
-            <i class="la la-users"></i>
+            <i class="la la-users-cog"></i>
         </button>
+        {% endif %}
         <span class="seo-rail-separator"></span>
         <button type="button" class="seo-rail-link seo-sidebar-toggle" id="kt_sidebar_hide_toggle"
             title="Collapse sidebar" aria-label="Collapse sidebar">
@@ -170,6 +172,7 @@
                             </a>
                         </div>
                         <!--end:Menu item-->
+                        {% if request.user.is_superuser or perms.page_speed_and_cwv %}
                         <div data-kt-menu-trigger="click"
                             class="menu-item menu-accordion{% if request.resolver_match.namespace == 'page_speed_and_cwv' %} here show{% endif %}">
                             <span class="menu-link">
@@ -192,6 +195,8 @@
                                 </div>
                             </div>
                         </div>
+                        {% endif %}
+                        {% if request.user.is_superuser or perms.pricing_pr_monitor %}
                         <div data-kt-menu-trigger="click"
                             class="menu-item menu-accordion{% if request.resolver_match.namespace == 'pricing_pr_monitor' %} here show{% endif %}">
                             <span class="menu-link">
@@ -212,6 +217,7 @@
                                             class="menu-title">History</span></a></div>
                             </div>
                         </div>
+                        {% endif %}
                         <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
                             <span class="menu-link">
                                 <span class="menu-icon"><i class="ki-duotone ki-black-right fs-2"></i></span>
@@ -227,6 +233,7 @@
                                             class="menu-title">Sentiment</span></a></div>
                             </div>
                         </div>
+                        {% if request.user.is_superuser or perms.keyword_research %}
                         <div data-kt-menu-trigger="click"
                             class="menu-item menu-accordion{% if request.resolver_match.namespace == 'keyword_research' %} here show{% endif %}">
                             <span class="menu-link">
@@ -247,6 +254,8 @@
                                             Clusters</span></a></div>
                             </div>
                         </div>
+                        {% endif %}
+                        {% if request.user.is_superuser or perms.technical_seo %}
                         <div data-kt-menu-trigger="click"
                             class="menu-item menu-accordion{% if request.resolver_match.namespace == 'technical_seo' %} here show{% endif %}">
                             <span class="menu-link">
@@ -267,6 +276,8 @@
                                             History</span></a></div>
                             </div>
                         </div>
+                        {% endif %}
+                        {% if request.user.is_superuser or perms.serp_analysis %}
                         <div data-kt-menu-trigger="click"
                             class="menu-item menu-accordion{% if request.resolver_match.namespace == 'serp_analysis' %} here show{% endif %}">
                             <span class="menu-link">
@@ -287,6 +298,7 @@
                                             class="menu-title">History</span></a></div>
                             </div>
                         </div>
+                        {% endif %}
                         <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
                             <span class="menu-link">
                                 <span class="menu-icon"><i class="ki-duotone ki-black-right fs-2"></i></span>
@@ -302,6 +314,7 @@
                                             Report</span></a></div>
                             </div>
                         </div>
+                        {% if request.user.is_superuser or perms.content_gap %}
                         <div data-kt-menu-trigger="click"
                             class="menu-item menu-accordion{% if request.resolver_match.namespace == 'content_gap' %} here show{% endif %}">
                             <span class="menu-link">
@@ -322,6 +335,8 @@
                                             &amp; Wireframes</span></a></div>
                             </div>
                         </div>
+                        {% endif %}
+                        {% if request.user.is_superuser or perms.bulk_alt_text %}
                         <div data-kt-menu-trigger="click"
                             class="menu-item menu-accordion{% if request.resolver_match.namespace == 'bulk_alt_text' %} here show{% endif %}">
                             <span class="menu-link">
@@ -342,6 +357,7 @@
                                             class="menu-title">History</span></a></div>
                             </div>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="seo-sidebar-group" data-sidebar-panel="analytics">
@@ -385,6 +401,7 @@
                                     Usage</span></a></div>
                     </div>
                 </div>
+                {% if request.user.is_superuser %}
                 <div class="seo-sidebar-group{% if request.resolver_match.url_name == 'roles-permissions' %} active{% endif %}"
                     data-sidebar-panel="roles">
                     <div class="seo-sidebar-heading">Roles &amp; Permissions</div>
@@ -392,11 +409,12 @@
                         <div class="menu-item"><a
                                 class="menu-link{% if request.resolver_match.url_name == 'roles-permissions' %} active{% endif %}"
                                 href="{% url 'roles-permissions' %}"><span class="menu-icon"><i
-                                        class="ki-duotone ki-profile-user fs-2"><span class="path1"></span><span
+                                        class="ki-duotone ki-security-user fs-2"><span class="path1"></span><span
                                             class="path2"></span></i></span><span class="menu-title">User &amp; Role
                                     Management</span></a></div>
                     </div>
                 </div>
+                {% endif %}
                 <!--end::Menu-->
             </div>
             <!--end::Aside Menu-->
