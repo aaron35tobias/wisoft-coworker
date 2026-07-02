@@ -46,7 +46,15 @@ def _build_page_speed(user):
 def _build_pricing(user):
     run = PricingPRRun.objects.filter(requested_by=user).select_related('monitor').order_by('-started_at').first()
     if not run: return None
-    return {'competitor': run.monitor.competitor_name, 'website': _domain(run.monitor.competitor_website), 'status': run.get_status_display(), 'runs': run.monitor.runs.count(), 'changes': run.changes_found, 'mentions': run.news_mentions_found, 'started': run.started_at}
+    severity_class = {'high': 'danger', 'medium': 'warning', 'low': 'success'}
+    status_class = {'completed': 'success', 'running': 'primary', 'failed': 'danger'}
+    changes = []
+    for change in run.changes.all()[:3]:
+        changes.append({'title': change.title, 'severity': change.get_severity_display(), 'cls': severity_class.get((change.severity or '').lower(), 'secondary')})
+    mentions = []
+    for mention in run.news_mentions.all()[:3]:
+        mentions.append({'title': mention.title, 'source': mention.source})
+    return {'competitor': run.monitor.competitor_name, 'website': _domain(run.monitor.competitor_website), 'status': run.get_status_display(), 'status_cls': status_class.get(run.status, 'secondary'), 'runs': run.monitor.runs.count(), 'changes': changes, 'changes_total': run.changes_found, 'mentions': mentions, 'mentions_total': run.news_mentions_found, 'started': run.started_at}
 
 def _build_content_gap(user):
     analysis = ContentGapAnalysis.objects.filter(requested_by=user).select_related('project').order_by('-started_at').first()
