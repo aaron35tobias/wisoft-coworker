@@ -6,3 +6,5 @@ google-auth
 celery[redis]==5.4.0
 gunicorn
 whitenoise
+anthropic
+Pillow
