@@ -10,7 +10,8 @@ from page_speed_and_cwv.models import WebsiteSpeedReport, Website
 from pricing_pr_monitor.models import PricingPRRun
 from content_gap.models import ContentGapAnalysis
 from keyword_research.models import KeywordResearchRun, KeywordIdea
-from django.db.models import Sum, Q
+from bulk_alt_text.models import BulkAltTextAnalysis
+from django.db.models import Sum
 from django.http import JsonResponse
 
 def _domain(url):
@@ -66,6 +67,11 @@ def _build_keyword(user):
         ideas.append({'keyword': idea.keyword, 'intent': idea.intent or '—', 'priority': priority or '—', 'cls': priority_class.get(priority, 'secondary')})
     return {'website': _domain(run.project.website_url), 'seed': run.project.seed_topic, 'status': run.get_status_display(), 'started': run.started_at, 'ideas': ideas, 'ideas_total': KeywordIdea.objects.filter(run=run).count()}
 
+def _build_bulk_alt_text(user):
+    analysis = BulkAltTextAnalysis.objects.filter(requested_by=user).order_by('-started_at').first()
+    if not analysis: return None
+    return {'website': _domain(analysis.page_url), 'page_title': analysis.page_title, 'status': analysis.get_status_display(), 'started': analysis.started_at, 'total_images': analysis.total_images, 'missing_alt': analysis.missing_alt_count, 'generated_alt': analysis.generated_alt_count}
+
 @login_required(login_url='sign-in')
 def dashboard_view(request):
     context = {
@@ -74,6 +80,7 @@ def dashboard_view(request):
         'pricing': _build_pricing(request.user),
         'content_gap': _build_content_gap(request.user),
         'keyword': _build_keyword(request.user),
+        'bulk_alt_text': _build_bulk_alt_text(request.user),
     }
     return render(request, 'general/dashboard.html', context)
 
