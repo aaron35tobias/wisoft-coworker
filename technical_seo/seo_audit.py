@@ -931,11 +931,18 @@ def generate_anthropic_summary(audit, prompt):
         audit.ai_summary = ai_summary or summarize_without_ai(audit)
         audit.ai_model = f'anthropic:{model}'
         audit.ai_error = ''
+        
+        usage = data.get('usage', {})
+        input_tokens = usage.get('input_tokens') or 0
+        output_tokens = usage.get('output_tokens') or 0
+        audit.ai_input_tokens = input_tokens
+        audit.ai_output_tokens = output_tokens
+        audit.ai_total_tokens = input_tokens + output_tokens
     except Exception as exc:
         audit.ai_summary = summarize_without_ai(audit)
         audit.ai_model = f'anthropic:{model}'
         audit.ai_error = f'Claude summary failed; used fallback summary. {exc}'
-    audit.save(update_fields=['ai_summary', 'ai_model', 'ai_error'])
+    audit.save(update_fields=['ai_summary', 'ai_model', 'ai_error', 'ai_input_tokens', 'ai_output_tokens', 'ai_total_tokens'])
     return True
 
 
@@ -968,11 +975,18 @@ def generate_openai_summary(audit, prompt):
         audit.ai_summary = ai_summary or summarize_without_ai(audit)
         audit.ai_model = f'openai:{model}'
         audit.ai_error = ''
+        
+        usage = data.get('usage', {})
+        input_tokens = usage.get('prompt_tokens') or 0
+        output_tokens = usage.get('completion_tokens') or 0
+        audit.ai_input_tokens = input_tokens
+        audit.ai_output_tokens = output_tokens
+        audit.ai_total_tokens = input_tokens + output_tokens
     except Exception as exc:
         audit.ai_summary = summarize_without_ai(audit)
         audit.ai_model = f'openai:{model}'
-        audit.ai_error = f'AI summary failed; used fallback summary. {exc}'
-    audit.save(update_fields=['ai_summary', 'ai_model', 'ai_error'])
+        audit.ai_error = f'OpenAI summary failed; used fallback summary. {exc}'
+    audit.save(update_fields=['ai_summary', 'ai_model', 'ai_error', 'ai_input_tokens', 'ai_output_tokens', 'ai_total_tokens'])
     return True
 
 

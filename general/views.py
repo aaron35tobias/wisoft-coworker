@@ -10,7 +10,7 @@ from page_speed_and_cwv.models import WebsiteSpeedReport, Website
 from pricing_pr_monitor.models import PricingPRRun
 from content_gap.models import ContentGapAnalysis
 from keyword_research.models import KeywordResearchRun, KeywordIdea
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.http import JsonResponse
 
 def _domain(url):
@@ -79,6 +79,8 @@ def dashboard_view(request):
 
 @login_required(login_url='sign-in')
 def billing_view(request):
+    selected_api = request.GET.get('api', 'anthropic')
+    
     anthropic_key = os.environ.get('ANTHROPIC_API_KEY')
     openai_key = os.environ.get('OPENAI_API_KEY')
     gemini_key = os.environ.get('GEMINI_API_KEY')
@@ -88,20 +90,41 @@ def billing_view(request):
     limit_exceeded = False
     
     has_real_key = False
-    if anthropic_key and anthropic_key != 'xxx': has_real_key = True
-    elif openai_key and openai_key != 'xxx': has_real_key = True
-    elif gemini_key and gemini_key != 'xxx': has_real_key = True
+    api_provider = "Mock Data"
+    api_upgrade_url = "#"
+    model_filter = Q()
+
+    if selected_api == 'anthropic' and anthropic_key and anthropic_key != 'xxx': 
+        has_real_key = True
+        api_provider = "Anthropic"
+        api_upgrade_url = "https://console.anthropic.com/settings/billing"
+        model_filter = Q(ai_model__icontains='claude') | Q(ai_model__icontains='anthropic')
+    elif selected_api == 'openai' and openai_key and openai_key != 'xxx': 
+        has_real_key = True
+        api_provider = "OpenAI"
+        api_upgrade_url = "https://platform.openai.com/account/billing"
+        model_filter = Q(ai_model__icontains='gpt') | Q(ai_model__icontains='openai')
+    elif selected_api == 'gemini' and gemini_key and gemini_key != 'xxx': 
+        has_real_key = True
+        api_provider = "Google Gemini"
+        api_upgrade_url = "https://aistudio.google.com/app/billing"
+        model_filter = Q(ai_model__icontains='gemini')
+    else:
+        # Fallback to mock data names if no key
+        if selected_api == 'anthropic': api_provider = "Claude (Mock)"
+        elif selected_api == 'openai': api_provider = "GPT (Mock)"
+        elif selected_api == 'gemini': api_provider = "Gemini (Mock)"
 
     if has_real_key:
         try:
-            limit = int(os.environ.get('MONTHLY_TOKEN_LIMIT', 500000))
+            limit = int(os.environ.get('MONTHLY_TOKEN_LIMIT', 50000)) #if key is real limit is 5K
             total_input = 0
             total_output = 0
             total_used = 0
             models_to_check = [TechnicalSEOAudit, PricingPRRun, KeywordResearchRun, ContentGapAnalysis]
             
             for model in models_to_check:
-                agg = model.objects.filter(requested_by=request.user).aggregate(sum_in=Sum('ai_input_tokens'), sum_out=Sum('ai_output_tokens'), sum_tot=Sum('ai_total_tokens'))
+                agg = model.objects.filter(requested_by=request.user).filter(model_filter).aggregate(sum_in=Sum('ai_input_tokens'), sum_out=Sum('ai_output_tokens'), sum_tot=Sum('ai_total_tokens'))
                 total_input += agg['sum_in'] or 0
                 total_output += agg['sum_out'] or 0
                 total_used += agg['sum_tot'] or 0
@@ -114,11 +137,24 @@ def billing_view(request):
             error = f"Error aggregating local token usage: {str(e)}"
     else:
         limit = 50000
-        total_used = 57688
-        usage_data = {
-            'input_tokens': 34000, 'output_tokens': 14500, 'total_tokens': total_used, 'limit': limit,
-            'remaining': max(0, limit - total_used), 'usage_percent': min((total_used / limit) * 100, 100)
-        }
+        if selected_api == 'anthropic':
+            total_used = 57688
+            usage_data = {
+                'input_tokens': 34000, 'output_tokens': 14500, 'total_tokens': total_used, 'limit': limit,
+                'remaining': max(0, limit - total_used), 'usage_percent': min((total_used / limit) * 100, 100)
+            }
+        elif selected_api == 'openai':
+            total_used = 25000
+            usage_data = {
+                'input_tokens': 15000, 'output_tokens': 10000, 'total_tokens': total_used, 'limit': limit,
+                'remaining': max(0, limit - total_used), 'usage_percent': min((total_used / limit) * 100, 100)
+            }
+        elif selected_api == 'gemini':
+            total_used = 5000
+            usage_data = {
+                'input_tokens': 3000, 'output_tokens': 2000, 'total_tokens': total_used, 'limit': limit,
+                'remaining': max(0, limit - total_used), 'usage_percent': min((total_used / limit) * 100, 100)
+            }
 
     if usage_data:
         if usage_data['usage_percent'] >= 100:
@@ -139,30 +175,54 @@ def billing_view(request):
             request.session['limit_exceeded'] = False
             request.session['billing_alert_sent'] = False
 
-    context = {'usage_data': usage_data, 'error': error, 'limit_exceeded': limit_exceeded}
+    context = {
+        'usage_data': usage_data, 
+        'error': error, 
+        'limit_exceeded': limit_exceeded,
+        'api_provider': api_provider,
+        'api_upgrade_url': api_upgrade_url,
+        'selected_api': selected_api
+    }
     return render(request, 'general/billing.html', context)
 
 @login_required(login_url='sign-in')
 def token_usage_chart_api(request):
+    selected_api = request.GET.get('api', 'anthropic')
+    
     anthropic_key = os.environ.get('ANTHROPIC_API_KEY')
     openai_key = os.environ.get('OPENAI_API_KEY')
     gemini_key = os.environ.get('GEMINI_API_KEY')
     
     has_real_key = False
-    if anthropic_key and anthropic_key != 'xxx': has_real_key = True
-    elif openai_key and openai_key != 'xxx': has_real_key = True
-    elif gemini_key and gemini_key != 'xxx': has_real_key = True
+    model_filter = Q()
+    
+    if selected_api == 'anthropic' and anthropic_key and anthropic_key != 'xxx': 
+        has_real_key = True
+        model_filter = Q(ai_model__icontains='claude') | Q(ai_model__icontains='anthropic')
+    elif selected_api == 'openai' and openai_key and openai_key != 'xxx': 
+        has_real_key = True
+        model_filter = Q(ai_model__icontains='gpt') | Q(ai_model__icontains='openai')
+    elif selected_api == 'gemini' and gemini_key and gemini_key != 'xxx': 
+        has_real_key = True
+        model_filter = Q(ai_model__icontains='gemini')
         
     if has_real_key:
         total_used = 0
         models_to_check = [TechnicalSEOAudit, PricingPRRun, KeywordResearchRun, ContentGapAnalysis]
         try:
             for model in models_to_check:
-                agg = model.objects.filter(requested_by=request.user).aggregate(sum_tot=Sum('ai_total_tokens'))
+                agg = model.objects.filter(requested_by=request.user).filter(model_filter).aggregate(sum_tot=Sum('ai_total_tokens'))
                 total_used += agg['sum_tot'] or 0
             data = {"categories": ["Week 1", "Week 2", "Week 3", "Current"], "series": [{"name": "API Tokens Used", "data": [int(total_used * 0.2), int(total_used * 0.5), int(total_used * 0.8), total_used]}]}
         except Exception:
             data = {"categories": ["Week 1", "Week 2", "Week 3", "Current"], "series": [{"name": "API Tokens Used", "data": [0, 0, 0, 0]}]}
     else:
-        data = {"categories": ["Week 1", "Week 2", "Week 3", "Current"], "series": [{"name": "API Tokens Used", "data": [10000, 25000, 40000, 47688]}]}
+        if selected_api == 'anthropic':
+            data = {"categories": ["Week 1", "Week 2", "Week 3", "Current"], "series": [{"name": "API Tokens Used", "data": [10000, 25000, 40000, 57688]}]}
+        elif selected_api == 'openai':
+            data = {"categories": ["Week 1", "Week 2", "Week 3", "Current"], "series": [{"name": "API Tokens Used", "data": [5000, 12000, 18000, 25000]}]}
+        elif selected_api == 'gemini':
+            data = {"categories": ["Week 1", "Week 2", "Week 3", "Current"], "series": [{"name": "API Tokens Used", "data": [1000, 2000, 3000, 5000]}]}
+        else:
+            data = {"categories": ["Week 1", "Week 2", "Week 3", "Current"], "series": [{"name": "API Tokens Used", "data": [0, 0, 0, 0]}]}
     return JsonResponse(data)

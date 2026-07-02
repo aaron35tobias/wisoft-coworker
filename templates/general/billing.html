@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}AI API Usage | Wisoft Co-Worker{% endblock %}
 
@@ -37,9 +38,8 @@
                 <!--begin::Content-->
                 <div class="fw-semibold mb-3 mb-md-0">
                     <h4 class="text-gray-900 fw-bold">Token Limit Exceeded</h4>
-                    <div class="fs-6 text-gray-700 mt-1">You have used <strong>{{ usage_data.total_tokens }}</strong> of
-                        <strong>{{ usage_data.limit }}</strong> tokens. Renew your plan on the <strong>{{ api_provider
-                            }}</strong> billing platform to continue using AI features.
+                    <div class="fs-6 text-gray-700 mt-1">You have used <strong>{{ usage_data.total_tokens|intcomma }}</strong> of
+                        <strong>{{ usage_data.limit|intcomma }}</strong> tokens. Renew your plan on the <strong>{{ api_provider }}</strong> billing platform to continue using AI features.
                     </div>
                 </div>
                 <!--end::Content-->
@@ -65,6 +65,15 @@
                             <span class="card-label fw-bold fs-3 mb-1">Token Usage Overview</span>
                             <span class="text-muted mt-1 fw-semibold fs-7">Monthly API usage limits for {{ api_provider }}</span>
                         </h3>
+                        <div class="card-toolbar">
+                            <form method="GET" action="{% url 'billing' %}" id="apiProviderForm">
+                                <select name="api" class="form-select form-select-sm form-select-solid" onchange="document.getElementById('apiProviderForm').submit()">
+                                    <option value="anthropic" {% if selected_api == 'anthropic' %}selected{% endif %}>Anthropic (Claude)</option>
+                                    <option value="openai" {% if selected_api == 'openai' %}selected{% endif %}>OpenAI (GPT)</option>
+                                    <option value="gemini" {% if selected_api == 'gemini' %}selected{% endif %}>Google Gemini</option>
+                                </select>
+                            </form>
+                        </div>
 
                     </div>
                     <!--end::Header-->
@@ -74,7 +83,7 @@
                         <div class="d-flex flex-column mb-7">
                             <div class="d-flex flex-stack mb-2">
                                 <span class="text-gray-800 fw-bold fs-6">Usage ({{ usage_data.usage_percent|floatformat:1 }}%)</span>
-                                <span class="text-gray-600 fw-bold fs-6">{{ usage_data.total_tokens }} / {{ usage_data.limit }} Tokens</span>
+                                <span class="text-gray-600 fw-bold fs-6">{{ usage_data.total_tokens|intcomma }} / {{ usage_data.limit|intcomma }} Tokens</span>
                             </div>
                             <div class="progress h-8px w-100 bg-light-primary">
                                 <div class="progress-bar bg-primary" role="progressbar"
@@ -97,7 +106,7 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.input_tokens }}</div>
+                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.input_tokens|intcomma }}</div>
                                         <div class="fs-7 text-gray-600 fw-bold">Input Tokens</div>
                                     </div>
                                 </div>
@@ -115,8 +124,7 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.output_tokens }}
-                                        </div>
+                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.output_tokens|intcomma }}</div>
                                         <div class="fs-7 text-gray-600 fw-bold">Output Tokens</div>
                                     </div>
                                 </div>
@@ -134,7 +142,7 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.total_tokens }}</div>
+                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.total_tokens|intcomma }}</div>
                                         <div class="fs-7 text-gray-600 fw-bold">Total Used</div>
                                     </div>
                                 </div>
@@ -152,7 +160,7 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.remaining }}</div>
+                                        <div class="fs-5 text-gray-900 fw-bold lh-1">{{ usage_data.remaining|intcomma }}</div>
                                         <div class="fs-7 text-gray-600 fw-bold">Remaining</div>
                                     </div>
                                 </div>
