@@ -13,6 +13,8 @@ from pricing_pr_monitor.models import PricingPRRun
 from content_gap.models import ContentGapAnalysis
 from keyword_research.models import KeywordResearchRun, KeywordIdea
 from bulk_alt_text.models import BulkAltTextAnalysis
+from serp_analysis.models import SERPAnalysis
+import json
 from django.db.models import Sum, Q
 from django.http import JsonResponse
 
@@ -26,7 +28,9 @@ def _build_technical_seo(user):
     if score >= 80: label, color = 'Good', '#50CD89'
     elif score >= 50: label, color = 'Fair', '#FFC700'
     else: label, color = 'Poor', '#F1416C'
-    return {'audit_id': audit.id, 'domain': _domain(audit.website.website_url), 'status': audit.get_status_display(), 'pages': audit.pages_crawled, 'issues': audit.issues_found, 'critical': audit.critical_issues, 'high': audit.high_issues, 'started': audit.started_at, 'health_score': score, 'health_label': label, 'health_color': color}
+    mobile_score = (audit.pagespeed_mobile or {}).get('performance_score')
+    desktop_score = (audit.pagespeed_desktop or {}).get('performance_score')
+    return {'audit_id': audit.id, 'domain': _domain(audit.website.website_url), 'status': audit.get_status_display(), 'pages': audit.pages_crawled, 'issues': audit.issues_found, 'critical': audit.critical_issues, 'high': audit.high_issues, 'started': audit.started_at, 'health_score': score, 'health_label': label, 'health_color': color, 'mobile_score': mobile_score, 'desktop_score': desktop_score}
 
 def _build_page_speed(user):
     website = Website.objects.filter(added_by=user, is_active=True).order_by('-date_added').first()
@@ -65,7 +69,11 @@ def _build_content_gap(user):
         priority = (gap.get('priority') or '').strip()
         gaps.append({'topic': gap.get('topic') or 'Content gap', 'priority': priority or '—', 'cls': priority_class.get(priority, 'secondary')})
     url = analysis.own_url or (analysis.project.website_url if analysis.project else '')
-    return {'website': _domain(url), 'status': analysis.get_status_display(), 'started': analysis.started_at, 'gaps': gaps, 'gaps_total': len(analysis.content_gaps or []), 'keywords_total': len(analysis.keyword_opportunities or [])}
+    priority_counts = {'High': 0, 'Medium': 0, 'Low': 0}
+    for gap in (analysis.content_gaps or []):
+        key = (gap.get('priority') or '').strip().title()
+        if key in priority_counts: priority_counts[key] += 1
+    return {'website': _domain(url), 'status': analysis.get_status_display(), 'started': analysis.started_at, 'gaps': gaps, 'gaps_total': len(analysis.content_gaps or []), 'keywords_total': len(analysis.keyword_opportunities or []), 'priority_counts': [priority_counts['High'], priority_counts['Medium'], priority_counts['Low']]}
 
 def _build_keyword(user):
     run = KeywordResearchRun.objects.filter(requested_by=user).select_related('project').order_by('-started_at').first()
@@ -75,12 +83,32 @@ def _build_keyword(user):
     for idea in KeywordIdea.objects.filter(run=run)[:3]:
         priority = (idea.priority or '').strip()
         ideas.append({'keyword': idea.keyword, 'intent': idea.intent or '—', 'priority': priority or '—', 'cls': priority_class.get(priority, 'secondary')})
-    return {'website': _domain(run.project.website_url), 'seed': run.project.seed_topic, 'status': run.get_status_display(), 'started': run.started_at, 'ideas': ideas, 'ideas_total': KeywordIdea.objects.filter(run=run).count()}
+    priority_counts = {'High': 0, 'Medium': 0, 'Low': 0}
+    for value in KeywordIdea.objects.filter(run=run).values_list('priority', flat=True):
+        key = (value or '').strip().title()
+        if key in priority_counts: priority_counts[key] += 1
+    return {'website': _domain(run.project.website_url), 'seed': run.project.seed_topic, 'status': run.get_status_display(), 'started': run.started_at, 'ideas': ideas, 'ideas_total': KeywordIdea.objects.filter(run=run).count(), 'priority_counts': [priority_counts['High'], priority_counts['Medium'], priority_counts['Low']]}
 
 def _build_bulk_alt_text(user):
     analysis = BulkAltTextAnalysis.objects.filter(requested_by=user).order_by('-started_at').first()
     if not analysis: return None
     return {'website': _domain(analysis.page_url), 'page_title': analysis.page_title, 'status': analysis.get_status_display(), 'started': analysis.started_at, 'total_images': analysis.total_images, 'missing_alt': analysis.missing_alt_count, 'generated_alt': analysis.generated_alt_count}
+
+def _build_serp(user):
+    analysis = SERPAnalysis.objects.filter(requested_by=user).order_by('-started_at').first()
+    if not analysis: return None
+    status_class = {'completed': 'success', 'running': 'primary', 'failed': 'danger'}
+    def overall(snap):
+        try:
+            return round(float((snap or {}).get('scores', {}).get('overall') or 0))
+        except (TypeError, ValueError):
+            return 0
+    labels = ['You']
+    scores = [overall(analysis.target_snapshot)]
+    for index, comp in enumerate(analysis.competitor_snapshots or [], start=1):
+        labels.append('Comp ' + str(index))
+        scores.append(overall(comp))
+    return {'keyword': analysis.keyword, 'status': analysis.get_status_display(), 'status_cls': status_class.get(analysis.status, 'secondary'), 'started': analysis.started_at, 'labels': json.dumps(labels), 'scores': json.dumps(scores)}
 
 @login_required(login_url='sign-in')
 def dashboard_view(request):
@@ -91,6 +119,7 @@ def dashboard_view(request):
         'content_gap': _build_content_gap(request.user),
         'keyword': _build_keyword(request.user),
         'bulk_alt_text': _build_bulk_alt_text(request.user),
+        'serp': _build_serp(request.user),
     }
     return render(request, 'general/dashboard.html', context)
 
