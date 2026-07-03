@@ -19,6 +19,7 @@ from django.utils.text import slugify
 from .models import TechnicalSEOAudit, TechnicalSEOIssue, TechnicalSEOWebsite
 from .tasks import run_technical_seo_audit_task
 from wisoft_co_worker.task_utils import enqueue_background_task
+from wisoft_co_worker.url_utils import normalize_url
 
 DEFAULT_CRAWL_PAGE_LIMIT = 5000
 
@@ -519,7 +520,7 @@ def audit_run_view(request):
     if request.method != 'POST':
         return redirect('technical_seo:audits')
 
-    website_url = request.POST.get('website_url', '').strip()
+    website_url = normalize_url(request.POST.get('website_url', ''))
     note = request.POST.get('note', '').strip()
     if not website_url:
         messages.error(request, 'Website URL is required.')

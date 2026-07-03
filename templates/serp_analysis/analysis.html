@@ -47,7 +47,7 @@
                                 </div>
                                 <div class="fv-row mb-5">
                                     <label class="required fs-6 fw-semibold mb-2">Own Target URL</label>
-                                    <input type="url"
+                                    <input type="text"
                                            name="target_url"
                                            class="form-control form-control-solid border border-gray-400"
                                            placeholder="https://example.com/service-page"
@@ -58,7 +58,7 @@
                                 <div class="fw-bold text-gray-900 mb-4">Competitor SERP URLs</div>
                                 {% for index in "12345" %}
                                     <div class="fv-row mb-4">
-                                        <input type="url"
+                                        <input type="text"
                                                name="competitor_url_{{ forloop.counter }}"
                                                class="form-control form-control-solid border border-gray-400"
                                                placeholder="https://competitor.com/ranking-page"
