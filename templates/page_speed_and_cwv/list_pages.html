@@ -295,7 +295,7 @@ Delete Selected
 <input type="hidden" id="input_create_page_website_id" name="website_id" value="{{ website.id|default:'' }}" />
 <div class="fv-row mb-8">
 <label for="input_create_page_url" class="required fs-6 fw-semibold mb-2">Page URL</label>
-<input type="url" id="input_create_page_url" name="page_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com/page" autocomplete="url" />
+<input type="text" id="input_create_page_url" name="page_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com/page" autocomplete="url" />
 </div>
 <div class="fv-row mb-8">
 <label class="form-check form-switch form-check-custom form-check-solid">
@@ -333,7 +333,7 @@ Delete Selected
 <input type="hidden" id="input_update_page_id" name="page_id" />
 <div class="fv-row mb-8">
 <label for="input_update_page_url" class="required fs-6 fw-semibold mb-2">Page URL</label>
-<input type="url" id="input_update_page_url" name="page_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com/page" autocomplete="url" />
+<input type="text" id="input_update_page_url" name="page_url" class="form-control form-control-solid border border-gray-400" placeholder="https://example.com/page" autocomplete="url" />
 </div>
 <div class="fv-row mb-8">
 <label class="form-check form-switch form-check-custom form-check-solid">
@@ -440,6 +440,10 @@ if (!$submitButton.length) { return; }
 $submitButton.attr("data-kt-indicator", "on").prop("disabled", true);
 }
 
+// Accept bare domains (e.g. "example.com/page") in addition to full URLs; the server prepends https://.
+jQuery.validator.methods.url = function (value, element) {
+return this.optional(element) || /^(https?:\/\/)?([\w-]+\.)+[a-z]{2,}(:\d+)?([/?#]\S*)?$/i.test(value);
+};
 var addValidator = $formCreate.validate({
 rules: {
 page_url: {

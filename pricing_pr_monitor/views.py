@@ -7,6 +7,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 
 from .models import PricingPRMonitor, PricingPRRun
 from .monitor import mention_record_is_relevant, run_pricing_pr_monitor
+from wisoft_co_worker.url_utils import normalize_url
 
 
 def split_lines(value):
@@ -75,9 +76,9 @@ def monitor_run_view(request, monitor_id=None):
         monitor = get_object_or_404(PricingPRMonitor, id=monitor_id, added_by=request.user)
     else:
         competitor_name = request.POST.get('competitor_name', '').strip()
-        competitor_website = request.POST.get('competitor_website', '').strip()
-        pricing_url = request.POST.get('pricing_url', '').strip()
-        monitored_urls = split_lines(request.POST.get('monitored_urls', ''))
+        competitor_website = normalize_url(request.POST.get('competitor_website', ''))
+        pricing_url = normalize_url(request.POST.get('pricing_url', ''))
+        monitored_urls = [normalize_url(url) for url in split_lines(request.POST.get('monitored_urls', ''))]
         news_keywords = split_lines(request.POST.get('news_keywords', ''))
         notes = request.POST.get('notes', '').strip()
 
