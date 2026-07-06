@@ -15,7 +15,10 @@ parts/
 sdist/
 var/
 wheels/
+<<<<<<< HEAD
+=======
 template_folder_reference/
+>>>>>>> bc994e9 (Initial clean project commit)
 *.egg-info/
 .installed.cfg
 *.egg
@@ -25,7 +28,11 @@ template_folder_reference/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+<<<<<<< HEAD
+media/
+=======
 media_uploads/
+>>>>>>> bc994e9 (Initial clean project commit)
 staticfiles/
 
 # Virtual environments
@@ -64,6 +71,8 @@ htmlcov/
 
 __pycache__/
 *.py[cod]
+<<<<<<< HEAD
+=======
 
 # Personal / Project specific
 .wisoft-ai/
@@ -72,3 +81,4 @@ __pycache__/
 db_backups/
 oauth-client-secret.json
 node_modules/
+>>>>>>> bc994e9 (Initial clean project commit)

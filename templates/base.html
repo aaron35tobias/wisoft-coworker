@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <!--begin::Head-->
@@ -483,6 +483,23 @@ padding-left: 1rem !important;
 padding-right: 1rem !important;
 }
 }
+body.has-top-alert #header-limit-alert {
+    position: sticky;
+    top: 0;
+    z-index: 1200;
+}
+body.has-top-alert #kt_header {
+    top: var(--top-alert-h, 0px) !important;
+}
+body.has-top-alert #kt_aside {
+    top: var(--top-alert-h, 0px) !important;
+}
+body.has-top-alert .seo-sidebar-rail,
+body.has-top-alert .seo-sidebar-panel,
+body.has-top-alert #kt_aside {
+    height: calc(100vh - var(--top-alert-h, 0px)) !important;
+    min-height: calc(100vh - var(--top-alert-h, 0px)) !important;
+}
 </style>
 <script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
 </head>
@@ -496,18 +513,14 @@ padding-right: 1rem !important;
 <!--begin::Root-->
 <div class="d-flex flex-column flex-root">
         {% if global_limit_exceeded %}
-        <!-- Global API limit alert: floating bottom left -->
-        <div id="bottom-limit-alert" class="alert bg-danger d-flex align-items-sm-center align-items-start p-3 mb-0 shadow d-none" style="position: fixed; bottom: 20px; left: 20px; right: 20px; max-width: 450px; z-index: 9999; border-radius: 6px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="me-3 mt-1 mt-sm-0 text-white flex-shrink-0" viewBox="0 0 16 16" style="min-width: 20px;">
-              <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
-            </svg>
-            <span class="text-white me-3" style="font-size: 0.95rem; line-height: 1.4;">Action Required: API usage for <strong>{{ api_provider }}</strong> has exceeded the limit. <a href="{% url 'billing' %}" class="fw-bold text-white text-decoration-underline">Upgrade your plan</a> to restore access.</span>
-            <button type="button" class="btn btn-icon btn-sm ms-auto flex-shrink-0 mt-1 mt-sm-0" style="width: 24px; height: 24px;" onclick="closeBottomAlert()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
+        <!-- Global API limit alert bar: full width, top of page, pushes the app down -->
+        <!-- Hidden on billing page via JS marker element -->
+        <div id="header-limit-alert" class="alert alert-danger d-flex align-items-center justify-content-center p-4 mb-0 rounded-0 d-none">
+            <i class="ki-duotone ki-warning fs-2hx text-danger me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
+            <div class="d-flex flex-column text-center">
+                <h4 class="mb-1 text-danger">Action Required: API Limit Exceeded</h4>
+                <span class="text-gray-800">Your AI API usage for <strong>{{ api_provider }}</strong> has exceeded the limit. Please <a href="{% url 'billing' %}" class="fw-bold text-danger text-decoration-underline">upgrade your plan</a> to restore access.</span>
+            </div>
         </div>
         {% endif %}
 <!--begin::Page-->
@@ -541,15 +554,16 @@ padding-right: 1rem !important;
                 </div>
 
                 <script>
-                    function showBottomAlert() {
-                        var el = document.getElementById('bottom-limit-alert');
+                    function showTopAlert() {
+                        var el = document.getElementById('header-limit-alert');
                         if (!el) return;
                         el.classList.remove('d-none');
-                    }
-
-                    function closeBottomAlert() {
-                        var el = document.getElementById('bottom-limit-alert');
-                        if (el) el.classList.add('d-none');
+                        document.body.classList.add('has-top-alert');
+                        var syncHeight = function () {
+                            document.documentElement.style.setProperty('--top-alert-h', el.offsetHeight + 'px');
+                        };
+                        syncHeight();
+                        window.addEventListener('resize', syncHeight);
                     }
 
                     function dismissGlobalAlert() {
@@ -562,7 +576,8 @@ padding-right: 1rem !important;
                         // Check for a marker element that billing.html injects.
                         var isBillingPage = document.getElementById('billing-page-marker');
                         if (!isBillingPage) {
-                            showBottomAlert();
+                            // The top banner stays visible the whole time the limit is exceeded
+                            showTopAlert();
                         }
 
                         // Show the full-screen popup only ONCE per browser session

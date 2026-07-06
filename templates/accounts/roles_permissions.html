@@ -1,0 +1,1424 @@
+﻿{% extends 'base.html' %}
+{% block title %}Roles & Permissions - Wisoft Co-Worker{% endblock %}
+
+{% block header %}
+{% include 'includes/header.html' with page_title='User & Role Management' %}
+{% endblock %}
+
+{% block content %}
+<style>
+    /* ═══════════════════════════════════════════════
+       CUSTOM MODAL SYSTEM (.kt-modal)
+       ═══════════════════════════════════════════════ */
+    .kt-modal-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+        backdrop-filter: blur(2px);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    .kt-modal-backdrop.show {
+        display: block;
+        opacity: 1;
+    }
+    .kt-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1050;
+        overflow-y: auto;
+        padding: 2rem 1rem;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    .kt-modal.show {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        pointer-events: auto;
+        opacity: 1;
+    }
+    .kt-modal-content {
+        background: var(--bs-body-bg, #fff);
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        width: 100%;
+        margin: auto;
+        transform: translateY(-20px) scale(0.97);
+        transition: transform 0.2s ease;
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    .kt-modal.show .kt-modal-content {
+        transform: translateY(0) scale(1);
+    }
+    .kt-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 1.5rem 1.5rem 1rem;
+        border-bottom: 1px solid var(--bs-border-color, #e4e6ef);
+    }
+    .kt-modal-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--bs-body-color, #181c32);
+    }
+    .kt-modal-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 6px;
+        color: var(--bs-secondary-color, #7e8299);
+        line-height: 1;
+        flex-shrink: 0;
+        transition: background 0.15s, color 0.15s;
+    }
+    .kt-modal-close:hover {
+        background: var(--bs-secondary-bg, #f5f8fa);
+        color: var(--bs-body-color, #181c32);
+    }
+    .kt-modal-body {
+        padding: 1.5rem;
+    }
+    .kt-modal-footer {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem 1.5rem;
+        border-top: 1px solid var(--bs-border-color, #e4e6ef);
+    }
+    [data-bs-theme="dark"] .kt-modal-content {
+        background: var(--bs-body-bg, #1e1e2d);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .permissions-scroll {
+        max-height: 420px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 5px;
+    }
+    .permissions-option {
+        min-width: 0;
+    }
+    .permissions-option label {
+        min-width: 0;
+        padding-right: 1rem;
+    }
+    @media (min-width: 576px) {
+        .w-sm-auto {
+            width: auto !important;
+        }
+    }
+    @media (min-width: 768px) {
+        .w-md-50 {
+            width: 50% !important;
+        }
+    }
+
+    /* ── Full-width seamless table rows ── */
+    #usersTab table,
+    #rolesTab table {
+        border-collapse: collapse !important;
+        border-spacing: 0 !important;
+        table-layout: auto;
+    }
+
+    /* Cell padding (replaces px-6 on the wrapper) */
+    #usersTab table th,
+    #usersTab table td,
+    #rolesTab table th,
+    #rolesTab table td {
+        padding-top: 14px !important;
+        padding-bottom: 14px !important;
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+        background-color: transparent !important;
+        vertical-align: middle;
+    }
+
+    /* Remove Bootstrap cell-level borders; apply to tr instead */
+    #usersTab table.table-row-dashed td,
+    #rolesTab table.table-row-dashed td {
+        border-top: none !important;
+        border-bottom: none !important;
+    }
+
+    /* Row separator on tr */
+    #usersTab table tbody tr,
+    #rolesTab table tbody tr {
+        border-bottom: 1px dashed var(--bs-border-color, #e4e6ef);
+    }
+
+    /* Zebra striping on <tr> — light mode */
+    #usersTab table tbody tr:nth-child(odd),
+    #rolesTab table tbody tr:nth-child(odd) {
+        background-color: rgba(0, 0, 0, 0.03);
+    }
+
+    #usersTab table tbody tr:nth-child(even),
+    #rolesTab table tbody tr:nth-child(even) {
+        background-color: transparent;
+    }
+
+    /* Dark-mode zebra */
+    [data-bs-theme="dark"] #usersTab table tbody tr:nth-child(odd),
+    [data-bs-theme="dark"] #rolesTab table tbody tr:nth-child(odd) {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Hover on the full row */
+    #usersTab table tbody tr:hover,
+    #rolesTab table tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.06) !important;
+        transition: background-color 0.15s ease;
+    }
+
+    [data-bs-theme="dark"] #usersTab table tbody tr:hover,
+    [data-bs-theme="dark"] #rolesTab table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    .roles-tabs .nav-link {
+        border-radius: 0;
+        padding: 0.75rem 0;
+        background-color: transparent !important;
+        border-bottom-width: 2px !important;
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .roles-tabs .nav-link.active {
+        background-color: transparent !important;
+        color: var(--bs-primary) !important;
+        border-color: var(--bs-primary) !important;
+        font-weight: 700;
+    }
+    .roles-tabs {
+        overflow: visible !important;
+        scrollbar-width: none;
+    }
+    .roles-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    @media (max-width: 575.98px) {
+        #kt_content_container > .page-title {
+            width: 100%;
+            align-items: center !important;
+            text-align: center;
+            padding-top: 1.5rem !important;
+            padding-bottom: 1.75rem !important;
+        }
+        #kt_content_container > .page-title h1 {
+            width: 100%;
+            align-items: center !important;
+            text-align: center;
+        }
+        .roles-page-container {
+            padding-top: 1.5rem !important;
+        }
+        .roles-mobile-heading {
+            margin-top: 1.25rem !important;
+            margin-bottom: 2rem !important;
+            text-align: center;
+        }
+        .kt-modal {
+            padding: 0.75rem;
+        }
+        .kt-modal.show {
+            align-items: center;
+        }
+        .kt-modal-content {
+            max-width: 100% !important;
+            max-height: calc(100dvh - 1.5rem);
+            margin: auto !important;
+            border-radius: 10px;
+        }
+        .kt-modal-header,
+        .kt-modal-body,
+        .kt-modal-footer {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .kt-modal-footer {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 0.75rem;
+        }
+        .kt-modal-footer .btn {
+            width: 100%;
+        }
+        .permissions-scroll {
+            max-height: 60vh;
+            padding-right: 0;
+        }
+        .permission-heading {
+            padding-left: 1rem !important;
+            padding-right: 0.5rem !important;
+        }
+        .permission-heading-actions {
+            gap: 0.75rem !important;
+            padding-right: 1rem !important;
+        }
+        .permissions-option {
+            margin-left: 0 !important;
+            gap: 1rem;
+        }
+        .responsive-stack-table {
+            border-collapse: separate !important;
+            border-spacing: 0 1.1rem !important;
+        }
+        .responsive-stack-table thead {
+            display: none;
+        }
+        .responsive-stack-table,
+        .responsive-stack-table tbody,
+        .responsive-stack-table tr,
+        .responsive-stack-table td {
+            display: block;
+            width: 100% !important;
+        }
+        .responsive-stack-table tbody tr {
+            border: 1px solid var(--bs-border-color, #e4e6ef) !important;
+            border-radius: 10px;
+            padding: 0.95rem 1.1rem;
+            background-color: var(--bs-body-bg, #fff) !important;
+        }
+        [data-bs-theme="dark"] .responsive-stack-table tbody tr {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+        }
+        .responsive-stack-table td {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 0.5rem;
+            max-width: none !important;
+            padding: 0.8rem 0 !important;
+            border: 0 !important;
+            text-align: left;
+            word-break: break-word;
+        }
+        #rolesTab .responsive-stack-table td {
+            min-height: 3.25rem;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.7rem 0 !important;
+        }
+        #rolesTab .responsive-stack-table td::before {
+            max-width: 48%;
+        }
+        #rolesTab .responsive-stack-table td > * {
+            text-align: right;
+        }
+        #rolesTab .responsive-stack-table td .btn {
+            align-self: center;
+        }
+        .responsive-stack-table td + td {
+            border-top: 1px dashed var(--bs-border-color, #e4e6ef) !important;
+        }
+        .responsive-stack-table td.text-truncate {
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: normal !important;
+        }
+        .responsive-stack-table td::before {
+            content: attr(data-label);
+            flex: 0 0 auto;
+            color: var(--bs-gray-600, #7e8299);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            text-align: left;
+        }
+        .responsive-stack-table td .badge,
+        .responsive-stack-table td .btn {
+            align-self: flex-start;
+        }
+        .responsive-stack-table td > * {
+            min-width: 0;
+        }
+        .responsive-stack-table td .btn,
+        .responsive-stack-table td form {
+            width: auto;
+        }
+        .roles-tabs {
+            gap: 1.5rem;
+            padding-bottom: 0.25rem;
+        }
+        .roles-tabs .nav-link {
+            min-width: auto;
+            text-align: center;
+        }
+    }
+</style>
+<div class="container-xxl roles-page-container py-6 py-md-10 px-3 px-md-6" style="max-width: 1100px;">
+    <div class="d-lg-none roles-mobile-heading">
+        <h1 class="fw-bold text-gray-900 mb-0 fs-2">User &amp; Role Management</h1>
+    </div>
+
+    {% if success_message %}
+    <div class="alert alert-success mb-6">{{ success_message }}</div>
+    {% endif %}
+    {% if errors.role %}
+    <div class="alert alert-danger mb-6">{{ errors.role }}</div>
+    {% endif %}
+
+    <div class="card shadow-sm mt-8 mt-md-6">
+        <div class="card-body p-0">
+            <div class="pt-4 pt-md-6 px-4 px-md-6">
+                <ul class="nav nav-tabs nav-line-tabs roles-tabs mb-5 mb-md-6 fs-6 flex-nowrap">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#usersTab">Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#rolesTab">Roles</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="tab-content" id="roleUserTabs">
+                <div class="tab-pane fade show active" id="usersTab" role="tabpanel">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center px-4 px-md-6 pb-4 gap-3">
+                        <div class="w-100" style="max-width: 380px;">
+                            <div class="position-relative">
+                                <i class="la la-search position-absolute top-50 translate-middle-y ms-3 text-muted fs-5"></i>
+                                <input type="search" class="form-control form-control-solid ps-10" id="usersTableSearch" placeholder="Search by username or email…">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary w-100 w-sm-auto" data-kt-modal-toggle="#createUserModal">
+                            <i class="la la-plus me-1"></i> Add User
+                        </button>
+                    </div>
+                    <div class="table-responsive pb-4 pb-md-6">
+                        <table class="table table-row-dashed table-row-gray-300 align-middle mb-0 responsive-stack-table" style="width:100%;">
+                            <thead>
+                                <tr class="fw-bold text-muted fs-7 text-uppercase text-start">
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Assigned Role</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr id="user-row-{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}">
+                                    <td data-label="Username">
+                                        <div class="fw-semibold text-gray-800">{{ user.username }}</div>
+                                        {% if user.is_superuser %}
+                                        <span class="badge badge-light-primary mt-1">Admin</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-gray-700" data-label="Email">{{ user.email|default:'—' }}</td>
+                                    <td data-label="Status">
+                                        {% if user.is_active %}
+                                        <span class="badge badge-light-success">Active</span>
+                                        {% else %}
+                                        <span class="badge badge-light-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-label="Assigned Role">
+                                        {% if user.role %}
+                                        <span class="badge badge-light-secondary">{{ user.role|title }}</span>
+                                        {% else %}
+                                        <span class="badge badge-light-secondary">No Role</span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-label="Actions">
+                                        <button type="button" class="btn btn-light btn-sm edit-user-btn" data-kt-modal-toggle="#assignUserModal" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}">Edit</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="rolesTab" role="tabpanel">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center px-4 px-md-6 pb-4 gap-3">
+                        <div class="w-100" style="max-width: 380px;">
+                            <div class="position-relative">
+                                <i class="la la-search position-absolute top-50 translate-middle-y ms-3 text-muted fs-5"></i>
+                                <input type="search" class="form-control form-control-solid ps-10" id="rolesTableSearch" placeholder="Search by role name…">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary w-100 w-sm-auto" data-kt-modal-toggle="#createRoleModal">
+                            <i class="la la-plus me-1"></i> Add Role
+                        </button>
+                    </div>
+                    <div class="table-responsive pb-4 pb-md-6">
+                        <table class="table table-row-dashed table-row-gray-300 align-middle mb-0 responsive-stack-table" style="width:100%;">
+                            <thead>
+                                <tr class="fw-bold text-muted fs-7 text-uppercase text-start">
+                                    <th>Role Name</th>
+                                    <th>Number of Users</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for role in roles %}
+                                <tr data-role-name="{{ role.name }}">
+                                    <td data-label="Role Name">
+                                        <div class="fw-semibold text-gray-800">{{ role.name|title }}</div>
+                                    </td>
+                                    <td data-label="Number of Users">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="fw-semibold text-gray-800 role-count" data-role-name="{{ role.name }}">{{ role.user_count }}</span>
+                                        </div>
+                                    </td>
+                                    <td data-label="Actions">
+                                        <button type="button" class="btn btn-sm btn-light edit-role-button" data-kt-modal-toggle="#rolePermissionsModal"
+                                            data-role-name="{{ role.name }}"
+                                            data-role-user-count="{{ role.user_count }}"
+                                            data-seo-view="{{ role.seo_view|yesno:'1,0' }}"
+                                            data-seo-page-speed-and-cwv="{{ role.seo_page_speed_and_cwv|yesno:'1,0' }}"
+                                            data-seo-pricing-pr-monitor="{{ role.seo_pricing_pr_monitor|yesno:'1,0' }}"
+                                            data-seo-brand-mentions="{{ role.seo_brand_mentions|yesno:'1,0' }}"
+                                            data-seo-keyword-research="{{ role.seo_keyword_research|yesno:'1,0' }}"
+                                            data-seo-technical-seo-audit="{{ role.seo_technical_seo_audit|yesno:'1,0' }}"
+                                            data-seo-serp-analysis="{{ role.seo_serp_analysis|yesno:'1,0' }}"
+                                            data-seo-internal-linking="{{ role.seo_internal_linking|yesno:'1,0' }}"
+                                            data-seo-content-gaps="{{ role.seo_content_gaps|yesno:'1,0' }}"
+                                            data-seo-bulk-alt-text="{{ role.seo_bulk_alt_text|yesno:'1,0' }}"
+                                            data-analytics-view="{{ role.analytics_view|yesno:'1,0' }}"
+                                            data-analytics-overview="{{ role.analytics_overview|yesno:'1,0' }}"
+                                            data-analytics-traffic-insights="{{ role.analytics_traffic_insights|yesno:'1,0' }}"
+                                            data-analytics-performance-trends="{{ role.analytics_performance_trends|yesno:'1,0' }}"
+                                            data-automation-view="{{ role.automation_view|yesno:'1,0' }}"
+                                            data-automation-ai-workflows="{{ role.automation_ai_workflows|yesno:'1,0' }}"
+                                            data-automation-prompt-library="{{ role.automation_prompt_library|yesno:'1,0' }}"
+                                            data-automation-automation-rules="{{ role.automation_automation_rules|yesno:'1,0' }}">
+                                            Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="kt-modal" data-kt-modal="true" id="rolePermissionsModal">
+    <div class="kt-modal-content" style="max-width: 450px; margin-top: 5vh;">
+        <div class="kt-modal-header">
+            <div>
+                <h3 class="kt-modal-title">Models</h3>
+                <div class="fw-semibold fs-6 text-gray-500" id="editPermissionsRoleName"></div>
+            </div>
+            <button type="button" class="kt-modal-close" aria-label="Close modal" data-kt-modal-dismiss="#rolePermissionsModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_role_permissions">
+            <input type="hidden" name="role_name" id="role_name_input">
+            <div class="kt-modal-body">
+
+                    <div class="accordion permissions-scroll" id="permissionsAccordion">
+                        <div class="accordion-item mb-4">
+                            <div class="accordion-header d-flex justify-content-between align-items-stretch bg-light rounded" id="headingSEO">
+                                <div class="fw-bold fs-5 text-gray-800 cursor-pointer flex-grow-1 px-4 px-md-6 py-4 d-flex align-items-center permission-heading" data-bs-toggle="collapse" data-bs-target="#collapseSEO">SEO</div>
+                                <div class="d-flex align-items-center gap-3 gap-md-4 pe-4 pe-md-6 py-4 permission-heading-actions">
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" id="seo_view" name="seo_view" data-collapse-target="collapseSEO">
+                                    </div>
+                                    <i class="la la-angle-down fs-3 cursor-pointer text-gray-500" data-bs-toggle="collapse" data-bs-target="#collapseSEO"></i>
+                                </div>
+                            </div>
+                            <div id="collapseSEO" class="accordion-collapse collapse" aria-labelledby="headingSEO" data-bs-parent="#permissionsAccordion">
+                                <div class="accordion-body pt-4">
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="seo_page_speed_and_cwv">Page Speed &amp; CWV</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="seo_page_speed_and_cwv" name="seo_page_speed_and_cwv">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="seo_pricing_pr_monitor">Pricing &amp; PR Monitor</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="seo_pricing_pr_monitor" name="seo_pricing_pr_monitor">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="seo_brand_mentions">Brand Mentions</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="seo_brand_mentions" name="seo_brand_mentions">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="seo_keyword_research">Keyword Research</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="seo_keyword_research" name="seo_keyword_research">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="seo_technical_seo_audit">Technical SEO Audit</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="seo_technical_seo_audit" name="seo_technical_seo_audit">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="seo_serp_analysis">SERP Analysis</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="seo_serp_analysis" name="seo_serp_analysis">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="seo_internal_linking">Internal Linking</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="seo_internal_linking" name="seo_internal_linking">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="seo_content_gaps">Content Gaps</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="seo_content_gaps" name="seo_content_gaps">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="seo_bulk_alt_text">Bulk Alt Text</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="seo_bulk_alt_text" name="seo_bulk_alt_text">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item mb-4 border-0">
+                            <div class="accordion-header d-flex justify-content-between align-items-stretch bg-light rounded" id="headingAnalytics">
+                                <div class="fw-bold fs-5 text-gray-800 cursor-pointer flex-grow-1 px-4 px-md-6 py-4 d-flex align-items-center permission-heading" data-bs-toggle="collapse" data-bs-target="#collapseAnalytics">Analytics</div>
+                                <div class="d-flex align-items-center gap-3 gap-md-4 pe-4 pe-md-6 py-4 permission-heading-actions">
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" id="analytics_view" name="analytics_view" data-collapse-target="collapseAnalytics">
+                                    </div>
+                                    <i class="la la-angle-down fs-3 cursor-pointer text-gray-500" data-bs-toggle="collapse" data-bs-target="#collapseAnalytics"></i>
+                                </div>
+                            </div>
+                            <div id="collapseAnalytics" class="accordion-collapse collapse" aria-labelledby="headingAnalytics" data-bs-parent="#permissionsAccordion">
+                                <div class="accordion-body pt-4">
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="analytics_overview">Overview</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="analytics_overview" name="analytics_overview">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="analytics_traffic_insights">Traffic Insights</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="analytics_traffic_insights" name="analytics_traffic_insights">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="analytics_performance_trends">Performance Trends</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="analytics_performance_trends" name="analytics_performance_trends">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item mb-4 border-0">
+                            <div class="accordion-header d-flex justify-content-between align-items-stretch bg-light rounded" id="headingAutomation">
+                                <div class="fw-bold fs-5 text-gray-800 cursor-pointer flex-grow-1 px-4 px-md-6 py-4 d-flex align-items-center permission-heading" data-bs-toggle="collapse" data-bs-target="#collapseAutomation">AI Automation</div>
+                                <div class="d-flex align-items-center gap-3 gap-md-4 pe-4 pe-md-6 py-4 permission-heading-actions">
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" id="automation_view" name="automation_view" data-collapse-target="collapseAutomation">
+                                    </div>
+                                    <i class="la la-angle-down fs-3 cursor-pointer text-gray-500" data-bs-toggle="collapse" data-bs-target="#collapseAutomation"></i>
+                                </div>
+                            </div>
+                            <div id="collapseAutomation" class="accordion-collapse collapse" aria-labelledby="headingAutomation" data-bs-parent="#permissionsAccordion">
+                                <div class="accordion-body pt-4">
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="automation_ai_workflows">AI Workflows</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="automation_ai_workflows" name="automation_ai_workflows">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="automation_prompt_library">Prompt Library</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="automation_prompt_library" name="automation_prompt_library">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="automation_automation_rules">Automation Rules</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="automation_automation_rules" name="automation_automation_rules">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            <div class="kt-modal-footer d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-danger" id="deleteRoleBtn">
+                    Delete Role
+                </button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="kt-modal" data-kt-modal="true" id="roleUsersModal">
+    <div class="kt-modal-content" style="max-width: 640px; margin-top: 5vh;">
+        <div class="kt-modal-header">
+            <div>
+                <h3 class="kt-modal-title" id="roleUsersModalTitle">Role Members</h3>
+                <div class="fw-semibold fs-6 text-gray-500" id="roleUsersModalRoleName"></div>
+            </div>
+            <button type="button" class="kt-modal-close" aria-label="Close modal" data-kt-modal-dismiss="#roleUsersModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+        </div>
+        <div class="kt-modal-body">
+            <div class="mb-6">
+                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+                    <div>
+                        <div class="fw-semibold fs-6 text-gray-700">Users assigned to this role.</div>
+                        <div class="text-muted fs-7">Remove a user to move them back to the default user role.</div>
+                    </div>
+                    <div class="w-100 w-md-50">
+                        <input type="search" class="form-control form-control-solid" id="roleUsersSearch" placeholder="Search by username or email">
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-row-dashed align-middle gs-0 gy-4 mb-0 responsive-stack-table" id="roleUsersTable">
+                    <thead class="bg-light">
+                        <tr class="text-gray-700 fw-semibold fs-7 text-uppercase">
+                            <th style="min-width: 160px;">Username</th>
+                            <th style="min-width: 200px;">Name</th>
+                            <th style="min-width: 240px;">Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="kt-modal" data-kt-modal="true" id="createRoleModal">
+    <div class="kt-modal-content" style="max-width: 450px; margin-top: 5vh;">
+        <div class="kt-modal-header">
+            <h3 class="kt-modal-title" id="editPermissionsTitle">Models</h3>
+            <button type="button" class="kt-modal-close" aria-label="Close modal" data-kt-modal-dismiss="#createRoleModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+        </div>
+        <form method="POST" id="createRoleForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_role">
+            <div class="kt-modal-body">
+                    <div class="mb-6">
+                        <label class="form-label">Role Name</label>
+                        <input type="text" class="form-control mb-4" id="new_role_name" name="new_role_name" placeholder="Enter role name">
+                        <div class="fw-semibold fs-6 text-gray-700">Choose initial permissions for the new role.</div>
+                    </div>
+                    <div class="accordion permissions-scroll" id="createPermissionsAccordion">
+                        <div class="accordion-item mb-4 border-0">
+                            <div class="accordion-header d-flex justify-content-between align-items-stretch bg-light rounded" id="headingCreateSEO">
+                                <div class="fw-bold fs-5 text-gray-800 cursor-pointer flex-grow-1 px-4 px-md-6 py-4 d-flex align-items-center permission-heading" data-bs-toggle="collapse" data-bs-target="#collapseCreateSEO">SEO</div>
+                                <div class="d-flex align-items-center gap-3 gap-md-4 pe-4 pe-md-6 py-4 permission-heading-actions">
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" id="new_seo_view" name="seo_view" data-collapse-target="collapseCreateSEO">
+                                    </div>
+                                    <i class="la la-angle-down fs-3 cursor-pointer text-gray-500" data-bs-toggle="collapse" data-bs-target="#collapseCreateSEO"></i>
+                                </div>
+                            </div>
+                            <div id="collapseCreateSEO" class="accordion-collapse collapse" aria-labelledby="headingCreateSEO" data-bs-parent="#createPermissionsAccordion">
+                                <div class="accordion-body pt-4">
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_seo_page_speed_and_cwv">Page Speed &amp; CWV</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_seo_page_speed_and_cwv" name="seo_page_speed_and_cwv">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_seo_pricing_pr_monitor">Pricing &amp; PR Monitor</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_seo_pricing_pr_monitor" name="seo_pricing_pr_monitor">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_seo_brand_mentions">Brand Mentions</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_seo_brand_mentions" name="seo_brand_mentions">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_seo_keyword_research">Keyword Research</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_seo_keyword_research" name="seo_keyword_research">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_seo_technical_seo_audit">Technical SEO Audit</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_seo_technical_seo_audit" name="seo_technical_seo_audit">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_seo_serp_analysis">SERP Analysis</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_seo_serp_analysis" name="seo_serp_analysis">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_seo_internal_linking">Internal Linking</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_seo_internal_linking" name="seo_internal_linking">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_seo_content_gaps">Content Gaps</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_seo_content_gaps" name="seo_content_gaps">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_seo_bulk_alt_text">Bulk Alt Text</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_seo_bulk_alt_text" name="seo_bulk_alt_text">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item mb-4 border-0">
+                            <div class="accordion-header d-flex justify-content-between align-items-stretch bg-light rounded" id="headingCreateAnalytics">
+                                <div class="fw-bold fs-5 text-gray-800 cursor-pointer flex-grow-1 px-4 px-md-6 py-4 d-flex align-items-center permission-heading" data-bs-toggle="collapse" data-bs-target="#collapseCreateAnalytics">Analytics</div>
+                                <div class="d-flex align-items-center gap-3 gap-md-4 pe-4 pe-md-6 py-4 permission-heading-actions">
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" id="new_analytics_view" name="analytics_view" data-collapse-target="collapseCreateAnalytics">
+                                    </div>
+                                    <i class="la la-angle-down fs-3 cursor-pointer text-gray-500" data-bs-toggle="collapse" data-bs-target="#collapseCreateAnalytics"></i>
+                                </div>
+                            </div>
+                            <div id="collapseCreateAnalytics" class="accordion-collapse collapse" aria-labelledby="headingCreateAnalytics" data-bs-parent="#createPermissionsAccordion">
+                                <div class="accordion-body pt-4">
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_analytics_overview">Overview</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_analytics_overview" name="analytics_overview">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_analytics_traffic_insights">Traffic Insights</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_analytics_traffic_insights" name="analytics_traffic_insights">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_analytics_performance_trends">Performance Trends</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_analytics_performance_trends" name="analytics_performance_trends">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item mb-4 border-0">
+                            <div class="accordion-header d-flex justify-content-between align-items-stretch bg-light rounded" id="headingCreateAutomation">
+                                <div class="fw-bold fs-5 text-gray-800 cursor-pointer flex-grow-1 px-4 px-md-6 py-4 d-flex align-items-center permission-heading" data-bs-toggle="collapse" data-bs-target="#collapseCreateAutomation">AI Automation</div>
+                                <div class="d-flex align-items-center gap-3 gap-md-4 pe-4 pe-md-6 py-4 permission-heading-actions">
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" id="new_automation_view" name="automation_view" data-collapse-target="collapseCreateAutomation">
+                                    </div>
+                                    <i class="la la-angle-down fs-3 cursor-pointer text-gray-500" data-bs-toggle="collapse" data-bs-target="#collapseCreateAutomation"></i>
+                                </div>
+                            </div>
+                            <div id="collapseCreateAutomation" class="accordion-collapse collapse" aria-labelledby="headingCreateAutomation" data-bs-parent="#createPermissionsAccordion">
+                                <div class="accordion-body pt-4">
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_automation_ai_workflows">AI Workflows</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_automation_ai_workflows" name="automation_ai_workflows">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_automation_prompt_library">Prompt Library</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_automation_prompt_library" name="automation_prompt_library">
+                                        </div>
+                                    </div>
+                                    <div class="permissions-option d-flex justify-content-between align-items-center mb-3 ms-md-4">
+                                        <label class="form-check-label text-gray-700" for="new_automation_automation_rules">Automation Rules</label>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" id="new_automation_automation_rules" name="automation_automation_rules">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            <div class="kt-modal-footer d-flex justify-content-end gap-2">
+                <button type="submit" class="btn btn-primary">Save Role</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="kt-modal" data-kt-modal="true" id="createUserModal">
+    <div class="kt-modal-content" style="max-width: 400px; margin-top: 10vh;">
+        <div class="kt-modal-header">
+            <h3 class="kt-modal-title">Create New User</h3>
+            <button type="button" class="kt-modal-close" aria-label="Close modal" data-kt-modal-dismiss="#createUserModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'roles-permissions' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_user">
+            <div class="kt-modal-body">
+                <div class="d-flex flex-column gap-4">
+                    <div class="d-flex flex-column gap-2">
+                        <label class="form-label mb-0">Username</label>
+                        <input type="text" class="form-control form-control-solid" name="username" placeholder="Enter username" required>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <label class="form-label mb-0">Email</label>
+                        <input type="email" class="form-control form-control-solid" name="email" placeholder="Enter email">
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <label class="form-label mb-0">Password</label>
+                        <input type="password" class="form-control form-control-solid" name="password" placeholder="Enter password" required>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <label class="form-label mb-0">Initial Role</label>
+                        <input type="hidden" name="initial_role" id="hidden_initial_role" value="">
+                        <div class="custom-dropdown-container w-100 position-relative">
+                          <button type="button" class="form-control form-control-solid d-flex justify-content-between align-items-center w-100" onclick="toggleCustomDropdown(this)">
+                            <span id="display_initial_role">-- No Role --</span>
+                            <span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dropdown-arrow-down lucide lucide-chevron-down" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dropdown-arrow-up lucide lucide-chevron-up" aria-hidden="true" style="display:none;"><path d="m18 15-6-6-6 6"></path></svg>
+                            </span>
+                          </button>
+                          <div class="custom-dropdown-menu w-100 p-3 text-sm bg-body shadow rounded border position-absolute mt-1" style="display: none; z-index: 100;">
+                              <div class="cursor-pointer py-2 px-3 text-gray-800 text-hover-primary rounded" onclick="document.getElementById('hidden_initial_role').value=''; document.getElementById('display_initial_role').innerText='-- No Role --'; toggleCustomDropdown(this.closest('.custom-dropdown-container').querySelector('button'));">-- No Role --</div>
+                              {% for role in roles %}
+                              <div class="cursor-pointer py-2 px-3 text-gray-800 text-hover-primary rounded" onclick="document.getElementById('hidden_initial_role').value='{{ role.name }}'; document.getElementById('display_initial_role').innerText='{{ role.name|title }}'; toggleCustomDropdown(this.closest('.custom-dropdown-container').querySelector('button'));">{{ role.name|title }}</div>
+                              {% endfor %}
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="kt-modal-footer d-flex justify-content-end gap-2">
+                <button type="submit" class="btn btn-primary">Create User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="kt-modal" data-kt-modal="true" id="assignUserModal">
+    <div class="kt-modal-content" style="max-width: 400px; margin-top: 10vh;">
+        <div class="kt-modal-header">
+            <h3 class="kt-modal-title">Manage User</h3>
+            <button type="button" class="kt-modal-close" aria-label="Close modal" data-kt-modal-dismiss="#assignUserModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+        </div>
+        <div class="kt-modal-body">
+            <div id="assignUserVerticalList" class="w-100">
+                {% for user in users %}
+                <div id="modal-user-row-{{ user.id }}" class="py-2" data-username="{{ user.username }}" data-email="{{ user.email }}" style="display: none;">
+                    <div class="fw-bold fs-4 text-gray-900 mb-1">{{ user.username }}</div>
+                    <div class="text-muted fs-6 mb-3">{{ user.email|default:'(no email)' }}</div>
+                    
+                    <div class="mb-5">
+                        <span class="badge badge-light-primary fs-7 px-3 py-2">Current Role: {{ user.role|default:'No Role'|title }}</span>
+                    </div>
+
+                    <form method="POST" class="d-flex flex-column gap-3 assign-role-form" id="assign-role-form-{{ user.id }}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="assign_user_role">
+                        <input type="hidden" name="assign_user_id" value="{{ user.id }}">
+                        <input type="hidden" name="assign_role_name" id="hidden_assign_role_{{ user.id }}" value="{{ user.role|default:'' }}">
+                        
+                        <div class="mb-2">
+                            <label class="form-label fs-7 fw-semibold text-gray-700">Assign New Role</label>
+                            <div class="custom-dropdown-container w-100 position-relative">
+                                <button type="button" class="form-control form-control-solid d-flex justify-content-between align-items-center w-100" onclick="toggleCustomDropdown(this)">
+                                <span id="display_assign_role_{{ user.id }}">{{ user.role|default:'-- Select Role --'|title }}</span>
+                                <span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dropdown-arrow-down lucide lucide-chevron-down" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dropdown-arrow-up lucide lucide-chevron-up" aria-hidden="true" style="display:none;"><path d="m18 15-6-6-6 6"></path></svg>
+                                </span>
+                                </button>
+                                <div class="custom-dropdown-menu w-100 p-3 text-sm bg-body shadow rounded border mt-1" style="display: none; position: absolute; z-index: 100;">
+                                    {% for role in roles %}
+                                    <div class="cursor-pointer py-2 px-3 text-gray-800 text-hover-primary" onclick="document.getElementById('hidden_assign_role_{{ user.id }}').value='{{ role.name }}'; document.getElementById('display_assign_role_{{ user.id }}').innerText='{{ role.name|title }}'; toggleCustomDropdown(this.closest('.custom-dropdown-container').querySelector('button'));">{{ role.name|title }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-column gap-3 mt-2">
+                            <button type="submit" form="assign-role-form-{{ user.id }}" class="btn btn-primary w-100">Save Changes</button>
+                            <button type="button" class="btn btn-danger w-100" onclick="if(confirm('Are you sure you want to completely remove this user?')) { document.getElementById('delete-user-form-{{ user.id }}').submit(); }">Delete User</button>
+                        </div>
+                    </form>
+                    <form id="delete-user-form-{{ user.id }}" method="POST" style="display: none;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_user">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js_scripts %}
+<script>
+    window.toggleCustomDropdown = function(btn) {
+        var menu = btn.nextElementSibling;
+        var isHidden = menu.style.display === 'none';
+        
+        // Close all other dropdowns first
+        document.querySelectorAll('.custom-dropdown-menu').forEach(function(m) {
+            m.style.display = 'none';
+            var prevBtn = m.previousElementSibling;
+            if (prevBtn) {
+                var down = prevBtn.querySelector('.dropdown-arrow-down');
+                var up = prevBtn.querySelector('.dropdown-arrow-up');
+                if (down) down.style.display = 'inline';
+                if (up) up.style.display = 'none';
+            }
+        });
+
+        if (isHidden) {
+            menu.style.display = 'block';
+            btn.querySelector('.dropdown-arrow-down').style.display = 'none';
+            btn.querySelector('.dropdown-arrow-up').style.display = 'inline';
+        } else {
+            menu.style.display = 'none';
+            btn.querySelector('.dropdown-arrow-down').style.display = 'inline';
+            btn.querySelector('.dropdown-arrow-up').style.display = 'none';
+        }
+    };
+
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.custom-dropdown-container')) {
+            document.querySelectorAll('.custom-dropdown-menu').forEach(function(m) {
+                m.style.display = 'none';
+                var prevBtn = m.previousElementSibling;
+                if (prevBtn) {
+                    var down = prevBtn.querySelector('.dropdown-arrow-down');
+                    var up = prevBtn.querySelector('.dropdown-arrow-up');
+                    if (down) down.style.display = 'inline';
+                    if (up) up.style.display = 'none';
+                }
+            });
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Accordion arrows toggle logic
+        document.querySelectorAll('.accordion-collapse').forEach(function(collapseEl) {
+            collapseEl.addEventListener('show.bs.collapse', function () {
+                var targetId = this.id;
+                document.querySelectorAll('[data-bs-target="#' + targetId + '"]').forEach(function(btn) {
+                    if (btn.classList.contains('la-angle-down')) {
+                        btn.classList.remove('la-angle-down');
+                        btn.classList.add('la-angle-up');
+                    }
+                });
+            });
+            collapseEl.addEventListener('hide.bs.collapse', function () {
+                var targetId = this.id;
+                document.querySelectorAll('[data-bs-target="#' + targetId + '"]').forEach(function(btn) {
+                    if (btn.classList.contains('la-angle-up')) {
+                        btn.classList.remove('la-angle-up');
+                        btn.classList.add('la-angle-down');
+                    }
+                });
+            });
+        });
+
+        // Existing permission toggle logic...
+        // ... (existing code unchanged up to line 632)
+        // New: Modal handling for assigning role to a specific user
+        document.querySelectorAll('.edit-user-btn').forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                var userId = this.getAttribute('data-user-id');
+                // Hide all rows
+                var rows = document.querySelectorAll('#assignUserVerticalList > div[id^="modal-user-row-"]');
+                rows.forEach(function (row) { row.style.display = 'none'; });
+                // Show only the selected user row
+                var targetRow = document.getElementById('modal-user-row-' + userId);
+                if (targetRow) { targetRow.style.display = 'block'; }
+            });
+        });
+        // End of new modal handling
+
+        var modal = document.getElementById('rolePermissionsModal');
+        var roleNameInput = document.getElementById('role_name_input');
+        var fields = [
+            'seo_view', 'seo_page_speed_and_cwv', 'seo_pricing_pr_monitor', 'seo_brand_mentions',
+            'seo_keyword_research', 'seo_technical_seo_audit', 'seo_serp_analysis', 'seo_internal_linking',
+            'seo_content_gaps', 'seo_bulk_alt_text',
+            'analytics_view', 'analytics_overview', 'analytics_traffic_insights', 'analytics_performance_trends',
+            'automation_view', 'automation_ai_workflows', 'automation_prompt_library', 'automation_automation_rules'
+        ];
+
+        var roleUserData = {{ role_user_data_json|default:'{}' }};
+        var roleUserCountDisplay = document.getElementById('role_user_count_display');
+        var roleUsersModalTitle = document.getElementById('roleUsersModalTitle');
+        var viewRoleMembersButton = document.getElementById('viewRoleMembersButton');
+        var parentToggleUpdates = [];
+
+        function updateChildToggleState(parent, childIds, isUserAction) {
+            childIds.forEach(function (childId) {
+                var child = document.getElementById(childId);
+                if (!child) {
+                    return;
+                }
+                child.disabled = !parent.checked;
+                if (!parent.checked) {
+                    child.checked = false;
+                } else if (isUserAction) {
+                    child.checked = true;
+                }
+            });
+        }
+
+        function setSubtoggles(parentId, childIds) {
+            var parent = document.getElementById(parentId);
+            if (!parent) {
+                return;
+            }
+            var update = function (event) {
+                updateChildToggleState(parent, childIds, !!event);
+                if (event) {
+                    var collapseTargetId = parent.getAttribute('data-collapse-target');
+                    if (collapseTargetId) {
+                        var collapseElement = document.getElementById(collapseTargetId);
+                        if (collapseElement) {
+                            var bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, { toggle: false });
+                            if (parent.checked) {
+                                bsCollapse.show();
+                            } else {
+                                bsCollapse.hide();
+                            }
+                        }
+                    }
+                }
+            };
+            parent.addEventListener('change', update);
+            parentToggleUpdates.push(function() { update(); });
+            update();
+        }
+
+        function syncAllParentToggleStates() {
+            parentToggleUpdates.forEach(function (update) {
+                update();
+            });
+            // Ensure all dropdowns are closed by default when the modal opens
+            document.querySelectorAll('.accordion-collapse').forEach(function(el) {
+                var bsCollapse = bootstrap.Collapse.getInstance(el);
+                if (bsCollapse) {
+                    bsCollapse.hide();
+                } else {
+                    el.classList.remove('show');
+                }
+            });
+        }
+
+        setSubtoggles('seo_view', [
+            'seo_page_speed_and_cwv', 'seo_pricing_pr_monitor', 'seo_brand_mentions',
+            'seo_keyword_research', 'seo_technical_seo_audit', 'seo_serp_analysis',
+            'seo_internal_linking', 'seo_content_gaps', 'seo_bulk_alt_text'
+        ]);
+        setSubtoggles('analytics_view', [
+            'analytics_overview', 'analytics_traffic_insights', 'analytics_performance_trends'
+        ]);
+        setSubtoggles('automation_view', [
+            'automation_ai_workflows', 'automation_prompt_library', 'automation_automation_rules'
+        ]);
+
+        setSubtoggles('new_seo_view', [
+            'new_seo_page_speed_and_cwv', 'new_seo_pricing_pr_monitor', 'new_seo_brand_mentions',
+            'new_seo_keyword_research', 'new_seo_technical_seo_audit', 'new_seo_serp_analysis',
+            'new_seo_internal_linking', 'new_seo_content_gaps', 'new_seo_bulk_alt_text'
+        ]);
+        setSubtoggles('new_analytics_view', [
+            'new_analytics_overview', 'new_analytics_traffic_insights', 'new_analytics_performance_trends'
+        ]);
+        setSubtoggles('new_automation_view', [
+            'new_automation_ai_workflows', 'new_automation_prompt_library', 'new_automation_automation_rules'
+        ]);
+
+        function populateRoleUsers(roleName) {
+            var users = roleUserData[roleName] || [];
+            var tbody = document.querySelector('#roleUsersTable tbody');
+            tbody.innerHTML = '';
+            var roleUsersModalRoleName = document.getElementById('roleUsersModalRoleName');
+            if (roleUsersModalRoleName) {
+                roleUsersModalRoleName.textContent = roleName.charAt(0).toUpperCase() + roleName.slice(1);
+            }
+            var roleUsersSearch = document.getElementById('roleUsersSearch');
+            if (roleUsersSearch) {
+                roleUsersSearch.value = '';
+            }
+            users.forEach(function (user) {
+                var row = document.createElement('tr');
+                row.setAttribute('data-username', user.username || '');
+                row.setAttribute('data-email', user.email || '');
+                row.innerHTML = '<td class="text-gray-800 text-truncate" data-label="Username" style="max-width: 160px;">' + user.username + '</td>' +
+                    '<td class="text-gray-700 text-truncate" data-label="Name" style="max-width: 180px;">' + user.full_name + '</td>' +
+                    '<td class="text-gray-700 text-truncate" data-label="Email" style="max-width: 240px;">' + user.email + '</td>' +
+                    '<td data-label="Actions"><form method="POST" class="d-inline-block remove-role-member-form"><input type="hidden" name="csrfmiddlewaretoken" value="' + document.querySelector('input[name=csrfmiddlewaretoken]').value + '"><input type="hidden" name="action" value="remove_role_member"><input type="hidden" name="role_name" value="' + roleName + '"><input type="hidden" name="user_id" value="' + user.id + '"><button type="submit" class="btn btn-sm btn-danger">Remove</button></form></td>';
+                tbody.appendChild(row);
+            });
+            wireRoleUserRemoveForms();
+            // Open the roleUsersModal using our custom modal logic
+            showModal('#roleUsersModal');
+        }
+
+        var roleUsersSearch = document.getElementById('roleUsersSearch');
+        if (roleUsersSearch) {
+            roleUsersSearch.addEventListener('input', function () {
+                var term = this.value.toLowerCase();
+                var rows = document.querySelectorAll('#roleUsersTable tbody tr');
+                rows.forEach(function (row) {
+                    var username = row.getAttribute('data-username')?.toLowerCase() || '';
+                    var email = row.getAttribute('data-email')?.toLowerCase() || '';
+                    if (username.includes(term) || email.includes(term)) {
+                        row.style.display = 'table-row';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        var editPermissionsRoleName = document.getElementById('editPermissionsRoleName');
+
+        document.querySelectorAll('.edit-role-button').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var roleName = button.getAttribute('data-role-name') || '';
+                roleNameInput.value = roleName;
+                if (editPermissionsRoleName) {
+                    editPermissionsRoleName.textContent = roleName.charAt(0).toUpperCase() + roleName.slice(1);
+                }
+                if (roleUserCountDisplay) {
+                    roleUserCountDisplay.textContent = button.getAttribute('data-role-user-count') || '0';
+                }
+                fields.forEach(function (field) {
+                    var input = document.getElementById(field);
+                    if (!input) {
+                        return;
+                    }
+                    input.checked = button.getAttribute('data-' + field.replace(/_/g, '-')) === '1';
+                });
+                syncAllParentToggleStates();
+                if (viewRoleMembersButton) {
+                    viewRoleMembersButton.setAttribute('data-role-name', roleName);
+                }
+            });
+        });
+
+        document.querySelectorAll('.view-role-users-button').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var roleName = button.getAttribute('data-role-name');
+                populateRoleUsers(roleName);
+            });
+        });
+
+        if (viewRoleMembersButton) {
+            viewRoleMembersButton.addEventListener('click', function () {
+                var roleName = this.getAttribute('data-role-name');
+                if (roleName) {
+                    populateRoleUsers(roleName);
+                }
+            });
+        }
+
+        var assignUserSearch = document.getElementById('assignUserSearch');
+        if (assignUserSearch) {
+            assignUserSearch.addEventListener('input', function () {
+                var searchValue = this.value.toLowerCase();
+                document.querySelectorAll('#assignUserTable tbody tr').forEach(function (row) {
+                    var username = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                    var name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                    var email = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                    var visible = username.includes(searchValue) || name.includes(searchValue) || email.includes(searchValue);
+                    row.style.display = visible ? '' : 'none';
+                });
+            });
+        }
+
+        function wireRoleUserRemoveForms() {
+            document.querySelectorAll('#roleUsersTable .remove-role-member-form').forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', form.action || window.location.href);
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    xhr.onload = function () {
+                        if (xhr.status === 200) {
+                            var response = JSON.parse(xhr.responseText);
+                            if (response.success) {
+                                var row = form.closest('tr');
+                                if (row) {
+                                    row.parentNode.removeChild(row);
+                                }
+                                document.querySelectorAll('.role-count[data-role-name="' + response.role_name + '"]').forEach(function (span) {
+                                    span.textContent = response.user_count;
+                                });
+                                if (roleUserCountDisplay) {
+                                    roleUserCountDisplay.textContent = response.user_count;
+                                }
+                            }
+                        }
+                    };
+                    var formData = new FormData(form);
+                    xhr.send(formData);
+                });
+            });
+        }
+
+        wireRoleUserRemoveForms();
+
+        // Users tab search filter
+        var usersTableSearch = document.getElementById('usersTableSearch');
+        if (usersTableSearch) {
+            usersTableSearch.addEventListener('input', function () {
+                var term = this.value.toLowerCase();
+                document.querySelectorAll('#usersTab table tbody tr').forEach(function (row) {
+                    var username = (row.getAttribute('data-username') || '').toLowerCase();
+                    var email = (row.getAttribute('data-email') || '').toLowerCase();
+                    row.style.display = (username.includes(term) || email.includes(term)) ? '' : 'none';
+                });
+            });
+        }
+
+        // Roles tab search filter
+        var rolesTableSearch = document.getElementById('rolesTableSearch');
+        if (rolesTableSearch) {
+            rolesTableSearch.addEventListener('input', function () {
+                var term = this.value.toLowerCase();
+                document.querySelectorAll('#rolesTab table tbody tr').forEach(function (row) {
+                    var roleName = (row.getAttribute('data-role-name') || '').toLowerCase();
+                    row.style.display = roleName.includes(term) ? '' : 'none';
+                });
+            });
+        }
+
+        // Delete Role button in Edit Permissions modal
+        var deleteRoleBtn = document.getElementById('deleteRoleBtn');
+        if (deleteRoleBtn) {
+            deleteRoleBtn.addEventListener('click', function () {
+                var roleName = roleNameInput.value;
+                if (!roleName) return;
+                if (!confirm('Are you sure you want to delete the "' + roleName.charAt(0).toUpperCase() + roleName.slice(1) + '" role? All users with this role will be moved to the default "User" role.')) return;
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.style.display = 'none';
+                var csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = document.querySelector('input[name=csrfmiddlewaretoken]').value;
+                form.appendChild(csrfInput);
+                var actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'delete_role';
+                form.appendChild(actionInput);
+                var roleInput = document.createElement('input');
+                roleInput.type = 'hidden';
+                roleInput.name = 'role_name';
+                roleInput.value = roleName;
+                form.appendChild(roleInput);
+                document.body.appendChild(form);
+                form.submit();
+            });
+        }
+        
+        // ═══════════════════════════════════════════════
+        // CUSTOM MODAL LOGIC FOR .kt-modal
+        // ═══════════════════════════════════════════════
+        // Create backdrop
+        const backdrop = document.createElement('div');
+        backdrop.className = 'kt-modal-backdrop';
+        document.body.appendChild(backdrop);
+
+        function showModal(modalId) {
+            const modal = document.querySelector(modalId);
+            if (!modal) return;
+            
+            // Show backdrop
+            backdrop.classList.add('show');
+            
+            // Show modal
+            modal.style.display = 'flex';
+            // Trigger reflow
+            void modal.offsetWidth;
+            modal.classList.add('show');
+        }
+
+        function hideModal(modal) {
+            if (!modal) return;
+            modal.classList.remove('show');
+            backdrop.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 200); // match transition duration
+        }
+
+        function hideAllModals() {
+            document.querySelectorAll('.kt-modal.show').forEach(hideModal);
+        }
+
+        // Toggles
+        document.querySelectorAll('[data-kt-modal-toggle]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                showModal(btn.getAttribute('data-kt-modal-toggle'));
+            });
+        });
+
+        // Dismisses
+        document.querySelectorAll('[data-kt-modal-dismiss]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = btn.getAttribute('data-kt-modal-dismiss');
+                if (target) {
+                    hideModal(document.querySelector(target));
+                } else {
+                    hideModal(btn.closest('.kt-modal'));
+                }
+            });
+        });
+
+        // Backdrop click dismiss
+        document.querySelectorAll('.kt-modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideModal(modal);
+                }
+            });
+        });
+        
+    });
+</script>
+{% endblock %}
+{% endblock %}

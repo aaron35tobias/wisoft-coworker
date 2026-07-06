@@ -130,7 +130,7 @@
 {% csrf_token %}
 <div class="fv-row mb-8">
 <label class="required fs-6 fw-semibold mb-2">Website URL</label>
-<input type="text" name="website_url" class="form-control form-control-solid" placeholder="https://example.com" autocomplete="url" />
+<input type="url" name="website_url" class="form-control form-control-solid" placeholder="https://example.com" autocomplete="url" />
 </div>
 <div class="fv-row mb-8">
 <label class="fs-6 fw-semibold mb-2">Note</label>
@@ -180,7 +180,7 @@
 <input type="hidden" name="website_id" />
 <div class="fv-row mb-8">
 <label class="required fs-6 fw-semibold mb-2">Website URL</label>
-<input type="text" name="website_url" class="form-control form-control-solid" placeholder="https://example.com" autocomplete="url" />
+<input type="url" name="website_url" class="form-control form-control-solid" placeholder="https://example.com" autocomplete="url" />
 </div>
 <div class="fv-row mb-8">
 <label class="fs-6 fw-semibold mb-2">Note</label>
@@ -215,10 +215,6 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery-validation/dist/jquery.validate.min.js"></script>
 <script>
 jQuery(function () {
-// Accept bare domains (e.g. "example.com") in addition to full URLs; the server prepends https://.
-jQuery.validator.methods.url = function (value, element) {
-return this.optional(element) || /^(https?:\/\/)?([\w-]+\.)+[a-z]{2,}(:\d+)?([/?#]\S*)?$/i.test(value);
-};
 var addDrawerElement = document.querySelector("#kt_add_website_drawer");
 var addFormElement = document.querySelector("#kt_add_website_form");
 var editDrawerElement = document.querySelector("#kt_edit_website_drawer");

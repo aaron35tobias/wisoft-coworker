@@ -1,0 +1,9 @@
+- Avoid silent fallbacks. Do not hide missing data, failed API calls, invalid state, or missing configuration with default values unless I explicitly ask for that behavior.
+- Prefer clear failure over hidden behavior. If required data is missing, raise an error, return a validation error, or make the failure visible.
+- If you think a fallback is needed, tell me before adding it.
+- Keep code simple and easy to debug.
+- Follow the existing project style and patterns.
+- Before adding new code, check nearby files and use the same structure, naming, imports, and error handling style.
+- Do not introduce a new coding style unless I ask for it or there is a clear reason.
+- Keep similar features implemented in a similar way.
+- Do not add or install new packages without asking me first.

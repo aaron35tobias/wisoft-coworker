@@ -1,4 +1,4 @@
-from io import BytesIO
+﻿from io import BytesIO
 import re
 import textwrap
 import zipfile
@@ -18,7 +18,6 @@ from django.views.decorators.http import require_GET
 from .models import ContentGapAnalysis, ContentGapProject
 from .tasks import run_content_gap_analysis_task
 from wisoft_co_worker.task_utils import enqueue_background_task
-from wisoft_co_worker.url_utils import normalize_url
 
 
 def get_user_analysis(user, analysis_id):
@@ -262,12 +261,12 @@ def analysis_run_view(request):
     if request.method != 'POST':
         return redirect('content_gap:analysis')
 
-    own_url = normalize_url(request.POST.get('own_url', ''))
+    own_url = request.POST.get('own_url', '').strip()
     target_topic = request.POST.get('target_topic', '').strip()
     target_market = request.POST.get('target_market', '').strip()
     notes = request.POST.get('notes', '').strip()
     competitor_urls = [
-        normalize_url(request.POST.get(f'competitor_url_{index}', ''))
+        request.POST.get(f'competitor_url_{index}', '').strip()
         for index in range(1, 4)
         if request.POST.get(f'competitor_url_{index}', '').strip()
     ]

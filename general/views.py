@@ -1,7 +1,6 @@
+import json
 import os
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import User, Group, Permission
-from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import render, redirect
 from django.core.mail import send_mail
 from django.conf import settings
@@ -13,10 +12,12 @@ from pricing_pr_monitor.models import PricingPRRun
 from content_gap.models import ContentGapAnalysis
 from keyword_research.models import KeywordResearchRun, KeywordIdea
 from bulk_alt_text.models import BulkAltTextAnalysis
-from serp_analysis.models import SERPAnalysis
-import json
 from django.db.models import Sum, Q
 from django.http import JsonResponse
+from django.utils.safestring import mark_safe
+
+from accounts.models import Profile, Role
+from django.contrib.auth.models import User
 
 def _domain(url):
     return url.split('://', 1)[-1].rstrip('/') if url else ''
@@ -28,9 +29,7 @@ def _build_technical_seo(user):
     if score >= 80: label, color = 'Good', '#50CD89'
     elif score >= 50: label, color = 'Fair', '#FFC700'
     else: label, color = 'Poor', '#F1416C'
-    mobile_score = (audit.pagespeed_mobile or {}).get('performance_score')
-    desktop_score = (audit.pagespeed_desktop or {}).get('performance_score')
-    return {'audit_id': audit.id, 'domain': _domain(audit.website.website_url), 'status': audit.get_status_display(), 'pages': audit.pages_crawled, 'issues': audit.issues_found, 'critical': audit.critical_issues, 'high': audit.high_issues, 'started': audit.started_at, 'health_score': score, 'health_label': label, 'health_color': color, 'mobile_score': mobile_score, 'desktop_score': desktop_score}
+    return {'audit_id': audit.id, 'domain': _domain(audit.website.website_url), 'status': audit.get_status_display(), 'pages': audit.pages_crawled, 'issues': audit.issues_found, 'critical': audit.critical_issues, 'high': audit.high_issues, 'started': audit.started_at, 'health_score': score, 'health_label': label, 'health_color': color}
 
 def _build_page_speed(user):
     website = Website.objects.filter(added_by=user, is_active=True).order_by('-date_added').first()
@@ -50,15 +49,7 @@ def _build_page_speed(user):
 def _build_pricing(user):
     run = PricingPRRun.objects.filter(requested_by=user).select_related('monitor').order_by('-started_at').first()
     if not run: return None
-    severity_class = {'high': 'danger', 'medium': 'warning', 'low': 'success'}
-    status_class = {'completed': 'success', 'running': 'primary', 'failed': 'danger'}
-    changes = []
-    for change in run.changes.all()[:3]:
-        changes.append({'title': change.title, 'severity': change.get_severity_display(), 'cls': severity_class.get((change.severity or '').lower(), 'secondary')})
-    mentions = []
-    for mention in run.news_mentions.all()[:3]:
-        mentions.append({'title': mention.title, 'source': mention.source})
-    return {'competitor': run.monitor.competitor_name, 'website': _domain(run.monitor.competitor_website), 'status': run.get_status_display(), 'status_cls': status_class.get(run.status, 'secondary'), 'runs': run.monitor.runs.count(), 'changes': changes, 'changes_total': run.changes_found, 'mentions': mentions, 'mentions_total': run.news_mentions_found, 'started': run.started_at}
+    return {'competitor': run.monitor.competitor_name, 'website': _domain(run.monitor.competitor_website), 'status': run.get_status_display(), 'runs': run.monitor.runs.count(), 'changes': run.changes_found, 'mentions': run.news_mentions_found, 'started': run.started_at}
 
 def _build_content_gap(user):
     analysis = ContentGapAnalysis.objects.filter(requested_by=user).select_related('project').order_by('-started_at').first()
@@ -69,11 +60,7 @@ def _build_content_gap(user):
         priority = (gap.get('priority') or '').strip()
         gaps.append({'topic': gap.get('topic') or 'Content gap', 'priority': priority or '—', 'cls': priority_class.get(priority, 'secondary')})
     url = analysis.own_url or (analysis.project.website_url if analysis.project else '')
-    priority_counts = {'High': 0, 'Medium': 0, 'Low': 0}
-    for gap in (analysis.content_gaps or []):
-        key = (gap.get('priority') or '').strip().title()
-        if key in priority_counts: priority_counts[key] += 1
-    return {'website': _domain(url), 'status': analysis.get_status_display(), 'started': analysis.started_at, 'gaps': gaps, 'gaps_total': len(analysis.content_gaps or []), 'keywords_total': len(analysis.keyword_opportunities or []), 'priority_counts': [priority_counts['High'], priority_counts['Medium'], priority_counts['Low']]}
+    return {'website': _domain(url), 'status': analysis.get_status_display(), 'started': analysis.started_at, 'gaps': gaps, 'gaps_total': len(analysis.content_gaps or []), 'keywords_total': len(analysis.keyword_opportunities or [])}
 
 def _build_keyword(user):
     run = KeywordResearchRun.objects.filter(requested_by=user).select_related('project').order_by('-started_at').first()
@@ -83,32 +70,12 @@ def _build_keyword(user):
     for idea in KeywordIdea.objects.filter(run=run)[:3]:
         priority = (idea.priority or '').strip()
         ideas.append({'keyword': idea.keyword, 'intent': idea.intent or '—', 'priority': priority or '—', 'cls': priority_class.get(priority, 'secondary')})
-    priority_counts = {'High': 0, 'Medium': 0, 'Low': 0}
-    for value in KeywordIdea.objects.filter(run=run).values_list('priority', flat=True):
-        key = (value or '').strip().title()
-        if key in priority_counts: priority_counts[key] += 1
-    return {'website': _domain(run.project.website_url), 'seed': run.project.seed_topic, 'status': run.get_status_display(), 'started': run.started_at, 'ideas': ideas, 'ideas_total': KeywordIdea.objects.filter(run=run).count(), 'priority_counts': [priority_counts['High'], priority_counts['Medium'], priority_counts['Low']]}
+    return {'website': _domain(run.project.website_url), 'seed': run.project.seed_topic, 'status': run.get_status_display(), 'started': run.started_at, 'ideas': ideas, 'ideas_total': KeywordIdea.objects.filter(run=run).count()}
 
 def _build_bulk_alt_text(user):
     analysis = BulkAltTextAnalysis.objects.filter(requested_by=user).order_by('-started_at').first()
     if not analysis: return None
     return {'website': _domain(analysis.page_url), 'page_title': analysis.page_title, 'status': analysis.get_status_display(), 'started': analysis.started_at, 'total_images': analysis.total_images, 'missing_alt': analysis.missing_alt_count, 'generated_alt': analysis.generated_alt_count}
-
-def _build_serp(user):
-    analysis = SERPAnalysis.objects.filter(requested_by=user).order_by('-started_at').first()
-    if not analysis: return None
-    status_class = {'completed': 'success', 'running': 'primary', 'failed': 'danger'}
-    def overall(snap):
-        try:
-            return round(float((snap or {}).get('scores', {}).get('overall') or 0))
-        except (TypeError, ValueError):
-            return 0
-    labels = ['You']
-    scores = [overall(analysis.target_snapshot)]
-    for index, comp in enumerate(analysis.competitor_snapshots or [], start=1):
-        labels.append('Comp ' + str(index))
-        scores.append(overall(comp))
-    return {'keyword': analysis.keyword, 'status': analysis.get_status_display(), 'status_cls': status_class.get(analysis.status, 'secondary'), 'started': analysis.started_at, 'labels': json.dumps(labels), 'scores': json.dumps(scores)}
 
 @login_required(login_url='sign-in')
 def dashboard_view(request):
@@ -119,7 +86,6 @@ def dashboard_view(request):
         'content_gap': _build_content_gap(request.user),
         'keyword': _build_keyword(request.user),
         'bulk_alt_text': _build_bulk_alt_text(request.user),
-        'serp': _build_serp(request.user),
     }
     return render(request, 'general/dashboard.html', context)
 
@@ -184,7 +150,7 @@ def billing_view(request):
     else:
         limit = 50000
         if selected_api == 'anthropic':
-            total_used = 57688
+            total_used = 47688
             usage_data = {
                 'input_tokens': 34000, 'output_tokens': 14500, 'total_tokens': total_used, 'limit': limit,
                 'remaining': max(0, limit - total_used), 'usage_percent': min((total_used / limit) * 100, 100)
@@ -273,54 +239,115 @@ def token_usage_chart_api(request):
             data = {"categories": ["Week 1", "Week 2", "Week 3", "Current"], "series": [{"name": "API Tokens Used", "data": [0, 0, 0, 0]}]}
     return JsonResponse(data)
 
+
+@login_required(login_url='sign-in')
 @user_passes_test(lambda u: u.is_superuser)
 def roles_permissions_view(request):
-    apps_to_manage = ['technical_seo', 'page_speed_and_cwv', 'pricing_pr_monitor', 'keyword_research', 'content_gap', 'bulk_alt_text', 'serp_analysis']
-    permissions = Permission.objects.filter(content_type__app_label__in=apps_to_manage)
-    
+    Role.ensure_defaults()
+
+    permission_fields = [
+        'seo_view', 'seo_page_speed_and_cwv', 'seo_pricing_pr_monitor', 'seo_brand_mentions',
+        'seo_keyword_research', 'seo_technical_seo_audit', 'seo_serp_analysis', 'seo_internal_linking',
+        'seo_content_gaps', 'seo_bulk_alt_text', 'analytics_view', 'analytics_overview',
+        'analytics_traffic_insights', 'analytics_performance_trends', 'automation_view',
+        'automation_ai_workflows', 'automation_prompt_library', 'automation_automation_rules',
+    ]
+
     if request.method == 'POST':
         action = request.POST.get('action')
-        if action == 'create_user':
-            username = request.POST.get('username')
-            email = request.POST.get('email')
-            password = request.POST.get('password')
-            role_id = request.POST.get('role_id')
+
+        if action == 'create_role':
+            role_name = (request.POST.get('new_role_name') or request.POST.get('role_name') or '').strip().lower()
+            if role_name:
+                role, _ = Role.objects.get_or_create(name=role_name)
+                for field in permission_fields:
+                    setattr(role, field, bool(request.POST.get(field)))
+                role.save()
+
+        elif action == 'save_role_permissions':
+            role_name = request.POST.get('role_name', '').strip().lower()
+            role = Role.objects.filter(name=role_name).first()
+            if role:
+                for field in permission_fields:
+                    setattr(role, field, bool(request.POST.get(field)))
+                role.save()
+
+        elif action == 'create_user':
+            username = request.POST.get('username', '').strip()
+            email = request.POST.get('email', '').strip()
+            password = request.POST.get('password', '')
+            initial_role = request.POST.get('initial_role', '').strip().lower() or 'user'
             if username and password:
                 user = User.objects.create_user(username=username, email=email, password=password)
-                if role_id:
-                    group = Group.objects.filter(id=role_id).first()
-                    if group:
-                        user.groups.add(group)
-        elif action == 'create_role':
-            role_name = request.POST.get('role_name')
-            perm_ids = request.POST.getlist('permissions')
-            if role_name:
-                group, created = Group.objects.get_or_create(name=role_name)
-                group.permissions.set(perm_ids)
-        elif action == 'update_user_role':
-            user_id = request.POST.get('user_id')
-            role_id = request.POST.get('role_id')
-            user = User.objects.filter(id=user_id).first()
+                profile, _ = Profile.objects.get_or_create(user=user)
+                profile.role = initial_role
+                profile.save()
+
+        elif action == 'assign_user_role':
+            user = User.objects.filter(id=request.POST.get('assign_user_id')).first()
+            assign_role_name = request.POST.get('assign_role_name', 'user').strip().lower() or 'user'
             if user:
-                user.groups.clear()
-                if role_id:
-                    group = Group.objects.filter(id=role_id).first()
-                    if group:
-                        user.groups.add(group)
-        elif action == 'approve_user':
-            user_id = request.POST.get('user_id')
-            user = User.objects.filter(id=user_id).first()
+                profile, _ = Profile.objects.get_or_create(user=user)
+                profile.role = assign_role_name
+                profile.save()
+
+        elif action == 'remove_role_member':
+            role_name = request.POST.get('role_name', '').strip().lower() or 'user'
+            user = User.objects.filter(id=request.POST.get('user_id')).first()
             if user:
-                user.is_active = True
-                user.save()
+                profile, _ = Profile.objects.get_or_create(user=user)
+                profile.role = 'user'
+                profile.save()
+                if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+                    user_count = Profile.objects.filter(role=role_name).count()
+                    return JsonResponse({'success': True, 'role_name': role_name, 'user_count': user_count})
+
+        elif action == 'delete_user':
+            user = User.objects.filter(id=request.POST.get('user_id')).first()
+            if user and not user.is_superuser:
+                user.delete()
+
+        elif action == 'delete_role':
+            role_name = request.POST.get('role_name', '').strip().lower()
+            role = Role.objects.filter(name=role_name).first()
+            if role:
+                Profile.objects.filter(role=role_name).update(role='user')
+                role.delete()
+
         return redirect('roles-permissions')
 
-    users = User.objects.prefetch_related('groups').all()
-    groups = Group.objects.prefetch_related('permissions').all()
-    
-    context = {
+    users = []
+    for user in User.objects.select_related('profile').all():
+        role_name = getattr(getattr(user, 'profile', None), 'role', None) or ('admin' if user.is_superuser else 'user')
+        users.append({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'full_name': user.get_full_name(),
+            'role': role_name,
+            'is_active': user.is_active,
+            'is_superuser': user.is_superuser,
+        })
+
+    role_counts = {}
+    for user in users:
+        role_counts[user['role']] = role_counts.get(user['role'], 0) + 1
+
+    roles = list(Role.objects.all())
+    for role in roles:
+        role.user_count = role_counts.get(role.name, 0)
+
+    role_user_data = {}
+    for user in users:
+        role_user_data.setdefault(user['role'], []).append({
+            'id': user['id'],
+            'username': user['username'],
+            'full_name': user['full_name'],
+            'email': user['email'],
+        })
+
+    return render(request, 'accounts/roles_permissions.html', {
         'users': users,
-        'groups': groups,
-        'permissions': permissions,
-    }
-    return render(request, 'general/roles_permissions.html', context)
+        'roles': roles,
+        'role_user_data_json': mark_safe(json.dumps(role_user_data)),
+    })

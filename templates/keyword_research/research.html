@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
 {% block title %}Keyword Research | Wisoft Co-Worker{% endblock %}
 {% block extra_css_scripts %}
@@ -32,7 +32,7 @@
                                 {% csrf_token %}
                                 <div class="fv-row mb-5">
                                     <label class="fs-6 fw-semibold mb-2">Page URL</label>
-                                    <input type="text"
+                                    <input type="url"
                                            name="website_url"
                                            class="form-control form-control-solid border border-gray-400"
                                            placeholder="https://example.com/service-page" />

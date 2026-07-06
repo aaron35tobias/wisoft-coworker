@@ -1,4 +1,4 @@
-# WiSoft Co-Worker AI Agent
+﻿# WiSoft Co-Worker AI Agent
 A comprehensive SEO AI agent platform built with Django. It provides an integrated suite of tools for Technical SEO audits, Content Gap analysis, Keyword Research, PageSpeed tracking, and Pricing/PR monitoring, powered by AI (Anthropic Claude & OpenAI).
 
 ## Prerequisites

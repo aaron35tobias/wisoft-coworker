@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, get_user_model, login, logout, update_session_auth_hash
+﻿from django.contrib.auth import authenticate, get_user_model, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
@@ -146,6 +146,22 @@ def profile_view(request):
                 errors['profile_picture'] = 'Please select an image to upload.'
             active_section = 'profile_picture'
 
+        elif action == 'delete_banner_image':
+            if hasattr(user, 'profile') and user.profile.banner_image:
+                user.profile.banner_image.delete(save=False)
+                user.profile.banner_image = None
+                user.profile.save()
+                success_message = 'Banner image removed successfully.'
+            active_section = 'banner'
+
+        elif action == 'delete_profile_picture':
+            if hasattr(user, 'profile') and user.profile.profile_picture:
+                user.profile.profile_picture.delete(save=False)
+                user.profile.profile_picture = None
+                user.profile.save()
+                success_message = 'Profile picture removed successfully.'
+            active_section = 'profile_picture'
+
         elif action == 'update_profile_details':
             first_name = request.POST.get('first_name', '').strip()
             last_name = request.POST.get('last_name', '').strip()
@@ -191,6 +207,7 @@ def profile_view(request):
             if not errors:
                 user.set_password(new_password)
                 user.save()
+                user.refresh_from_db()
                 update_session_auth_hash(request, user)
                 success_message = 'Password updated successfully.'
             active_section = 'password'
@@ -212,6 +229,66 @@ def profile_view(request):
     return render(request, 'accounts/profile.html', context)
 
 
+
 @login_required(login_url='sign-in')
 def settings_view(request):
-    return redirect('profile')
+    user = request.user
+    errors = {}
+    success_message = ''
+    active_tab = 'profile'  # default tab
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'update_profile_details':
+            first_name = request.POST.get('first_name', '').strip()
+            last_name = request.POST.get('last_name', '').strip()
+            new_username = request.POST.get('username', '').strip()
+
+            if not new_username:
+                errors['username'] = 'Username is required.'
+            elif User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
+                errors['username'] = 'Username is already taken.'
+
+            if not errors:
+                user.first_name = first_name
+                user.last_name = last_name
+                user.username = new_username
+                user.save()
+                success_message = 'Profile details updated successfully.'
+            active_tab = 'profile'
+
+        elif action == 'update_password':
+            current_password = request.POST.get('current_password', '')
+            new_password = request.POST.get('new_password', '')
+            confirm_password = request.POST.get('confirm_password', '')
+
+            if not current_password:
+                errors['password_current_password'] = 'Current password is required.'
+            elif not user.check_password(current_password):
+                errors['password_current_password'] = 'Incorrect current password.'
+
+            if not new_password:
+                errors['new_password'] = 'New password is required.'
+            elif len(new_password) < 8:
+                errors['new_password'] = 'Password must be at least 8 characters long.'
+
+            if new_password and new_password != confirm_password:
+                errors['confirm_password'] = 'Passwords do not match.'
+
+            if not errors:
+                user.set_password(new_password)
+                user.save()
+                user.refresh_from_db()
+                update_session_auth_hash(request, user)
+                success_message = 'Password updated successfully.'
+            active_tab = 'password'
+
+        context = {
+            'errors': errors,
+            'success_message': success_message,
+            'active_tab': active_tab,
+        }
+        return render(request, 'accounts/settings.html', context)
+
+    return render(request, 'accounts/settings.html', {'active_tab': active_tab})
