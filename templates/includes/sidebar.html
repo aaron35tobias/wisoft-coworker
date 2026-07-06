@@ -97,8 +97,7 @@
                 data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent"
                 data-kt-menu-placement="right-start">
                 <img src="{% if request.user.profile.profile_picture %}{{ request.user.profile.profile_picture.url }}{% else %}{% static 'assets/images/default-avatar.svg' %}{% endif %}"
-                    alt="photo"
-                    data-default-src="{% static 'assets/images/default-avatar.svg' %}"
+                    alt="photo" data-default-src="{% static 'assets/images/default-avatar.svg' %}"
                     onerror="this.onerror=null;this.src=this.getAttribute('data-default-src')" />
             </button>
             <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px"
@@ -113,10 +112,12 @@
                         </div>
                         <div class="d-flex flex-column min-w-0 flex-grow-1 overflow-hidden" style="max-width: 145px;">
                             <div class="fw-bold d-flex align-items-center fs-5 min-w-0">
-                                <span class="text-truncate" title="{{ request.user.username }}">{{ request.user.username }}</span>
+                                <span class="text-truncate" title="{{ request.user.username }}">{{ request.user.username
+                                    }}</span>
                             </div>
                             <span class="fw-semibold text-muted fs-7 text-truncate d-block"
-                                title="{{ request.user.email|default:'No email' }}">{{ request.user.email|default:"No email" }}</span>
+                                title="{{ request.user.email|default:'No email' }}">{{ request.user.email|default:"No
+                                email" }}</span>
                         </div>
                     </div>
                 </div>
@@ -412,8 +413,9 @@
                                 class="menu-link{% if request.resolver_match.url_name == 'roles-permissions' %} active{% endif %}"
                                 href="{% url 'roles-permissions' %}"><span class="menu-icon"><i
                                         class="ki-duotone ki-security-user fs-2"><span class="path1"></span><span
-                                            class="path2"></span></i></span><span class="menu-title">User & Role Management
-                                    </span></a></div>
+                                            class="path2"></span></i></span><span class="menu-title">User & Role
+                                    Management
+                                </span></a></div>
                     </div>
                 </div>
                 {% endif %}

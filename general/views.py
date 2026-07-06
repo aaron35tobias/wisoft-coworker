@@ -147,7 +147,7 @@ def billing_view(request):
     else:
         limit = 50000
         if selected_api == 'anthropic':
-            total_used = 47688
+            total_used = 57688
             usage_data = {
                 'input_tokens': 34000, 'output_tokens': 14500, 'total_tokens': total_used, 'limit': limit,
                 'remaining': max(0, limit - total_used), 'usage_percent': min((total_used / limit) * 100, 100)
