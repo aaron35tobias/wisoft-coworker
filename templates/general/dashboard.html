@@ -45,11 +45,10 @@
 <div class="d-flex align-items-center mb-4">
 <div class="symbol symbol-40px me-3"><span class="symbol-label bg-light-primary"><i class="ki-duotone ki-rocket fs-2 text-primary"><span class="path1"></span><span class="path2"></span></i></span></div>
 <span class="text-gray-900 fw-bold fs-4">Page Speed &amp; CWV</span>
+<a href="{% url 'page_speed_and_cwv:website-list' %}" class="btn btn-sm btn-light-primary ms-auto flex-shrink-0">View Analysis</a>
 </div>
 {% if speed %}
-<div class="fs-1 fw-bold text-gray-900 text-truncate mb-1">{{ speed.domain }}</div>
-<div class="fw-semibold fs-8 text-uppercase mb-4 {% if speed.has_report %}text-success{% else %}text-gray-500{% endif %}">{% if speed.has_report %}Scanned {{ speed.scanned_at|date:"d M Y, g:i A" }}{% else %}Not scanned yet{% endif %}</div>
-<div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-1">Performance Scores</div>
+<div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-1 text-center">Performance Scores</div>
 <div id="chart_page_speed" style="height: 225px;"></div>
 <div class="d-flex flex-wrap justify-content-center gap-3 fs-8 fw-semibold text-gray-700 mb-2">
 <span class="d-flex align-items-center"><span class="me-1 rounded-circle d-inline-block" style="width:9px;height:9px;background:#50CD89;"></span>Performance</span>
@@ -58,16 +57,12 @@
 <span class="d-flex align-items-center"><span class="me-1 rounded-circle d-inline-block" style="width:9px;height:9px;background:#7239EA;"></span>SEO</span>
 </div>
 <div class="separator separator-dashed mb-3"></div>
-<div class="d-flex align-items-center">
-<span class="text-gray-500 fw-semibold fs-8 text-uppercase me-2">Devices</span>
-{% for d in speed.devices %}<span class="badge badge-light-primary me-1">{{ d }}</span>{% empty %}<span class="text-gray-400 fw-semibold fs-7">—</span>{% endfor %}
-</div>
+<div class="fs-5 fw-bold text-gray-900 text-truncate text-center">{{ speed.domain }}</div>
 {% else %}
 <div class="d-flex flex-column flex-grow-1 justify-content-center align-items-center text-center py-5">
 <span class="text-gray-600 fw-semibold fs-7">No website added yet</span>
 </div>
 {% endif %}
-<a href="{% url 'page_speed_and_cwv:website-list' %}" class="stretched-link"></a>
 </div>
 </div>
 </div>
@@ -85,6 +80,7 @@
 <div class="text-gray-900 fw-bold fs-4">Pricing &amp; PR Monitor</div>
 <div class="text-gray-500 fw-semibold fs-8 text-truncate">{% if pricing %}{{ pricing.website }}{% else %}Competitor Tracking{% endif %}</div>
 </div>
+<a href="{% url 'pricing_pr_monitor:monitors' %}" class="btn btn-sm btn-light-info ms-auto flex-shrink-0">View Analysis</a>
 </div>
 {% if pricing %}
 <div class="row g-4 mb-3">
@@ -110,7 +106,6 @@
 <span class="text-gray-600 fw-semibold fs-7">No monitors analysed yet</span>
 </div>
 {% endif %}
-<a href="{% url 'pricing_pr_monitor:monitors' %}" class="stretched-link"></a>
 </div>
 </div>
 </div>
@@ -125,19 +120,23 @@
 <div class="d-flex align-items-center mb-4">
 <div class="symbol symbol-40px me-3"><span class="symbol-label bg-light-primary"><i class="ki-duotone ki-key fs-2 text-primary"><span class="path1"></span><span class="path2"></span></i></span></div>
 <span class="text-gray-900 fw-bold fs-4">Keyword Research</span>
+<a href="{% url 'keyword_research:research' %}" class="btn btn-sm btn-light-primary ms-auto flex-shrink-0">View Analysis</a>
 </div>
 {% if keyword %}
-<div class="text-gray-500 fw-semibold fs-8 text-uppercase">Latest</div>
-<div class="fs-4 fw-bold text-gray-900 text-truncate mb-1">{{ keyword.website }}</div>
-<div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-3">{{ keyword.ideas_total }} keyword ideas{% if keyword.seed %} · seed: {{ keyword.seed }}{% endif %}</div>
-<div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-1">Keyword Priority Mix</div>
+<div class="d-flex flex-column flex-grow-1 justify-content-center">
+<div class="d-flex justify-content-between align-items-center mb-1">
+<span class="text-gray-500 fw-semibold fs-8 text-uppercase text-truncate me-2">{{ keyword.ideas_total }} keyword ideas{% if keyword.seed %} · seed: {{ keyword.seed }}{% endif %}</span>
+<span class="text-gray-500 fw-semibold fs-8 text-uppercase flex-shrink-0">Keyword Priority Mix</span>
+</div>
 <div id="chart_keyword" style="height: 235px;"></div>
+<div class="separator separator-dashed mb-3"></div>
+<div class="fs-5 fw-bold text-gray-900 text-truncate text-center">{{ keyword.website }}</div>
+</div>
 {% else %}
 <div class="d-flex flex-column flex-grow-1 justify-content-center align-items-center text-center py-5">
 <span class="text-gray-600 fw-semibold fs-7">No research run yet</span>
 </div>
 {% endif %}
-<a href="{% url 'keyword_research:research' %}" class="stretched-link"></a>
 </div>
 </div>
 </div>
@@ -152,10 +151,9 @@
 <div class="d-flex align-items-center mb-5">
 <div class="symbol symbol-40px me-3"><span class="symbol-label bg-light-warning"><i class="ki-duotone ki-setting-2 fs-2 text-warning"><span class="path1"></span><span class="path2"></span></i></span></div>
 <span class="text-gray-900 fw-bold fs-4">Technical SEO Audit</span>
+<a href="{% url 'technical_seo:audits' %}" class="btn btn-sm btn-light-warning ms-auto flex-shrink-0">View Analysis</a>
 </div>
 {% if tech %}
-<div class="text-gray-500 fw-semibold fs-8 text-uppercase">Latest</div>
-<div class="fs-4 fw-bold text-gray-900 text-truncate mb-4">{{ tech.domain }}</div>
 <div class="row g-3 mb-2">
 <div class="col-6"><div class="d-flex align-items-center"><i class="ki-duotone ki-check-circle fs-2 text-success me-2"><span class="path1"></span><span class="path2"></span></i><div><div class="fw-bold text-gray-900 fs-7 lh-1">{{ tech.status }}</div><div class="text-gray-500 fs-8">Status</div></div></div></div>
 <div class="col-6"><div class="d-flex align-items-center"><i class="ki-duotone {% if tech.critical %}ki-cross-circle text-danger{% else %}ki-check-circle text-success{% endif %} fs-2 me-2"><span class="path1"></span><span class="path2"></span></i><div><div class="fw-bold text-gray-900 fs-7 lh-1">{{ tech.critical }}</div><div class="text-gray-500 fs-8">Critical</div></div></div></div>
@@ -164,12 +162,13 @@
 </div>
 <div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-1">PageSpeed Scores</div>
 <div id="chart_tech"></div>
+<div class="separator separator-dashed mb-3"></div>
+<div class="fs-5 fw-bold text-gray-900 text-truncate text-center">{{ tech.domain }}</div>
 {% else %}
 <div class="d-flex flex-column flex-grow-1 justify-content-center align-items-center text-center py-5">
 <span class="text-gray-600 fw-semibold fs-7">No audit yet</span>
 </div>
 {% endif %}
-<a href="{% url 'technical_seo:audits' %}" class="stretched-link"></a>
 </div>
 </div>
 </div>
@@ -184,19 +183,19 @@
 <div class="d-flex align-items-center mb-4">
 <div class="symbol symbol-40px me-3"><span class="symbol-label bg-light-success"><i class="ki-duotone ki-abstract-41 fs-2 text-success"><span class="path1"></span><span class="path2"></span></i></span></div>
 <span class="text-gray-900 fw-bold fs-4">Content Gaps</span>
+<a href="{% url 'content_gap:analysis' %}" class="btn btn-sm btn-light-success ms-auto flex-shrink-0">View Analysis</a>
 </div>
 {% if content_gap %}
-<div class="text-gray-500 fw-semibold fs-8 text-uppercase">Latest</div>
-<div class="fs-4 fw-bold text-gray-900 text-truncate mb-1">{{ content_gap.website }}</div>
 <div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-3">{{ content_gap.gaps_total }} gaps · {{ content_gap.keywords_total }} keyword opportunities</div>
 <div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-1">Gap Priority Mix</div>
 <div id="chart_content_gap" style="height: 235px;"></div>
+<div class="separator separator-dashed mb-3"></div>
+<div class="fs-5 fw-bold text-gray-900 text-truncate text-center">{{ content_gap.website }}</div>
 {% else %}
 <div class="d-flex flex-column flex-grow-1 justify-content-center align-items-center text-center py-5">
 <span class="text-gray-600 fw-semibold fs-7">No analysis yet</span>
 </div>
 {% endif %}
-<a href="{% url 'content_gap:analysis' %}" class="stretched-link"></a>
 </div>
 </div>
 </div>
@@ -214,6 +213,7 @@
 <div class="text-gray-900 fw-bold fs-4">SERP Analysis</div>
 <div class="text-gray-500 fw-semibold fs-8 text-truncate">{% if serp %}{{ serp.keyword }}{% else %}Rank Tracking{% endif %}</div>
 </div>
+<a href="{% url 'serp_analysis:analysis' %}" class="btn btn-sm btn-light-info ms-auto flex-shrink-0">View Analysis</a>
 </div>
 {% if serp %}
 <div class="text-gray-500 fw-semibold fs-8 text-uppercase mb-1">SEO Score vs Competitors</div>
@@ -223,7 +223,6 @@
 <span class="text-gray-600 fw-semibold fs-7">No analysis yet</span>
 </div>
 {% endif %}
-<a href="{% url 'serp_analysis:analysis' %}" class="stretched-link"></a>
 </div>
 </div>
 </div>
@@ -240,7 +239,7 @@
 <div class="text-gray-900 fw-bold fs-4">Internal Linking</div>
 <div class="text-gray-500 fw-semibold fs-8">Link Suggestions</div>
 </div>
-<span class="badge badge-light fw-bold ms-auto">Coming soon</span>
+<a href="#" class="btn btn-sm btn-light-danger ms-auto flex-shrink-0">View Analysis</a>
 </div>
 <table class="table table-row-dashed align-middle fs-8 mb-3">
 <thead><tr class="text-gray-500 fw-bold"><th>Page</th><th class="text-end">Opportunities</th></tr></thead>
@@ -250,7 +249,6 @@
 <tr><td class="text-gray-800">/about</td><td class="text-end"><span class="badge badge-light-secondary fs-8 fw-bold">1</span></td></tr>
 </tbody>
 </table>
-<a href="#" class="stretched-link"></a>
 </div>
 </div>
 </div>
@@ -264,6 +262,7 @@
 <div class="d-flex align-items-center mb-4">
 <div class="symbol symbol-40px me-3"><span class="symbol-label bg-light-primary"><i class="ki-duotone ki-picture fs-2 text-primary"><span class="path1"></span><span class="path2"></span></i></span></div>
 <span class="text-gray-900 fw-bold fs-4">Bulk Alt Text</span>
+<a href="{% url 'bulk_alt_text:generate' %}" class="btn btn-sm btn-light-primary ms-auto flex-shrink-0">View Analysis</a>
 </div>
 {% if bulk_alt_text %}
 <div class="text-gray-500 fw-semibold fs-8 text-uppercase">Latest</div>
@@ -279,7 +278,6 @@
 <span class="text-gray-600 fw-semibold fs-7">No images processed yet</span>
 </div>
 {% endif %}
-<a href="{% url 'bulk_alt_text:generate' %}" class="stretched-link"></a>
 </div>
 </div>
 </div>
@@ -296,7 +294,7 @@
 <div class="text-gray-900 fw-bold fs-4">Brand Mentions</div>
 <div class="text-gray-500 fw-semibold fs-8">Mentions &amp; Sentiment</div>
 </div>
-<span class="badge badge-light fw-bold ms-auto">Coming soon</span>
+<a href="#" class="btn btn-sm btn-light-info ms-auto flex-shrink-0">View Analysis</a>
 </div>
 <table class="table table-row-dashed align-middle fs-8 mb-3">
 <thead><tr class="text-gray-500 fw-bold"><th>Source</th><th class="text-end">Sentiment</th></tr></thead>
@@ -306,7 +304,6 @@
 <tr><td class="text-gray-800">forum thread</td><td class="text-end"><span class="badge badge-light-danger fs-8 fw-bold">Negative</span></td></tr>
 </tbody>
 </table>
-<a href="#" class="stretched-link"></a>
 </div>
 </div>
 </div>
@@ -1006,13 +1003,23 @@
     <script>
     document.addEventListener("DOMContentLoaded", function () {
         if (typeof ApexCharts === "undefined") { return; }
+        var apexInstances = [];
+        var am5RootsList = [];
+
+        function buildCharts() {
+        apexInstances.forEach(function (ch) { try { ch.destroy(); } catch (e) {} });
+        apexInstances = [];
+        am5RootsList.forEach(function (r) { try { r.dispose(); } catch (e) {} });
+        am5RootsList = [];
         var C = { primary: "#009EF7", success: "#50CD89", warning: "#FFC700", danger: "#F1416C", info: "#7239EA" };
-        var track = "#F1F1F4";
+        var isDark = document.documentElement.getAttribute("data-bs-theme") === "dark";
+        var chartText = isDark ? "#FFFFFF" : "#5E6278";
+        var track = isDark ? "#2B2B40" : "#F1F1F4";
 
         {% if speed %}
         if (typeof am5 !== "undefined" && document.querySelector("#chart_page_speed")) {
             am5.ready(function () {
-                var psRoot = am5.Root.new("chart_page_speed");
+                var psRoot = am5.Root.new("chart_page_speed"); am5RootsList.push(psRoot);
                 psRoot.setThemes([am5themes_Animated.new(psRoot)]);
                 if (psRoot._logo) psRoot._logo.dispose();
 
@@ -1070,7 +1077,7 @@
         {% if keyword %}
         if (typeof am5 !== "undefined" && document.querySelector("#chart_keyword")) {
             am5.ready(function () {
-                var kwRoot = am5.Root.new("chart_keyword");
+                var kwRoot = am5.Root.new("chart_keyword"); am5RootsList.push(kwRoot);
                 kwRoot.setThemes([am5themes_Animated.new(kwRoot)]);
                 if (kwRoot._logo) kwRoot._logo.dispose();
 
@@ -1094,7 +1101,7 @@
                 var kwLegend = kwChart.children.push(am5.Legend.new(kwRoot, {
                     centerX: am5.percent(50), x: am5.percent(50), marginTop: 6
                 }));
-                kwLegend.labels.template.setAll({ fontSize: 11 });
+                kwLegend.labels.template.setAll({ fontSize: 11, fill: am5.color(isDark ? 0xffffff : 0x5e6278) });
                 kwLegend.valueLabels.template.set("forceHidden", true);
                 kwLegend.data.setAll(kwSeries.dataItems);
 
@@ -1107,25 +1114,26 @@
         (function () {
             var el = document.querySelector("#chart_tech");
             if (!el) return;
-            new ApexCharts(el, {
+            var techChart = new ApexCharts(el, {
                 chart: { type: "radialBar", height: 200 },
                 series: [{{ tech.mobile_score|default:0 }}, {{ tech.desktop_score|default:0 }}],
                 labels: ["Mobile", "Desktop"],
                 colors: [C.primary, C.success],
                 stroke: { lineCap: "round" },
                 plotOptions: { radialBar: { hollow: { size: "48%" }, track: { background: track },
-                    dataLabels: { name: { fontSize: "12px", offsetY: -6 }, value: { fontSize: "18px", fontWeight: 700, offsetY: 2, formatter: function (v) { return Math.round(v); } },
-                        total: { show: true, label: "Avg", fontSize: "12px", formatter: function (w) {
+                    dataLabels: { name: { fontSize: "12px", offsetY: -6, color: chartText }, value: { fontSize: "18px", fontWeight: 700, offsetY: 2, color: chartText, formatter: function (v) { return Math.round(v); } },
+                        total: { show: true, label: "Avg", fontSize: "12px", color: chartText, formatter: function (w) {
                             var s = w.globals.series, sum = 0, i; for (i = 0; i < s.length; i++) { sum += s[i]; } return Math.round(sum / s.length); } } } } },
-                legend: { show: true, position: "bottom", fontSize: "11px" }
-            }).render();
+                legend: { show: true, position: "bottom", fontSize: "11px", labels: { colors: chartText } }
+            });
+            techChart.render(); apexInstances.push(techChart);
         })();
         {% endif %}
 
         {% if content_gap %}
         if (typeof am5 !== "undefined" && document.querySelector("#chart_content_gap")) {
             am5.ready(function () {
-                var cgRoot = am5.Root.new("chart_content_gap");
+                var cgRoot = am5.Root.new("chart_content_gap"); am5RootsList.push(cgRoot);
                 cgRoot.setThemes([am5themes_Animated.new(cgRoot)]);
                 if (cgRoot._logo) cgRoot._logo.dispose();
 
@@ -1149,7 +1157,7 @@
                 var cgLegend = cgChart.children.push(am5.Legend.new(cgRoot, {
                     centerX: am5.percent(50), x: am5.percent(50), marginTop: 6
                 }));
-                cgLegend.labels.template.setAll({ fontSize: 11 });
+                cgLegend.labels.template.setAll({ fontSize: 11, fill: am5.color(isDark ? 0xffffff : 0x5e6278) });
                 cgLegend.valueLabels.template.set("forceHidden", true);
                 cgLegend.data.setAll(cgSeries.dataItems);
 
@@ -1162,11 +1170,11 @@
         (function () {
             var el = document.querySelector("#chart_serp");
             if (!el) return;
-            new ApexCharts(el, {
+            var serpChart = new ApexCharts(el, {
                 chart: { type: "area", height: 200, toolbar: { show: false }, zoom: { enabled: false } },
                 series: [{ name: "SEO Score", data: {{ serp.scores|safe }} }],
-                xaxis: { categories: {{ serp.labels|safe }}, labels: { style: { fontSize: "10px" } }, axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false } },
-                yaxis: { min: 0, max: 100, tickAmount: 4, labels: { style: { fontSize: "10px" }, formatter: function (v) { return Math.round(v); } } },
+                xaxis: { categories: {{ serp.labels|safe }}, labels: { style: { fontSize: "10px", colors: chartText } }, axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false } },
+                yaxis: { min: 0, max: 100, tickAmount: 4, labels: { style: { fontSize: "10px", colors: chartText }, formatter: function (v) { return Math.round(v); } } },
                 colors: [C.info],
                 stroke: { curve: "smooth", width: 3 },
                 dataLabels: { enabled: false },
@@ -1174,9 +1182,20 @@
                 grid: { strokeDashArray: 4, borderColor: "#E4E6EF", xaxis: { lines: { show: false } } },
                 markers: { size: 0, colors: [C.info], strokeColors: "#fff", strokeWidth: 2, hover: { size: 7 } },
                 tooltip: { y: { formatter: function (v) { return Math.round(v) + " / 100"; } } }
-            }).render();
+            });
+            serpChart.render(); apexInstances.push(serpChart);
         })();
         {% endif %}
+        }
+
+        buildCharts();
+
+        var themeObserver = new MutationObserver(function (mutations) {
+            for (var mi = 0; mi < mutations.length; mi++) {
+                if (mutations[mi].attributeName === "data-bs-theme") { buildCharts(); break; }
+            }
+        });
+        themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-bs-theme"] });
     });
     </script>
     <!--end::SEO feature card charts-->
