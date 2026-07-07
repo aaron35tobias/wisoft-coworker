@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
 from django.core.mail import send_mail
 from django.conf import settings
-import anthropic
+from general.context_processors import MOCK_USAGE
 
 from technical_seo.models import TechnicalSEOAudit
 from page_speed_and_cwv.models import WebsiteSpeedReport, Website
@@ -102,41 +102,41 @@ def billing_view(request):
     limit_exceeded = False
     
     has_real_key = False
-    api_provider = "Mock Data"
-    api_upgrade_url = "#"
-    model_filter = Q()
+    api_provider = "Claude (Mock)"
+    api_upgrade_url = "https://console.anthropic.com/settings/billing"
 
-    if selected_api == 'anthropic' and anthropic_key and anthropic_key != 'xxx': 
+    if selected_api == 'anthropic' and anthropic_key and anthropic_key != 'xxx':
         has_real_key = True
-        api_provider = "Anthropic"
+        api_provider = "Claude"
         api_upgrade_url = "https://console.anthropic.com/settings/billing"
-        model_filter = Q(ai_model__icontains='claude') | Q(ai_model__icontains='anthropic')
-    elif selected_api == 'openai' and openai_key and openai_key != 'xxx': 
+    elif selected_api == 'openai' and openai_key and openai_key != 'xxx':
         has_real_key = True
         api_provider = "OpenAI"
         api_upgrade_url = "https://platform.openai.com/account/billing"
-        model_filter = Q(ai_model__icontains='gpt') | Q(ai_model__icontains='openai')
-    elif selected_api == 'gemini' and gemini_key and gemini_key != 'xxx': 
+    elif selected_api == 'gemini' and gemini_key and gemini_key != 'xxx':
         has_real_key = True
         api_provider = "Google Gemini"
         api_upgrade_url = "https://aistudio.google.com/app/billing"
-        model_filter = Q(ai_model__icontains='gemini')
     else:
-        # Fallback to mock data names if no key
         if selected_api == 'anthropic': api_provider = "Claude (Mock)"
         elif selected_api == 'openai': api_provider = "GPT (Mock)"
         elif selected_api == 'gemini': api_provider = "Gemini (Mock)"
 
     if has_real_key:
+        # Real key — query actual usage from DB
         try:
-            limit = int(os.environ.get('MONTHLY_TOKEN_LIMIT', 50000)) #if key is real limit is 5K
+            limit = int(os.environ.get('MONTHLY_TOKEN_LIMIT', 50000))
             total_input = 0
             total_output = 0
             total_used = 0
             models_to_check = [TechnicalSEOAudit, PricingPRRun, KeywordResearchRun, ContentGapAnalysis]
             
             for model in models_to_check:
-                agg = model.objects.filter(requested_by=request.user).filter(model_filter).aggregate(sum_in=Sum('ai_input_tokens'), sum_out=Sum('ai_output_tokens'), sum_tot=Sum('ai_total_tokens'))
+                agg = model.objects.filter(requested_by=request.user).aggregate(
+                    sum_in=Sum('ai_input_tokens'),
+                    sum_out=Sum('ai_output_tokens'),
+                    sum_tot=Sum('ai_total_tokens')
+                )
                 total_input += agg['sum_in'] or 0
                 total_output += agg['sum_out'] or 0
                 total_used += agg['sum_tot'] or 0
@@ -148,30 +148,21 @@ def billing_view(request):
         except Exception as e:
             error = f"Error aggregating local token usage: {str(e)}"
     else:
-        limit = 50000
-        if selected_api == 'anthropic':
-            total_used = 47688
-            usage_data = {
-                'input_tokens': 34000, 'output_tokens': 14500, 'total_tokens': total_used, 'limit': limit,
-                'remaining': max(0, limit - total_used), 'usage_percent': min((total_used / limit) * 100, 100)
-            }
-        elif selected_api == 'openai':
-            total_used = 25000
-            usage_data = {
-                'input_tokens': 15000, 'output_tokens': 10000, 'total_tokens': total_used, 'limit': limit,
-                'remaining': max(0, limit - total_used), 'usage_percent': min((total_used / limit) * 100, 100)
-            }
-        elif selected_api == 'gemini':
-            total_used = 5000
-            usage_data = {
-                'input_tokens': 3000, 'output_tokens': 2000, 'total_tokens': total_used, 'limit': limit,
-                'remaining': max(0, limit - total_used), 'usage_percent': min((total_used / limit) * 100, 100)
-            }
+        # No real key (missing or 'xxx') — use shared mock data
+        mock = MOCK_USAGE.get(selected_api, MOCK_USAGE['anthropic'])
+        limit = mock['limit']
+        total_used = mock['total_tokens']
+        usage_data = {
+            'input_tokens': mock['input_tokens'], 'output_tokens': mock['output_tokens'],
+            'total_tokens': total_used, 'limit': limit,
+            'remaining': max(0, limit - total_used),
+            'usage_percent': min((total_used / limit) * 100, 100) if limit > 0 else 100
+        }
 
     if usage_data:
         if usage_data['usage_percent'] >= 100:
             limit_exceeded = True
-            request.session['limit_exceeded'] = True
+            # Send a one-time email alert (tracked in session to avoid spam)
             if not request.session.get('billing_alert_sent', False):
                 user_email = request.user.email
                 if user_email:
@@ -184,7 +175,6 @@ def billing_view(request):
                         pass
         else:
             limit_exceeded = False
-            request.session['limit_exceeded'] = False
             request.session['billing_alert_sent'] = False
 
     context = {

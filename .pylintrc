@@ -1,0 +1,28 @@
+[MAIN]
+load-plugins=pylint_django
+django-settings-module=wisoft_co_worker.settings
+
+# Ignore migrations folders entirely
+ignore=migrations,__pycache__,node_modules,.venv
+
+[FORMAT]
+# Allow up to 150 chars per line (Django projects commonly use this)
+max-line-length=150
+
+[MESSAGES CONTROL]
+# Disable rules that don't make sense for Django projects:
+disable=C0114,C0115,C0116,R0801,R0903,R0901,W0613,W0107,C0301,R0914,R0912,R0915,W0718,W0612,C0103,C0415,R1705,R1716,W0611,C0303,C0321,C0411,C0412,R0917,E5142,duplicate-code
+
+[DESIGN]
+max-args=12
+max-locals=35
+max-returns=15
+max-branches=30
+max-statements=100
+
+[SIMILARITIES]
+ignore-imports=yes
+min-similarity-lines=15
+
+[TYPECHECK]
+generated-members=objects,DoesNotExist,MultipleObjectsReturned,id,pk

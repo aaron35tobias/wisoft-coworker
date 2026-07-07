@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <!--begin::Head-->
@@ -483,22 +483,71 @@ padding-left: 1rem !important;
 padding-right: 1rem !important;
 }
 }
-body.has-top-alert #header-limit-alert {
-    position: sticky;
-    top: 0;
-    z-index: 1200;
+/* Bottom-left toast alert */
+#limit-toast-alert {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #dc3545;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(220, 53, 69, 0.35);
+    font-size: 13px;
+    font-weight: 500;
+    max-width: 420px;
+    min-width: 320px;
+    animation: toastSlideIn 0.4s ease-out;
 }
-body.has-top-alert #kt_header {
-    top: var(--top-alert-h, 0px) !important;
+#limit-toast-alert .toast-icon {
+    flex-shrink: 0;
+    font-size: 18px;
 }
-body.has-top-alert #kt_aside {
-    top: var(--top-alert-h, 0px) !important;
+#limit-toast-alert .toast-message {
+    flex: 1;
+    line-height: 1.4;
 }
-body.has-top-alert .seo-sidebar-rail,
-body.has-top-alert .seo-sidebar-panel,
-body.has-top-alert #kt_aside {
-    height: calc(100vh - var(--top-alert-h, 0px)) !important;
-    min-height: calc(100vh - var(--top-alert-h, 0px)) !important;
+#limit-toast-alert .toast-message a {
+    color: #fff;
+    text-decoration: underline;
+    font-weight: 700;
+}
+#limit-toast-alert .toast-message a:hover {
+    opacity: 0.85;
+}
+#limit-toast-alert .toast-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+#limit-toast-alert .toast-close:hover {
+    opacity: 1;
+}
+@keyframes toastSlideIn {
+    from { transform: translateX(-100%); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
+}
+@media (max-width: 576px) {
+    #limit-toast-alert {
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 90%;
+    }
+    @keyframes toastSlideIn {
+        from { transform: translateX(-50%) translateY(30px); opacity: 0; }
+        to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+    }
 }
 </style>
 <script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
@@ -513,14 +562,11 @@ body.has-top-alert #kt_aside {
 <!--begin::Root-->
 <div class="d-flex flex-column flex-root">
         {% if global_limit_exceeded %}
-        <!-- Global API limit alert bar: full width, top of page, pushes the app down -->
-        <!-- Hidden on billing page via JS marker element -->
-        <div id="header-limit-alert" class="alert alert-danger d-flex align-items-center justify-content-center p-4 mb-0 rounded-0 d-none">
-            <i class="ki-duotone ki-warning fs-2hx text-danger me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>
-            <div class="d-flex flex-column text-center">
-                <h4 class="mb-1 text-danger">Action Required: API Limit Exceeded</h4>
-                <span class="text-gray-800">Your AI API usage for <strong>{{ api_provider }}</strong> has exceeded the limit. Please <a href="{% url 'billing' %}" class="fw-bold text-danger text-decoration-underline">upgrade your plan</a> to restore access.</span>
-            </div>
+        <!-- Bottom-left toast alert for API limit -->
+        <div id="limit-toast-alert" style="display:none;">
+            <span class="toast-icon">⚠</span>
+            <span class="toast-message">API limit exceeded for <strong>{{ api_provider }}</strong>. <a href="{% url 'billing' %}">Upgrade now</a></span>
+            <button class="toast-close" onclick="dismissToastAlert()" aria-label="Close">&times;</button>
         </div>
         {% endif %}
 <!--begin::Page-->
@@ -554,34 +600,30 @@ body.has-top-alert #kt_aside {
                 </div>
 
                 <script>
-                    function showTopAlert() {
-                        var el = document.getElementById('header-limit-alert');
+                    function showToastAlert() {
+                        var el = document.getElementById('limit-toast-alert');
                         if (!el) return;
-                        el.classList.remove('d-none');
-                        document.body.classList.add('has-top-alert');
-                        var syncHeight = function () {
-                            document.documentElement.style.setProperty('--top-alert-h', el.offsetHeight + 'px');
-                        };
-                        syncHeight();
-                        window.addEventListener('resize', syncHeight);
+                        el.style.display = 'flex';
+                    }
+
+                    function dismissToastAlert() {
+                        var el = document.getElementById('limit-toast-alert');
+                        if (el) el.style.display = 'none';
+                        sessionStorage.setItem('toast_alert_dismissed', 'true');
                     }
 
                     function dismissGlobalAlert() {
-                        // Closing the modal also means it won't pop up again this session
                         sessionStorage.setItem('limit_modal_shown', 'true');
                     }
 
                     document.addEventListener("DOMContentLoaded", function () {
-                        // On the billing page, the top alert is suppressed (page shows its own inline alert).
-                        // Check for a marker element that billing.html injects.
                         var isBillingPage = document.getElementById('billing-page-marker');
-                        if (!isBillingPage) {
-                            // The top banner stays visible the whole time the limit is exceeded
-                            showTopAlert();
+                        // Show the bottom-left toast (unless on billing page or dismissed this session)
+                        if (!isBillingPage && sessionStorage.getItem('toast_alert_dismissed') !== 'true') {
+                            showToastAlert();
                         }
 
                         // Show the full-screen popup only ONCE per browser session
-                        // (on first visit after the app/server is opened), not on every refresh
                         if (sessionStorage.getItem('limit_modal_shown') !== 'true') {
                             var modalElement = document.getElementById('global_limit_modal');
                             if (modalElement) {
