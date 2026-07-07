@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 {% block title %}Content Gap Analysis | Wisoft Co-Worker{% endblock %}
 {% block extra_css_scripts %}
@@ -48,7 +48,7 @@ width: calc(100% - 32px);
                                 {% csrf_token %}
                                 <div class="fv-row mb-6">
                                     <label class="required fs-6 fw-semibold mb-2">Your Page URL</label>
-                                    <input type="url"
+                                    <input type="text"
                                            name="own_url"
                                            class="form-control form-control-solid border border-gray-400"
                                            placeholder="https://example.com/service-page"
@@ -72,7 +72,7 @@ width: calc(100% - 32px);
                                 </div>
                                 <div class="fv-row mb-4">
                                     <label class="required fs-6 fw-semibold mb-2">Competitor URL 1</label>
-                                    <input type="url"
+                                    <input type="text"
                                            name="competitor_url_1"
                                            class="form-control form-control-solid border border-gray-400"
                                            placeholder="https://competitor.com/page"
@@ -80,14 +80,14 @@ width: calc(100% - 32px);
                                 </div>
                                 <div class="fv-row mb-4">
                                     <label class="fs-6 fw-semibold mb-2">Competitor URL 2</label>
-                                    <input type="url"
+                                    <input type="text"
                                            name="competitor_url_2"
                                            class="form-control form-control-solid border border-gray-400"
                                            placeholder="https://competitor.com/another-page" />
                                 </div>
                                 <div class="fv-row mb-6">
                                     <label class="fs-6 fw-semibold mb-2">Competitor URL 3</label>
-                                    <input type="url"
+                                    <input type="text"
                                            name="competitor_url_3"
                                            class="form-control form-control-solid border border-gray-400"
                                            placeholder="https://competitor.com/comparison-page" />

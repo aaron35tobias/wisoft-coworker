@@ -1,4 +1,4 @@
-﻿from io import BytesIO
+from io import BytesIO
 import re
 import textwrap
 import zipfile
@@ -18,6 +18,7 @@ from django.views.decorators.http import require_GET, require_POST
 from .models import KeywordCartItem, KeywordResearchProject, KeywordResearchRun
 from .tasks import run_keyword_research_task
 from wisoft_co_worker.task_utils import enqueue_background_task
+from wisoft_co_worker.url_utils import normalize_url
 
 
 def get_user_run(user, run_id):
@@ -321,7 +322,7 @@ def run_research_view(request):
     if request.method != 'POST':
         return redirect('keyword_research:research')
 
-    website_url = request.POST.get('website_url', '').strip()
+    website_url = normalize_url(request.POST.get('website_url', ''))
     seed_keywords = request.POST.get('seed_keywords', '').strip()
     target_location = request.POST.get('target_location', '').strip()
     language = request.POST.get('language', '').strip()

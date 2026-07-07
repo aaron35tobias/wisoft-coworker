@@ -7,6 +7,21 @@ import re
 
 BULK_ALT_TEXT_TIMEOUT = 20
 
+# Look like a real browser so sites (e.g. Noon, Amazon) don't reject the request
+# with a 403. `Accept-Encoding: identity` keeps the response uncompressed so
+# urlopen returns readable HTML.
+BULK_ALT_TEXT_HEADERS = {
+    'User-Agent': (
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+        '(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+    ),
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'identity',
+    'Referer': 'https://www.google.com/',
+    'Upgrade-Insecure-Requests': '1',
+}
+
 
 class PageImageParser(HTMLParser):
     def __init__(self):
@@ -80,7 +95,7 @@ def build_alt_text(image_url, page_title):
 
 def run_bulk_alt_text_analysis(analysis):
     page_url = normalize_page_url(analysis.page_url)
-    request = Request(page_url, headers={'User-Agent': 'WisoftCoWorkerBot/1.0'})
+    request = Request(page_url, headers=BULK_ALT_TEXT_HEADERS)
 
     with urlopen(request, timeout=BULK_ALT_TEXT_TIMEOUT) as response:
         html_content = response.read().decode('utf-8', errors='ignore')

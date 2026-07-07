@@ -1,9 +1,10 @@
-﻿from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.core.validators import URLValidator
+from wisoft_co_worker.url_utils import normalize_url
 from django.http import JsonResponse
 from django.urls import reverse
 from django.utils import timezone
@@ -116,7 +117,7 @@ def page_list_redirect(website_id):
 @login_required(login_url='sign-in')
 def create_view(request):
     if request.method == 'POST':
-        website_url = request.POST.get('website_url', '').strip().lower()
+        website_url = normalize_url(request.POST.get('website_url', '').strip().lower())
         note = request.POST.get('note', '').strip()
         is_active = request.POST.get('is_active') == '1'
 
@@ -145,7 +146,7 @@ def create_view(request):
 def update_view(request):
     if request.method == 'POST':
         website_id = request.POST.get('website_id')
-        website_url = request.POST.get('website_url', '').strip().lower()
+        website_url = normalize_url(request.POST.get('website_url', '').strip().lower())
         note = request.POST.get('note', '').strip()
         is_active = request.POST.get('is_active') == '1'
         website = get_object_or_404(Website, id=website_id, added_by=request.user)
@@ -331,7 +332,7 @@ def create_page_view(request):
         return redirect('page_speed_and_cwv:website-list')
 
     website_id = request.POST.get('website_id')
-    page_url = request.POST.get('page_url', '').strip().lower()
+    page_url = normalize_url(request.POST.get('page_url', '').strip().lower())
     is_active = request.POST.get('is_active') == '1'
 
     website = get_object_or_404(Website, id=website_id, added_by=request.user)
@@ -360,7 +361,7 @@ def update_page_view(request):
         return redirect('page_speed_and_cwv:website-list')
 
     page_id = request.POST.get('page_id')
-    page_url = request.POST.get('page_url', '').strip().lower()
+    page_url = normalize_url(request.POST.get('page_url', '').strip().lower())
     is_active = request.POST.get('is_active') == '1'
 
     page = get_object_or_404(WebsitePage.objects.select_related('website'), id=page_id, website__added_by=request.user)
