@@ -3,27 +3,50 @@
 {% block title %}Image Variations | Wisoft Co-Worker{% endblock %}
 {% block extra_css_scripts %}
 <style>
-/* ---- Creative Image / Variations (dark tool, Firefly-style) ---- */
-.ci-shell { color: #cfd0e0; }
+/* ---- Creative Image / Variations (Firefly-style, theme-aware) ---- */
+/* light defaults */
+.ci-shell {
+    --ci-panel-bg: #ffffff; --ci-panel-border: #e1e3ea; --ci-head-border: #f1f1f4;
+    --ci-text: #181c32; --ci-muted: #99a1b7; --ci-label: #a1a5b7;
+    --ci-input-bg: #f9f9f9; --ci-input-border: #dbdfe9; --ci-input-text: #4b5675;
+    --ci-chip-border: #c4c9d4; --ci-chip-text: #4b5675; --ci-chip-text-on: #181c32;
+    --ci-pill-bg: #f9f9f9; --ci-pill-border: #dbdfe9; --ci-pill-text: #4b5675; --ci-pill-active-bg: #e1e3ea;
+    --ci-thumb-border: #c4c9d4; --ci-thumb-bg: #f9f9f9;
+    --ci-tile-bg: #f1f1f4; --ci-empty-border: #dbdfe9; --ci-empty-text: #99a1b7;
+    color: var(--ci-input-text);
+}
+/* dark overrides */
+[data-bs-theme="dark"] .ci-shell {
+    --ci-panel-bg: #12121c; --ci-panel-border: rgba(255, 255, 255, .06); --ci-head-border: rgba(255, 255, 255, .06);
+    --ci-text: #ffffff; --ci-muted: #9a9cb0; --ci-label: #6f7186;
+    --ci-input-bg: #1b1b29; --ci-input-border: rgba(255, 255, 255, .12); --ci-input-text: #e6e7f0;
+    --ci-chip-border: rgba(255, 255, 255, .25); --ci-chip-text: #b9bacb; --ci-chip-text-on: #ffffff;
+    --ci-pill-bg: #1b1b29; --ci-pill-border: rgba(255, 255, 255, .12); --ci-pill-text: #b9bacb; --ci-pill-active-bg: #2a2a3c;
+    --ci-thumb-border: rgba(255, 255, 255, .18); --ci-thumb-bg: rgba(255, 255, 255, .02);
+    --ci-tile-bg: #1b1b29; --ci-empty-border: rgba(255, 255, 255, .12); --ci-empty-text: #6f7186;
+}
+.ci-text { color: var(--ci-text) !important; }
+
 .ci-tabs .ci-tab {
-    background: transparent; border: 1px solid rgba(255, 255, 255, .12); color: #b5b7c8;
+    background: transparent; border: 1px solid var(--ci-panel-border); color: var(--ci-muted);
     border-radius: .65rem; padding: .5rem 1.1rem; font-weight: 600; font-size: .9rem;
 }
-.ci-tabs .ci-tab.active { background: #1b1b29; color: #fff; border-color: rgba(255, 255, 255, .2); }
+.ci-tabs .ci-tab.active { background: var(--ci-pill-active-bg); color: var(--ci-text); border-color: var(--ci-input-border); }
 
 .ci-panel {
-    background: #12121c; border: 1px solid rgba(255, 255, 255, .06); border-radius: 1rem;
+    background: var(--ci-panel-bg); border: 1px solid var(--ci-panel-border); border-radius: 1rem;
 }
-.ci-panel-head { border-bottom: 1px solid rgba(255, 255, 255, .06); }
+.ci-panel-head { border-bottom: 1px solid var(--ci-head-border); }
 .ci-badge-exp {
-    background: rgba(114, 57, 234, .18); color: #b18bff; border: 1px solid rgba(114, 57, 234, .35);
+    background: rgba(114, 57, 234, .14); color: #7239ea; border: 1px solid rgba(114, 57, 234, .30);
     font-size: .68rem; font-weight: 700; padding: .18rem .5rem; border-radius: .4rem; letter-spacing: .02em;
 }
-.ci-label { font-size: .7rem; letter-spacing: .08em; color: #6f7186; font-weight: 700; }
+[data-bs-theme="dark"] .ci-badge-exp { background: rgba(114, 57, 234, .18); color: #b18bff; }
+.ci-label { font-size: .7rem; letter-spacing: .08em; color: var(--ci-label); font-weight: 700; }
 
 /* upload / thumb box */
 .ci-thumb-box {
-    border: 1px dashed rgba(255, 255, 255, .18); border-radius: .75rem; background: rgba(255, 255, 255, .02);
+    border: 1px dashed var(--ci-thumb-border); border-radius: .75rem; background: var(--ci-thumb-bg);
     height: 130px; overflow: hidden; cursor: pointer; transition: border-color .2s ease, background .2s ease;
     position: relative;
 }
@@ -38,7 +61,7 @@
 
 /* MODE select */
 .ci-select {
-    background: #1b1b29; color: #e6e7f0; border: 1px solid rgba(255, 255, 255, .12);
+    background: var(--ci-input-bg); color: var(--ci-input-text); border: 1px solid var(--ci-input-border);
     border-radius: .6rem; padding: .55rem .8rem; width: 100%; font-weight: 600; font-size: .9rem;
 }
 
@@ -47,21 +70,21 @@
 .ci-chip { display: flex; align-items: center; gap: .5rem; cursor: pointer; user-select: none; }
 .ci-chip input { display: none; }
 .ci-chip .ci-box {
-    width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid rgba(255, 255, 255, .25);
+    width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--ci-chip-border);
     display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s;
 }
 .ci-chip .ci-box i { color: #fff; font-size: .7rem; opacity: 0; }
 .ci-chip input:checked + .ci-box { background: #009EF7; border-color: #009EF7; }
 .ci-chip input:checked + .ci-box i { opacity: 1; }
-.ci-chip .ci-txt { font-size: .85rem; color: #b9bacb; }
-.ci-chip input:checked ~ .ci-txt { color: #fff; }
+.ci-chip .ci-txt { font-size: .85rem; color: var(--ci-chip-text); }
+.ci-chip input:checked ~ .ci-txt { color: var(--ci-chip-text-on); }
 
 /* aspect / quality pills */
 .ci-pill {
-    background: #1b1b29; border: 1px solid rgba(255, 255, 255, .12); color: #b9bacb;
+    background: var(--ci-pill-bg); border: 1px solid var(--ci-pill-border); color: var(--ci-pill-text);
     border-radius: .55rem; padding: .45rem 0; font-weight: 600; font-size: .82rem; flex: 1; text-align: center; cursor: pointer;
 }
-.ci-pill.active { background: #2a2a3c; color: #fff; border-color: rgba(255, 255, 255, .25); }
+.ci-pill.active { background: var(--ci-pill-active-bg); color: var(--ci-text); border-color: var(--ci-input-border); }
 
 .ci-generate {
     background: #1b6ef5; border: none; color: #fff; border-radius: .7rem; padding: .8rem;
@@ -71,10 +94,10 @@
 .ci-generate:disabled { opacity: .5; cursor: not-allowed; }
 
 /* results */
-.ci-results-title { color: #9a9cb0; font-size: .95rem; font-weight: 600; }
+.ci-results-title { color: var(--ci-muted); font-size: .95rem; font-weight: 600; }
 .ci-grid { display: grid; gap: 6px; }
 .ci-tile {
-    position: relative; border-radius: .6rem; overflow: hidden; background: #1b1b29; aspect-ratio: 1 / 1;
+    position: relative; border-radius: .6rem; overflow: hidden; background: var(--ci-tile-bg); aspect-ratio: 1 / 1;
 }
 .ci-tile.ci-portrait { aspect-ratio: 2 / 3; }
 .ci-tile img { width: 100%; height: 100%; object-fit: cover; }
@@ -89,14 +112,14 @@
 }
 .ci-tile:hover .ci-tile-name { opacity: 1; }
 .ci-empty {
-    border: 1px dashed rgba(255, 255, 255, .12); border-radius: 1rem; color: #6f7186;
+    border: 1px dashed var(--ci-empty-border); border-radius: 1rem; color: var(--ci-empty-text);
     min-height: 340px; display: flex; align-items: center; justify-content: center; flex-direction: column;
 }
 
 /* history */
-.ci-hist-group-label { color: #9a9cb0; font-size: .85rem; font-weight: 700; }
+.ci-hist-group-label { color: var(--ci-muted); font-size: .85rem; font-weight: 700; }
 .ci-hist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .9rem; }
-.ci-hist-card { position: relative; border-radius: .75rem; overflow: hidden; background: #1b1b29; aspect-ratio: 1 / 1; border: 1px solid rgba(255, 255, 255, .06); }
+.ci-hist-card { position: relative; border-radius: .75rem; overflow: hidden; background: var(--ci-tile-bg); aspect-ratio: 1 / 1; border: 1px solid var(--ci-panel-border); }
 .ci-hist-card img { width: 100%; height: 100%; object-fit: cover; }
 .ci-hist-meta { position: absolute; left: 6px; bottom: 6px; background: rgba(0, 0, 0, .6); color: #fff; font-size: .62rem; padding: .12rem .45rem; border-radius: .3rem; }
 .ci-hist-del {
@@ -131,7 +154,7 @@
                 <div class="col-lg-4">
                     <div class="ci-panel">
                         <div class="ci-panel-head d-flex align-items-center p-4">
-                            <span class="fw-bold text-white fs-5 me-2">Variations</span>
+                            <span class="fw-bold ci-text fs-5 me-2">Variations</span>
                             <span class="ci-badge-exp">EXPERIMENTAL</span>
                         </div>
                         <div class="p-4">
@@ -196,7 +219,7 @@
         <!--begin::History view-->
         <div data-ci-view="history" class="d-none">
             <div class="d-flex align-items-center justify-content-between mb-4">
-                <h3 class="fw-bold text-white mb-0">History</h3>
+                <h3 class="fw-bold ci-text mb-0">History</h3>
                 <button type="button" class="btn btn-sm btn-light-danger" id="ci_hist_clear">
                     <i class="la la-trash fs-5"></i>Clear all
                 </button>
