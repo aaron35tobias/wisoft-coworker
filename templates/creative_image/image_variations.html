@@ -153,12 +153,12 @@
 .ci-hist-card img { width: 100%; height: 100%; object-fit: cover; }
 .ci-hist-meta { position: absolute; left: 6px; bottom: 6px; background: rgba(0, 0, 0, .6); color: #fff; font-size: .62rem; padding: .12rem .45rem; border-radius: .3rem; }
 .ci-hist-del {
-    position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%;
+    position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-radius: 50%;
     background: rgba(0, 0, 0, .6); color: #fff; border: none; display: flex; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity .15s;
+    opacity: 1; box-shadow: 0 2px 6px rgba(0, 0, 0, .3); transition: background .15s, transform .15s;
 }
-.ci-hist-card:hover .ci-hist-del { opacity: 1; }
-.ci-hist-del:hover { background: #f1416c; }
+.ci-hist-card:hover .ci-hist-del { background: #f1416c; transform: scale(1.08); }
+.ci-hist-del:hover { background: #d9214e; }
 </style>
 {% endblock %}
 {% block header %}
