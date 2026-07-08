@@ -29,7 +29,7 @@
 
 .ci-tabs .ci-tab {
     background: transparent; border: 1px solid var(--ci-panel-border); color: var(--ci-muted);
-    border-radius: .65rem; padding: .5rem 1.1rem; font-weight: 600; font-size: .9rem;
+    border-radius: .65rem; padding: .55rem 1.25rem; font-weight: 600; font-size: 1rem;
 }
 .ci-tabs .ci-tab.active { background: var(--ci-pill-active-bg); color: var(--ci-text); border-color: var(--ci-input-border); }
 
@@ -39,10 +39,10 @@
 .ci-panel-head { border-bottom: 1px solid var(--ci-head-border); }
 .ci-badge-exp {
     background: rgba(114, 57, 234, .14); color: #7239ea; border: 1px solid rgba(114, 57, 234, .30);
-    font-size: .68rem; font-weight: 700; padding: .18rem .5rem; border-radius: .4rem; letter-spacing: .02em;
+    font-size: .74rem; font-weight: 700; padding: .2rem .55rem; border-radius: .4rem; letter-spacing: .02em;
 }
 [data-bs-theme="dark"] .ci-badge-exp { background: rgba(114, 57, 234, .18); color: #b18bff; }
-.ci-label { font-size: .7rem; letter-spacing: .08em; color: var(--ci-label); font-weight: 700; }
+.ci-label { font-size: .8rem; letter-spacing: .08em; color: var(--ci-label); font-weight: 700; }
 
 /* upload / thumb box */
 .ci-thumb-box {
@@ -62,7 +62,7 @@
 /* MODE select */
 .ci-select {
     background: var(--ci-input-bg); color: var(--ci-input-text); border: 1px solid var(--ci-input-border);
-    border-radius: .6rem; padding: .55rem .8rem; width: 100%; font-weight: 600; font-size: .9rem;
+    border-radius: .6rem; padding: .65rem .9rem; width: 100%; font-weight: 600; font-size: 1rem;
 }
 
 /* perspective chips */
@@ -70,31 +70,31 @@
 .ci-chip { display: flex; align-items: center; gap: .5rem; cursor: pointer; user-select: none; }
 .ci-chip input { display: none; }
 .ci-chip .ci-box {
-    width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--ci-chip-border);
+    width: 20px; height: 20px; border-radius: 5px; border: 1.5px solid var(--ci-chip-border);
     display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s;
 }
-.ci-chip .ci-box i { color: #fff; font-size: .7rem; opacity: 0; }
+.ci-chip .ci-box i { color: #fff; font-size: .8rem; opacity: 0; }
 .ci-chip input:checked + .ci-box { background: #009EF7; border-color: #009EF7; }
 .ci-chip input:checked + .ci-box i { opacity: 1; }
-.ci-chip .ci-txt { font-size: .85rem; color: var(--ci-chip-text); }
+.ci-chip .ci-txt { font-size: .98rem; color: var(--ci-chip-text); }
 .ci-chip input:checked ~ .ci-txt { color: var(--ci-chip-text-on); }
 
 /* aspect / quality pills */
 .ci-pill {
     background: var(--ci-pill-bg); border: 1px solid var(--ci-pill-border); color: var(--ci-pill-text);
-    border-radius: .55rem; padding: .45rem 0; font-weight: 600; font-size: .82rem; flex: 1; text-align: center; cursor: pointer;
+    border-radius: .55rem; padding: .55rem 0; font-weight: 600; font-size: .95rem; flex: 1; text-align: center; cursor: pointer;
 }
 .ci-pill.active { background: var(--ci-pill-active-bg); color: var(--ci-text); border-color: var(--ci-input-border); }
 
 .ci-generate {
-    background: #1b6ef5; border: none; color: #fff; border-radius: .7rem; padding: .8rem;
-    font-weight: 700; width: 100%; transition: background .15s;
+    background: #1b6ef5; border: none; color: #fff; border-radius: .7rem; padding: .9rem;
+    font-weight: 700; width: 100%; font-size: 1.1rem; transition: background .15s;
 }
 .ci-generate:hover:not(:disabled) { background: #155ad0; }
 .ci-generate:disabled { opacity: .5; cursor: not-allowed; }
 
 /* results */
-.ci-results-title { color: var(--ci-muted); font-size: .95rem; font-weight: 600; }
+.ci-results-title { color: var(--ci-muted); font-size: 1.05rem; font-weight: 600; }
 .ci-grid { display: grid; gap: 6px; }
 .ci-tile {
     position: relative; border-radius: .6rem; overflow: hidden; background: var(--ci-tile-bg); aspect-ratio: 1 / 1;
@@ -154,7 +154,7 @@
                 <div class="col-lg-4">
                     <div class="ci-panel">
                         <div class="ci-panel-head d-flex align-items-center p-4">
-                            <span class="fw-bold ci-text fs-5 me-2">Variations</span>
+                            <span class="fw-bold ci-text fs-3 me-2">Variations</span>
                             <span class="ci-badge-exp">EXPERIMENTAL</span>
                         </div>
                         <div class="p-4">
@@ -162,9 +162,9 @@
                             <div class="ci-thumb-box mb-4" id="ci_thumb_box">
                                 <input type="file" id="ci_file" accept="image/jpeg,image/png,image/webp" class="d-none" />
                                 <div id="ci_thumb_prompt" class="h-100 d-flex flex-column align-items-center justify-content-center text-center px-3">
-                                    <i class="la la-cloud-upload-alt fs-2x text-gray-600 mb-1"></i>
-                                    <span class="fw-semibold" style="font-size:.8rem;color:#8a8ca0;">Upload or drag &amp; drop an image</span>
-                                    <span style="font-size:.68rem;color:#5c5e72;">JPG, PNG or WEBP</span>
+                                    <i class="la la-cloud-upload-alt fs-3x text-gray-600 mb-2"></i>
+                                    <span class="fw-semibold" style="font-size:.95rem;color:#8a8ca0;">Upload or drag &amp; drop an image</span>
+                                    <span style="font-size:.8rem;color:#8a8ca0;">JPG, PNG or WEBP</span>
                                 </div>
                                 <img id="ci_thumb_img" class="d-none" alt="" />
                                 <button type="button" class="ci-thumb-change" id="ci_change">Change</button>
