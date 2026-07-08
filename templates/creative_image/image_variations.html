@@ -90,7 +90,7 @@
 .ci-dd { position: relative; flex: 1; }
 .ci-dd > .ci-pill { width: 100%; display: flex; align-items: center; justify-content: center; gap: .4rem; }
 .ci-dd.open > .ci-pill { background: var(--ci-pill-active-bg); color: var(--ci-text); border-color: var(--ci-input-border); }
-.ci-dd-caret { font-size: .7rem; color: #000; opacity: 1; transition: transform .15s; }
+.ci-dd-caret { font-size: .85rem; line-height: 1; color: #000; opacity: 1; transition: transform .15s; }
 [data-bs-theme="dark"] .ci-dd-caret { color: #fff; }
 .ci-dd.open .ci-dd-caret { transform: rotate(180deg); }
 .ci-dd-menu {
@@ -213,15 +213,15 @@
                             <!--aspect / grid / quality-->
                             <div class="d-flex gap-2 mb-4">
                                 <div class="ci-dd" data-ci-dd="aspect">
-                                    <div class="ci-pill ci-dd-toggle"><i class="la la-square"></i><span class="ci-dd-val" data-ci-val="aspect">1:1</span><i class="la la-angle-down ci-dd-caret"></i></div>
+                                    <div class="ci-pill ci-dd-toggle"><i class="la la-square"></i><span class="ci-dd-val" data-ci-val="aspect">1:1</span><span class="ci-dd-caret">&#9662;</span></div>
                                     <div class="ci-dd-menu" data-ci-menu="aspect"></div>
                                 </div>
                                 <div class="ci-dd" data-ci-dd="grid">
-                                    <div class="ci-pill ci-dd-toggle"><i class="la la-th"></i><span class="ci-dd-val" data-ci-val="grid">2x3</span><i class="la la-angle-down ci-dd-caret"></i></div>
+                                    <div class="ci-pill ci-dd-toggle"><i class="la la-th"></i><span class="ci-dd-val" data-ci-val="grid">2x3</span><span class="ci-dd-caret">&#9662;</span></div>
                                     <div class="ci-dd-menu" data-ci-menu="grid"></div>
                                 </div>
                                 <div class="ci-dd" data-ci-dd="quality">
-                                    <div class="ci-pill ci-dd-toggle"><i class="la la-expand"></i><span class="ci-dd-val" data-ci-val="quality">4K</span><i class="la la-angle-down ci-dd-caret"></i></div>
+                                    <div class="ci-pill ci-dd-toggle"><i class="la la-expand"></i><span class="ci-dd-val" data-ci-val="quality">4K</span><span class="ci-dd-caret">&#9662;</span></div>
                                     <div class="ci-dd-menu" data-ci-menu="quality"></div>
                                 </div>
                             </div>
