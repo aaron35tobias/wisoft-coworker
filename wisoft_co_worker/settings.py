@@ -1,4 +1,4 @@
-﻿import os
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -131,3 +131,4 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_ALWAYS_EAGER = DEBUG
