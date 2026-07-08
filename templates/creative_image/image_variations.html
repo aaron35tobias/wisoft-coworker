@@ -1,0 +1,668 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Image Variations | Wisoft Co-Worker{% endblock %}
+{% block extra_css_scripts %}
+<style>
+/* ---- Creative Image / Variations (Firefly-style, theme-aware) ---- */
+/* light defaults */
+.ci-shell {
+    --ci-panel-bg: #ffffff; --ci-panel-border: #e1e3ea; --ci-head-border: #f1f1f4;
+    --ci-text: #181c32; --ci-muted: #99a1b7; --ci-label: #a1a5b7;
+    --ci-input-bg: #f9f9f9; --ci-input-border: #dbdfe9; --ci-input-text: #4b5675;
+    --ci-chip-border: #c4c9d4; --ci-chip-text: #4b5675; --ci-chip-text-on: #181c32;
+    --ci-pill-bg: #f9f9f9; --ci-pill-border: #dbdfe9; --ci-pill-text: #4b5675; --ci-pill-active-bg: #e1e3ea;
+    --ci-thumb-border: #c4c9d4; --ci-thumb-bg: #f9f9f9;
+    --ci-tile-bg: #f1f1f4; --ci-empty-border: #dbdfe9; --ci-empty-text: #99a1b7;
+    color: var(--ci-input-text);
+}
+/* dark overrides */
+[data-bs-theme="dark"] .ci-shell {
+    --ci-panel-bg: #12121c; --ci-panel-border: rgba(255, 255, 255, .06); --ci-head-border: rgba(255, 255, 255, .06);
+    --ci-text: #ffffff; --ci-muted: #9a9cb0; --ci-label: #6f7186;
+    --ci-input-bg: #1b1b29; --ci-input-border: rgba(255, 255, 255, .12); --ci-input-text: #e6e7f0;
+    --ci-chip-border: rgba(255, 255, 255, .25); --ci-chip-text: #b9bacb; --ci-chip-text-on: #ffffff;
+    --ci-pill-bg: #1b1b29; --ci-pill-border: rgba(255, 255, 255, .12); --ci-pill-text: #b9bacb; --ci-pill-active-bg: #2a2a3c;
+    --ci-thumb-border: rgba(255, 255, 255, .18); --ci-thumb-bg: rgba(255, 255, 255, .02);
+    --ci-tile-bg: #1b1b29; --ci-empty-border: rgba(255, 255, 255, .12); --ci-empty-text: #6f7186;
+}
+.ci-text { color: var(--ci-text) !important; }
+
+/* keep the control panel visible while results scroll (desktop) */
+@media (min-width: 992px) {
+    .ci-sticky-col { position: sticky; top: 90px; align-self: flex-start; }
+}
+
+.ci-tabs .ci-tab {
+    background: transparent; border: 1px solid var(--ci-panel-border); color: var(--ci-muted);
+    border-radius: .65rem; padding: .55rem 1.25rem; font-weight: 600; font-size: 1rem;
+}
+.ci-tabs .ci-tab.active { background: var(--ci-pill-active-bg); color: var(--ci-text); border-color: var(--ci-input-border); }
+
+.ci-panel {
+    background: var(--ci-panel-bg); border: 1px solid var(--ci-panel-border); border-radius: 1rem;
+}
+.ci-panel-head { border-bottom: 1px solid var(--ci-head-border); }
+.ci-badge-exp {
+    background: rgba(114, 57, 234, .14); color: #7239ea; border: 1px solid rgba(114, 57, 234, .30);
+    font-size: .74rem; font-weight: 700; padding: .2rem .55rem; border-radius: .4rem; letter-spacing: .02em;
+}
+[data-bs-theme="dark"] .ci-badge-exp { background: rgba(114, 57, 234, .18); color: #b18bff; }
+.ci-label { font-size: .8rem; letter-spacing: .08em; color: var(--ci-label); font-weight: 700; }
+
+/* upload / thumb box */
+.ci-thumb-box {
+    border: 1px dashed var(--ci-thumb-border); border-radius: .75rem; background: var(--ci-thumb-bg);
+    height: 130px; overflow: hidden; cursor: pointer; transition: border-color .2s ease, background .2s ease;
+    position: relative;
+}
+.ci-thumb-box:hover { border-color: rgba(0, 158, 247, .55); }
+.ci-thumb-box.ci-dragover { border-color: #009EF7; background: rgba(0, 158, 247, .10); }
+.ci-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+.ci-thumb-change {
+    position: absolute; top: 6px; right: 6px; background: rgba(0, 0, 0, .55); color: #fff;
+    border: none; border-radius: .4rem; font-size: .7rem; padding: .2rem .5rem; opacity: 0; transition: opacity .15s;
+}
+.ci-thumb-box:hover .ci-thumb-change { opacity: 1; }
+
+/* MODE select */
+.ci-select {
+    background: var(--ci-input-bg); color: var(--ci-input-text); border: 1px solid var(--ci-input-border);
+    border-radius: .6rem; padding: .65rem .9rem; width: 100%; font-weight: 600; font-size: 1rem;
+}
+
+/* perspective chips */
+.ci-persp { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem .9rem; }
+.ci-chip { display: flex; align-items: center; gap: .5rem; cursor: pointer; user-select: none; }
+.ci-chip input { display: none; }
+.ci-chip .ci-box {
+    width: 20px; height: 20px; border-radius: 5px; border: 1.5px solid var(--ci-chip-border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s;
+}
+.ci-chip .ci-box i { color: #fff; font-size: .8rem; opacity: 0; }
+.ci-chip input:checked + .ci-box { background: #009EF7; border-color: #009EF7; }
+.ci-chip input:checked + .ci-box i { opacity: 1; }
+.ci-chip .ci-txt { font-size: .98rem; color: var(--ci-chip-text); }
+.ci-chip input:checked ~ .ci-txt { color: var(--ci-chip-text-on); }
+
+/* aspect / quality pills */
+.ci-pill {
+    background: var(--ci-pill-bg); border: 1px solid var(--ci-pill-border); color: var(--ci-pill-text);
+    border-radius: .55rem; padding: .55rem 0; font-weight: 600; font-size: .95rem; flex: 1; text-align: center; cursor: pointer;
+}
+.ci-pill.active { background: var(--ci-pill-active-bg); color: var(--ci-text); border-color: var(--ci-input-border); }
+
+/* pill dropdowns (aspect / grid / quality) */
+.ci-dd { position: relative; flex: 1; }
+.ci-dd > .ci-pill { width: 100%; display: flex; align-items: center; justify-content: center; gap: .4rem; }
+.ci-dd.open > .ci-pill { background: var(--ci-pill-active-bg); color: var(--ci-text); border-color: var(--ci-input-border); }
+.ci-dd-caret { font-size: .85rem; line-height: 1; color: #000; opacity: 1; transition: transform .15s; }
+[data-bs-theme="dark"] .ci-dd-caret { color: #fff; }
+.ci-dd.open .ci-dd-caret { transform: rotate(180deg); }
+.ci-dd-menu {
+    position: absolute; bottom: calc(100% + 6px); left: 0; right: 0; min-width: 210px; z-index: 30;
+    background: var(--ci-panel-bg); border: 1px solid var(--ci-panel-border); border-radius: .8rem;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .22); padding: .4rem; max-height: 280px; overflow-y: auto; display: none;
+}
+.ci-dd.open .ci-dd-menu { display: block; }
+.ci-dd-item {
+    display: flex; align-items: center; gap: .7rem; padding: .5rem .6rem; border-radius: .55rem;
+    cursor: pointer; color: var(--ci-input-text);
+}
+.ci-dd-item:hover, .ci-dd-item.active { background: var(--ci-pill-active-bg); }
+.ci-dd-item .ci-dd-r { font-weight: 700; color: var(--ci-text); min-width: 2.7rem; font-size: .95rem; }
+.ci-dd-item .ci-dd-n { color: var(--ci-muted); font-size: .85rem; margin-left: auto; white-space: nowrap; }
+.ci-dd-icon { display: flex; align-items: center; justify-content: center; width: 22px; flex-shrink: 0; }
+.ci-dd-shape { border: 1.6px solid var(--ci-input-text); border-radius: 3px; flex-shrink: 0; }
+.ci-dd-check { color: #009EF7; margin-left: auto; font-size: 1rem; }
+.ci-dd-item.active .ci-dd-n { display: none; }
+.ci-dd-qsub { color: var(--ci-muted); font-size: .8rem; }
+
+.ci-generate {
+    background: #1b6ef5; border: none; color: #fff; border-radius: .7rem; padding: .9rem;
+    font-weight: 700; width: 100%; font-size: 1.1rem; transition: background .15s;
+}
+.ci-generate:hover:not(:disabled) { background: #155ad0; }
+.ci-generate:disabled { opacity: .5; cursor: not-allowed; }
+
+/* results */
+.ci-results-title { color: var(--ci-muted); font-size: 1.05rem; font-weight: 600; }
+.ci-grid { display: grid; gap: 6px; }
+.ci-tile {
+    position: relative; border-radius: .6rem; overflow: hidden; background: var(--ci-tile-bg); aspect-ratio: 1 / 1;
+}
+.ci-tile img { width: 100%; height: 100%; object-fit: cover; }
+.ci-tile .ci-tile-badge {
+    position: absolute; left: 6px; bottom: 6px; background: rgba(0, 0, 0, .6); color: #fff;
+    font-size: .62rem; font-weight: 700; padding: .12rem .4rem; border-radius: .3rem; display: flex; align-items: center; gap: .25rem;
+}
+.ci-tile .ci-tile-name {
+    position: absolute; left: 6px; top: 6px; right: 6px; background: rgba(0, 0, 0, .55); color: #fff;
+    font-size: .62rem; padding: .12rem .4rem; border-radius: .3rem; opacity: 0; transition: opacity .15s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ci-tile:hover .ci-tile-name { opacity: 1; }
+.ci-empty {
+    border: 1px dashed var(--ci-empty-border); border-radius: 1rem; color: var(--ci-empty-text);
+    min-height: 340px; display: flex; align-items: center; justify-content: center; flex-direction: column;
+}
+
+/* history */
+.ci-hist-group-label { color: var(--ci-muted); font-size: .85rem; font-weight: 700; }
+.ci-hist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .9rem; }
+.ci-hist-card { position: relative; border-radius: .75rem; overflow: hidden; background: var(--ci-tile-bg); aspect-ratio: 1 / 1; border: 1px solid var(--ci-panel-border); }
+.ci-hist-card img { width: 100%; height: 100%; object-fit: cover; }
+.ci-hist-meta { position: absolute; left: 6px; bottom: 6px; background: rgba(0, 0, 0, .6); color: #fff; font-size: .62rem; padding: .12rem .45rem; border-radius: .3rem; }
+.ci-hist-del {
+    position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(0, 0, 0, .6); color: #fff; border: none; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .15s;
+}
+.ci-hist-card:hover .ci-hist-del { opacity: 1; }
+.ci-hist-del:hover { background: #f1416c; }
+</style>
+{% endblock %}
+{% block header %}
+    {% include 'includes/header.html' with page_title='Image Variations' parent_title='Creative Image' %}
+{% endblock %}
+{% block content %}
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <div class="container-xxl ci-shell" id="kt_content_container">
+
+        <!--begin::Tabs-->
+        <div class="d-flex align-items-center justify-content-between mb-5">
+            <div class="d-flex align-items-center ci-tabs gap-2">
+                <button type="button" class="ci-tab active" data-ci-tab="variations">Variations</button>
+                <button type="button" class="ci-tab" data-ci-tab="history">History</button>
+            </div>
+        </div>
+        <!--end::Tabs-->
+
+        <!--begin::Variations view-->
+        <div data-ci-view="variations">
+            <div class="row g-5">
+                <!--begin::Control panel-->
+                <div class="col-lg-4 ci-sticky-col">
+                    <div class="ci-panel">
+                        <div class="ci-panel-head d-flex align-items-center p-4">
+                            <span class="fw-bold ci-text fs-3 me-2">Variations</span>
+                            <span class="ci-badge-exp">EXPERIMENTAL</span>
+                        </div>
+                        <div class="p-4">
+                            <!--upload / thumbnail-->
+                            <div class="ci-thumb-box mb-4" id="ci_thumb_box">
+                                <input type="file" id="ci_file" accept="image/jpeg,image/png,image/webp" class="d-none" />
+                                <div id="ci_thumb_prompt" class="h-100 d-flex flex-column align-items-center justify-content-center text-center px-3">
+                                    <i class="la la-cloud-upload-alt fs-3x text-gray-600 mb-2"></i>
+                                    <span class="fw-semibold" style="font-size:.95rem;color:#8a8ca0;">Upload or drag &amp; drop an image</span>
+                                    <span style="font-size:.8rem;color:#8a8ca0;">JPG, PNG or WEBP</span>
+                                </div>
+                                <img id="ci_thumb_img" class="d-none" alt="" />
+                                <button type="button" class="ci-thumb-change" id="ci_change">Change</button>
+                            </div>
+
+                            <!--MODE-->
+                            <div class="ci-label mb-2">MODE</div>
+                            <select class="ci-select mb-4" id="ci_mode">
+                                <option value="reframe">Reframe</option>
+                                <option value="reference">Match reference</option>
+                                <option value="strict">Keep composition</option>
+                            </select>
+
+                            <!--PERSPECTIVES-->
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <span class="ci-label">PERSPECTIVES</span>
+                                <span class="ci-label" id="ci_persp_count">(0)</span>
+                            </div>
+                            <div class="ci-persp mb-4" id="ci_persp"><!--injected by JS--></div>
+
+                            <!--aspect / grid / quality-->
+                            <div class="d-flex gap-2 mb-4">
+                                <div class="ci-dd" data-ci-dd="aspect">
+                                    <div class="ci-pill ci-dd-toggle"><i class="la la-square"></i><span class="ci-dd-val" data-ci-val="aspect">1:1</span><span class="ci-dd-caret">&#9662;</span></div>
+                                    <div class="ci-dd-menu" data-ci-menu="aspect"></div>
+                                </div>
+                                <div class="ci-dd" data-ci-dd="grid">
+                                    <div class="ci-pill ci-dd-toggle"><i class="la la-th"></i><span class="ci-dd-val" data-ci-val="grid">2x3</span><span class="ci-dd-caret">&#9662;</span></div>
+                                    <div class="ci-dd-menu" data-ci-menu="grid"></div>
+                                </div>
+                                <div class="ci-dd" data-ci-dd="quality">
+                                    <div class="ci-pill ci-dd-toggle"><i class="la la-expand"></i><span class="ci-dd-val" data-ci-val="quality">4K</span><span class="ci-dd-caret">&#9662;</span></div>
+                                    <div class="ci-dd-menu" data-ci-menu="quality"></div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="ci-generate" id="ci_generate" disabled>
+                                <span class="ci-gen-label">Generate <i class="la la-magic ms-1"></i></span>
+                                <span class="ci-gen-progress d-none">Generating... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!--end::Control panel-->
+
+                <!--begin::Results-->
+                <div class="col-lg-8">
+                    <div id="ci_results">
+                        <div class="ci-empty" id="ci_results_empty">
+                            <i class="ki-duotone ki-picture fs-4x mb-4"><span class="path1"></span><span class="path2"></span></i>
+                            <div class="fw-semibold fs-3">Upload an image and press Generate</div>
+                            <div class="fs-5 mt-1">Your generated angles will show up here</div>
+                        </div>
+                    </div>
+                </div>
+                <!--end::Results-->
+            </div>
+        </div>
+        <!--end::Variations view-->
+
+        <!--begin::History view-->
+        <div data-ci-view="history" class="d-none">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h3 class="fw-bold ci-text mb-0">History</h3>
+                <button type="button" class="btn btn-sm btn-light-danger" id="ci_hist_clear">
+                    <i class="la la-trash fs-5"></i>Clear all
+                </button>
+            </div>
+            <div id="ci_hist_body"><!--injected by JS--></div>
+        </div>
+        <!--end::History view-->
+
+    </div>
+</div>
+{% endblock %}
+{% block extra_js_scripts %}
+<script>
+(function () {
+    "use strict";
+
+    var PERSPECTIVES = [
+        "Ext. long shot", "Long shot", "Closeup", "Medium long",
+        "Extreme closeup", "Low angle", "Back view", "Med. closeup",
+        "OTS", "High angle", "Wide", "POV",
+        "Aerial", "Eye level", "Profile", "3/4 view"
+    ];
+    var DEFAULT_ON = { "Ext. long shot": 1, "Long shot": 1, "Closeup": 1, "Medium long": 1, "Back view": 1, "Med. closeup": 1 };
+    var STORAGE_KEY = "ci_history";
+
+    // --- element refs ---
+    var fileInput = document.getElementById("ci_file");
+    var thumbBox = document.getElementById("ci_thumb_box");
+    var thumbPrompt = document.getElementById("ci_thumb_prompt");
+    var thumbImg = document.getElementById("ci_thumb_img");
+    var changeBtn = document.getElementById("ci_change");
+    var perspWrap = document.getElementById("ci_persp");
+    var perspCount = document.getElementById("ci_persp_count");
+    var generateBtn = document.getElementById("ci_generate");
+    var genLabel = generateBtn.querySelector(".ci-gen-label");
+    var genProgress = generateBtn.querySelector(".ci-gen-progress");
+    var results = document.getElementById("ci_results");
+    var resultsEmpty = document.getElementById("ci_results_empty");
+    var histBody = document.getElementById("ci_hist_body");
+    var histClear = document.getElementById("ci_hist_clear");
+
+    var currentUrl = null;
+    var currentImg = null;   // loaded HTMLImageElement for montage building
+    var aspectRatio = { r: "1:1", w: 1, h: 1 };
+    var grid = { g: "2x3", cols: 2, cap: 6 };
+    var quality = "4K";
+
+    // -------- perspectives --------
+    PERSPECTIVES.forEach(function (name) {
+        var label = document.createElement("label");
+        label.className = "ci-chip";
+        label.innerHTML =
+            '<input type="checkbox" value="' + name + '"' + (DEFAULT_ON[name] ? " checked" : "") + '>' +
+            '<span class="ci-box"><i class="la la-check"></i></span>' +
+            '<span class="ci-txt">' + name + '</span>';
+        perspWrap.appendChild(label);
+    });
+    perspWrap.addEventListener("change", updateState);
+
+    function selectedPerspectives() {
+        return Array.prototype.slice.call(perspWrap.querySelectorAll("input:checked")).map(function (c) { return c.value; });
+    }
+
+    function updateState() {
+        var sel = selectedPerspectives();
+        perspCount.textContent = "(" + sel.length + ")";
+        generateBtn.disabled = !currentUrl || sel.length === 0;
+    }
+
+    // -------- upload --------
+    function humanReady(file) { return file && file.type && file.type.indexOf("image/") === 0; }
+
+    function showFile(file) {
+        if (!humanReady(file)) { return; }
+        if (currentUrl) { URL.revokeObjectURL(currentUrl); }
+        currentUrl = URL.createObjectURL(file);
+        thumbImg.src = currentUrl;
+        thumbImg.classList.remove("d-none");
+        thumbPrompt.classList.add("d-none");
+        currentImg = new Image();
+        currentImg.onload = updateState;
+        currentImg.src = currentUrl;
+        updateState();
+    }
+
+    thumbBox.addEventListener("click", function (e) {
+        if (e.target === changeBtn) { return; }
+        fileInput.click();
+    });
+    changeBtn.addEventListener("click", function () { fileInput.click(); });
+    fileInput.addEventListener("change", function () { if (fileInput.files.length) { showFile(fileInput.files[0]); } });
+
+    ["dragenter", "dragover"].forEach(function (ev) {
+        thumbBox.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); thumbBox.classList.add("ci-dragover"); });
+    });
+    ["dragleave", "drop"].forEach(function (ev) {
+        thumbBox.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); thumbBox.classList.remove("ci-dragover"); });
+    });
+    thumbBox.addEventListener("drop", function (e) {
+        var files = e.dataTransfer && e.dataTransfer.files;
+        if (files && files.length) { fileInput.files = files; showFile(files[0]); }
+    });
+
+    // -------- pill dropdowns (aspect / grid / quality) --------
+    var ASPECTS = [
+        { r: "1:1", name: "Square", w: 1, h: 1 },
+        { r: "21:9", name: "Ultrawide", w: 21, h: 9 },
+        { r: "16:9", name: "Widescreen", w: 16, h: 9 },
+        { r: "9:16", name: "Story", w: 9, h: 16 },
+        { r: "4:3", name: "Classic", w: 4, h: 3 },
+        { r: "4:5", name: "Portrait", w: 4, h: 5 },
+        { r: "5:4", name: "Landscape", w: 5, h: 4 },
+        { r: "3:4", name: "Traditional", w: 3, h: 4 },
+        { r: "3:2", name: "Standard", w: 3, h: 2 },
+        { r: "2:3", name: "Portrait", w: 2, h: 3 }
+    ];
+    var GRIDS = [
+        { g: "2x2", cols: 2, cap: 4 },
+        { g: "2x3", cols: 2, cap: 6 },
+        { g: "3x2", cols: 3, cap: 6 },
+        { g: "3x3", cols: 3, cap: 9 }
+    ];
+    var QUALITIES = [
+        { q: "2K", time: "~30s", px: "~683×683px per image" },
+        { q: "4K", time: "~30s", px: "~1365×1365px per image" }
+    ];
+
+    function setVal(name, text) { document.querySelector('[data-ci-val="' + name + '"]').textContent = text; }
+    function closeAllDD() { document.querySelectorAll(".ci-dd.open").forEach(function (d) { d.classList.remove("open"); }); }
+    function markActive(menu, el) {
+        menu.querySelectorAll(".ci-dd-item").forEach(function (x) { x.classList.remove("active"); });
+        el.classList.add("active");
+    }
+    function shapeSpan(w, h) {
+        var m = 16, bw, bh;
+        if (w >= h) { bw = m; bh = Math.max(8, Math.round(m * h / w)); }
+        else { bh = m; bw = Math.max(8, Math.round(m * w / h)); }
+        return '<span class="ci-dd-shape" style="width:' + bw + 'px;height:' + bh + 'px;"></span>';
+    }
+
+    var aspectMenu = document.querySelector('[data-ci-menu="aspect"]');
+    ASPECTS.forEach(function (it) {
+        var el = document.createElement("div");
+        el.className = "ci-dd-item" + (it.r === aspectRatio.r ? " active" : "");
+        el.innerHTML = '<span class="ci-dd-icon">' + shapeSpan(it.w, it.h) + '</span>' +
+            '<span class="ci-dd-r">' + it.r + '</span><span class="ci-dd-n">' + it.name + '</span>' +
+            '<i class="la la-check ci-dd-check' + (it.r === aspectRatio.r ? '' : ' d-none') + '"></i>';
+        el.addEventListener("click", function () {
+            aspectRatio = { r: it.r, w: it.w, h: it.h };
+            setVal("aspect", it.r);
+            markActive(aspectMenu, el);
+            refreshChecks(aspectMenu);
+            closeAllDD();
+        });
+        aspectMenu.appendChild(el);
+    });
+
+    var gridMenu = document.querySelector('[data-ci-menu="grid"]');
+    GRIDS.forEach(function (it) {
+        var el = document.createElement("div");
+        el.className = "ci-dd-item" + (it.g === grid.g ? " active" : "");
+        el.innerHTML = '<span class="ci-dd-icon"><i class="la ' + (it.cols === 2 ? "la-th-large" : "la-th") + ' fs-4"></i></span>' +
+            '<span class="ci-dd-r">' + it.g + '</span><span class="ci-dd-n">' + it.cap + ' images</span>' +
+            '<i class="la la-check ci-dd-check' + (it.g === grid.g ? '' : ' d-none') + '"></i>';
+        el.addEventListener("click", function () {
+            grid = { g: it.g, cols: it.cols, cap: it.cap };
+            setVal("grid", it.g);
+            markActive(gridMenu, el);
+            refreshChecks(gridMenu);
+            closeAllDD();
+        });
+        gridMenu.appendChild(el);
+    });
+
+    var qualityMenu = document.querySelector('[data-ci-menu="quality"]');
+    QUALITIES.forEach(function (it) {
+        var el = document.createElement("div");
+        el.className = "ci-dd-item" + (it.q === quality ? " active" : "");
+        el.innerHTML = '<span class="ci-dd-icon"><i class="la la-expand fs-4"></i></span>' +
+            '<span><span class="ci-dd-r">' + it.q + '</span> <span class="ci-dd-n" style="margin-left:0;">' + it.time + '</span>' +
+            '<div class="ci-dd-qsub">' + it.px + '</div></span>' +
+            '<i class="la la-check ci-dd-check' + (it.q === quality ? '' : ' d-none') + '"></i>';
+        el.addEventListener("click", function () {
+            quality = it.q;
+            setVal("quality", it.q);
+            markActive(qualityMenu, el);
+            refreshChecks(qualityMenu);
+            closeAllDD();
+        });
+        qualityMenu.appendChild(el);
+    });
+
+    function refreshChecks(menu) {
+        menu.querySelectorAll(".ci-dd-item").forEach(function (x) {
+            var chk = x.querySelector(".ci-dd-check");
+            if (chk) { chk.classList.toggle("d-none", !x.classList.contains("active")); }
+        });
+    }
+
+    document.querySelectorAll(".ci-dd-toggle").forEach(function (t) {
+        t.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var dd = t.closest(".ci-dd");
+            var wasOpen = dd.classList.contains("open");
+            closeAllDD();
+            if (!wasOpen) { dd.classList.add("open"); }
+        });
+    });
+    document.querySelectorAll(".ci-dd-menu").forEach(function (m) {
+        m.addEventListener("click", function (e) { e.stopPropagation(); });
+    });
+    document.addEventListener("click", closeAllDD);
+
+    // -------- fake "angle" styling (deterministic per perspective) --------
+    // Each perspective gets a repeatable transform + filter so the demo tiles
+    // visibly differ. TODO(backend): replace tiles with real generated images.
+    function styleFor(name) {
+        var h = 0;
+        for (var i = 0; i < name.length; i++) { h = (h * 31 + name.charCodeAt(i)) & 0xffff; }
+        var flip = (h & 1) ? -1 : 1;
+        var zoom = 1 + ((h >> 1) % 5) * 0.06;        // 1.00 - 1.24
+        var rot = (((h >> 4) % 7) - 3) * 2;          // -6deg .. +6deg
+        var hue = (h >> 6) % 40 - 20;                // -20 .. +19
+        var bright = 0.92 + ((h >> 9) % 6) * 0.03;   // 0.92 - 1.07
+        return {
+            css: "transform:scale(" + zoom + ") scaleX(" + flip + ") rotate(" + rot + "deg);" +
+                 "filter:hue-rotate(" + hue + "deg) brightness(" + bright + ");",
+            flip: flip, zoom: zoom, rot: rot, hue: hue, bright: bright
+        };
+    }
+
+    // -------- generate --------
+    generateBtn.addEventListener("click", function () {
+        var sel = selectedPerspectives();
+        if (!currentUrl || !sel.length) { return; }
+        var tiles = sel.slice(0, grid.cap);
+
+        setGenerating(true);
+        // Simulate the request. TODO(backend): POST the image + selected
+        // perspectives/mode/aspect and swap these placeholders for real URLs.
+        setTimeout(function () {
+            renderResults(tiles);
+            saveToHistory(tiles);
+            setGenerating(false);
+        }, 1200);
+    });
+
+    function setGenerating(on) {
+        generateBtn.disabled = on;
+        genLabel.classList.toggle("d-none", on);
+        genProgress.classList.toggle("d-none", !on);
+    }
+
+    function renderResults(tiles) {
+        if (resultsEmpty) { resultsEmpty.remove(); resultsEmpty = null; }
+        var block = document.createElement("div");
+        block.className = "mb-8";
+
+        var title = document.createElement("div");
+        title.className = "ci-results-title mb-3";
+        title.textContent = "generate " + tiles.length + " different angles of this image";
+        block.appendChild(title);
+
+        var gridEl = document.createElement("div");
+        gridEl.className = "ci-grid";
+        gridEl.style.gridTemplateColumns = "repeat(" + grid.cols + ", 1fr)";
+
+        tiles.forEach(function (name) {
+            var st = styleFor(name);
+            var tile = document.createElement("div");
+            tile.className = "ci-tile";
+            tile.style.aspectRatio = aspectRatio.w + " / " + aspectRatio.h;
+            var badge = '<span class="ci-tile-badge"><i class="la la-video"></i>' + quality + '</span>';
+            tile.innerHTML =
+                '<img src="' + currentUrl + '" style="' + st.css + '" alt="' + name + '">' +
+                '<span class="ci-tile-name">' + name + '</span>' + badge;
+            gridEl.appendChild(tile);
+        });
+
+        block.appendChild(gridEl);
+        results.insertBefore(block, results.firstChild);   // newest on top
+    }
+
+    // -------- history (localStorage) --------
+    function buildMontage(tiles, cb) {
+        // Draw a small grid montage of the generated angles for the history thumb.
+        if (!currentImg || !currentImg.complete) { cb(null); return; }
+        var cols = grid.cols;
+        var rows = Math.ceil(tiles.length / cols);
+        var size = 260, cw = size / cols, ch = size / rows;
+        var canvas = document.createElement("canvas");
+        canvas.width = size; canvas.height = size;
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#1b1b29"; ctx.fillRect(0, 0, size, size);
+        var iw = currentImg.naturalWidth, ih = currentImg.naturalHeight;
+        var scale = Math.max(cw / iw, ch / ih);
+
+        tiles.forEach(function (name, i) {
+            var st = styleFor(name);
+            var x = (i % cols) * cw, y = Math.floor(i / cols) * ch;
+            ctx.save();
+            ctx.beginPath(); ctx.rect(x + 1, y + 1, cw - 2, ch - 2); ctx.clip();
+            ctx.translate(x + cw / 2, y + ch / 2);
+            ctx.rotate(st.rot * Math.PI / 180);
+            ctx.scale(st.zoom * st.flip, st.zoom);
+            try { ctx.filter = "hue-rotate(" + st.hue + "deg) brightness(" + st.bright + ")"; } catch (e) {}
+            var dw = iw * scale, dh = ih * scale;
+            ctx.drawImage(currentImg, -dw / 2, -dh / 2, dw, dh);
+            ctx.restore();
+        });
+        try { cb(canvas.toDataURL("image/jpeg", 0.7)); } catch (e) { cb(null); }
+    }
+
+    function loadHistory() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (e) { return []; }
+    }
+    function storeHistory(items) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch (e) { /* quota */ }
+    }
+
+    function saveToHistory(tiles) {
+        buildMontage(tiles, function (thumb) {
+            var items = loadHistory();
+            items.unshift({ id: Date.now(), ts: Date.now(), count: tiles.length, thumb: thumb });
+            if (items.length > 40) { items = items.slice(0, 40); }
+            storeHistory(items);
+            renderHistory();
+        });
+    }
+
+    function monthLabel(ts) {
+        var d = new Date(ts);
+        return d.toLocaleString("en-US", { month: "long", year: "numeric" });
+    }
+
+    function renderHistory() {
+        var items = loadHistory();
+        histBody.innerHTML = "";
+        if (!items.length) {
+            histBody.innerHTML = '<div class="ci-empty"><i class="la la-history fs-4x mb-4"></i>' +
+                '<div class="fw-semibold fs-3">No history yet</div>' +
+                '<div class="fs-5 mt-1">Generated variations will be saved here</div></div>';
+            return;
+        }
+        var groups = {}, order = [];
+        items.forEach(function (it) {
+            var key = monthLabel(it.ts);
+            if (!groups[key]) { groups[key] = []; order.push(key); }
+            groups[key].push(it);
+        });
+        order.forEach(function (key) {
+            var head = document.createElement("div");
+            head.className = "ci-hist-group-label mb-3 mt-2";
+            head.textContent = key;
+            histBody.appendChild(head);
+
+            var grid = document.createElement("div");
+            grid.className = "ci-hist-grid mb-5";
+            groups[key].forEach(function (it) {
+                var card = document.createElement("div");
+                card.className = "ci-hist-card";
+                var img = it.thumb
+                    ? '<img src="' + it.thumb + '" alt="variation">'
+                    : '<div class="d-flex align-items-center justify-content-center h-100 text-gray-600"><i class="la la-image fs-2x"></i></div>';
+                card.innerHTML = img +
+                    '<span class="ci-hist-meta">' + it.count + ' angles</span>' +
+                    '<button type="button" class="ci-hist-del" data-id="' + it.id + '" title="Delete"><i class="la la-trash fs-6"></i></button>';
+                grid.appendChild(card);
+            });
+            histBody.appendChild(grid);
+        });
+    }
+
+    histBody.addEventListener("click", function (e) {
+        var btn = e.target.closest(".ci-hist-del");
+        if (!btn) { return; }
+        var id = Number(btn.getAttribute("data-id"));
+        storeHistory(loadHistory().filter(function (it) { return it.id !== id; }));
+        renderHistory();
+    });
+
+    histClear.addEventListener("click", function () {
+        if (!loadHistory().length) { return; }
+        if (window.confirm("Delete all saved variations from history?")) {
+            storeHistory([]);
+            renderHistory();
+        }
+    });
+
+    // -------- tabs --------
+    document.querySelectorAll("[data-ci-tab]").forEach(function (tab) {
+        tab.addEventListener("click", function () {
+            var name = tab.getAttribute("data-ci-tab");
+            document.querySelectorAll("[data-ci-tab]").forEach(function (t) { t.classList.toggle("active", t === tab); });
+            document.querySelectorAll("[data-ci-view]").forEach(function (v) {
+                v.classList.toggle("d-none", v.getAttribute("data-ci-view") !== name);
+            });
+            if (name === "history") { renderHistory(); }
+        });
+    });
+
+    // init
+    updateState();
+    renderHistory();
+})();
+</script>
+{% endblock %}

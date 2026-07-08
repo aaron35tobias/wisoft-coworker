@@ -13,6 +13,7 @@ urlpatterns = [
     path('pricing-pr-monitor/', include('pricing_pr_monitor.urls')),
     path('keyword-research/', include('keyword_research.urls')),
     path('serp-analysis/', include('serp_analysis.urls')),
+    path('creative-image/', include('creative_image.urls')),
     path('admin/', admin.site.urls),
 ]
 

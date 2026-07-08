@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'pricing_pr_monitor',
     'keyword_research',
     'serp_analysis',
+    'creative_image',
 ]
 
 MIDDLEWARE = [
