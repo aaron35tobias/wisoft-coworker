@@ -27,6 +27,11 @@
 }
 .ci-text { color: var(--ci-text) !important; }
 
+/* keep the control panel visible while results scroll (desktop) */
+@media (min-width: 992px) {
+    .ci-sticky-col { position: sticky; top: 90px; align-self: flex-start; }
+}
+
 .ci-tabs .ci-tab {
     background: transparent; border: 1px solid var(--ci-panel-border); color: var(--ci-muted);
     border-radius: .65rem; padding: .55rem 1.25rem; font-weight: 600; font-size: 1rem;
@@ -176,7 +181,7 @@
         <div data-ci-view="variations">
             <div class="row g-5">
                 <!--begin::Control panel-->
-                <div class="col-lg-4">
+                <div class="col-lg-4 ci-sticky-col">
                     <div class="ci-panel">
                         <div class="ci-panel-head d-flex align-items-center p-4">
                             <span class="fw-bold ci-text fs-3 me-2">Variations</span>
