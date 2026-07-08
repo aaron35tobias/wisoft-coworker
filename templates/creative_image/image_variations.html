@@ -200,36 +200,12 @@
                                 <button type="button" class="ci-thumb-change" id="ci_change">Change</button>
                             </div>
 
-                            <!--MODE-->
-                            <div class="ci-label mb-2">MODE</div>
-                            <select class="ci-select mb-4" id="ci_mode">
-                                <option value="reframe">Reframe</option>
-                                <option value="reference">Match reference</option>
-                                <option value="strict">Keep composition</option>
-                            </select>
-
                             <!--PERSPECTIVES-->
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <span class="ci-label">PERSPECTIVES</span>
                                 <span class="ci-label" id="ci_persp_count">(0)</span>
                             </div>
                             <div class="ci-persp mb-4" id="ci_persp"><!--injected by JS--></div>
-
-                            <!--aspect / grid / quality-->
-                            <div class="d-flex gap-2 mb-4">
-                                <div class="ci-dd" data-ci-dd="aspect">
-                                    <div class="ci-pill ci-dd-toggle"><i class="la la-square"></i><span class="ci-dd-val" data-ci-val="aspect">1:1</span><span class="ci-dd-caret">&#9662;</span></div>
-                                    <div class="ci-dd-menu" data-ci-menu="aspect"></div>
-                                </div>
-                                <div class="ci-dd" data-ci-dd="grid">
-                                    <div class="ci-pill ci-dd-toggle"><i class="la la-th"></i><span class="ci-dd-val" data-ci-val="grid">2x3</span><span class="ci-dd-caret">&#9662;</span></div>
-                                    <div class="ci-dd-menu" data-ci-menu="grid"></div>
-                                </div>
-                                <div class="ci-dd" data-ci-dd="quality">
-                                    <div class="ci-pill ci-dd-toggle"><i class="la la-expand"></i><span class="ci-dd-val" data-ci-val="quality">4K</span><span class="ci-dd-caret">&#9662;</span></div>
-                                    <div class="ci-dd-menu" data-ci-menu="quality"></div>
-                                </div>
-                            </div>
 
                             <button type="button" class="ci-generate" id="ci_generate" disabled>
                                 <span class="ci-gen-label">Generate <i class="la la-magic ms-1"></i></span>
@@ -275,16 +251,6 @@
 (function () {
     "use strict";
 
-    var PERSPECTIVES = [
-        "Ext. long shot", "Long shot", "Closeup", "Medium long",
-        "Extreme closeup", "Low angle", "Back view", "Med. closeup",
-        "OTS", "High angle", "Wide", "POV",
-        "Aerial", "Eye level", "Profile", "3/4 view"
-    ];
-    var DEFAULT_ON = { "Ext. long shot": 1, "Long shot": 1, "Closeup": 1, "Medium long": 1, "Back view": 1, "Med. closeup": 1 };
-    var STORAGE_KEY = "ci_history";
-
-    // --- element refs ---
     var fileInput = document.getElementById("ci_file");
     var thumbBox = document.getElementById("ci_thumb_box");
     var thumbPrompt = document.getElementById("ci_thumb_prompt");
@@ -292,6 +258,7 @@
     var changeBtn = document.getElementById("ci_change");
     var perspWrap = document.getElementById("ci_persp");
     var perspCount = document.getElementById("ci_persp_count");
+    
     var generateBtn = document.getElementById("ci_generate");
     var genLabel = generateBtn.querySelector(".ci-gen-label");
     var genProgress = generateBtn.querySelector(".ci-gen-progress");
@@ -302,9 +269,15 @@
 
     var currentUrl = null;
     var currentImg = null;   // loaded HTMLImageElement for montage building
-    var aspectRatio = { r: "1:1", w: 1, h: 1 };
-    var grid = { g: "2x3", cols: 2, cap: 6 };
-    var quality = "4K";
+    var grid = { g: "3x3", cols: 3, cap: 9 };
+    
+    var PERSPECTIVES = [
+        "Ext. long shot", "Long shot", "Closeup", "Medium long",
+        "Extreme closeup", "Low angle", "Back view", "Med. closeup",
+        "OTS", "High angle", "Wide", "POV",
+        "Aerial", "Eye level", "Profile", "3/4 view"
+    ];
+    var DEFAULT_ON = { "Closeup": 1, "Back view": 1, "Wide": 1 };
 
     // -------- perspectives --------
     PERSPECTIVES.forEach(function (name) {
@@ -316,15 +289,15 @@
             '<span class="ci-txt">' + name + '</span>';
         perspWrap.appendChild(label);
     });
-    perspWrap.addEventListener("change", updateState);
-
+    
     function selectedPerspectives() {
         return Array.prototype.slice.call(perspWrap.querySelectorAll("input:checked")).map(function (c) { return c.value; });
     }
+    perspWrap.addEventListener("change", updateState);
 
     function updateState() {
         var sel = selectedPerspectives();
-        perspCount.textContent = "(" + sel.length + ")";
+        if (perspCount) perspCount.textContent = "(" + sel.length + ")";
         generateBtn.disabled = !currentUrl || sel.length === 0;
     }
 
@@ -362,149 +335,78 @@
         if (files && files.length) { fileInput.files = files; showFile(files[0]); }
     });
 
-    // -------- pill dropdowns (aspect / grid / quality) --------
-    var ASPECTS = [
-        { r: "1:1", name: "Square", w: 1, h: 1 },
-        { r: "21:9", name: "Ultrawide", w: 21, h: 9 },
-        { r: "16:9", name: "Widescreen", w: 16, h: 9 },
-        { r: "9:16", name: "Story", w: 9, h: 16 },
-        { r: "4:3", name: "Classic", w: 4, h: 3 },
-        { r: "4:5", name: "Portrait", w: 4, h: 5 },
-        { r: "5:4", name: "Landscape", w: 5, h: 4 },
-        { r: "3:4", name: "Traditional", w: 3, h: 4 },
-        { r: "3:2", name: "Standard", w: 3, h: 2 },
-        { r: "2:3", name: "Portrait", w: 2, h: 3 }
-    ];
-    var GRIDS = [
-        { g: "2x2", cols: 2, cap: 4 },
-        { g: "2x3", cols: 2, cap: 6 },
-        { g: "3x2", cols: 3, cap: 6 },
-        { g: "3x3", cols: 3, cap: 9 }
-    ];
-    var QUALITIES = [
-        { q: "2K", time: "~30s", px: "~683×683px per image" },
-        { q: "4K", time: "~30s", px: "~1365×1365px per image" }
-    ];
-
-    function setVal(name, text) { document.querySelector('[data-ci-val="' + name + '"]').textContent = text; }
-    function closeAllDD() { document.querySelectorAll(".ci-dd.open").forEach(function (d) { d.classList.remove("open"); }); }
-    function markActive(menu, el) {
-        menu.querySelectorAll(".ci-dd-item").forEach(function (x) { x.classList.remove("active"); });
-        el.classList.add("active");
-    }
-    function shapeSpan(w, h) {
-        var m = 16, bw, bh;
-        if (w >= h) { bw = m; bh = Math.max(8, Math.round(m * h / w)); }
-        else { bh = m; bw = Math.max(8, Math.round(m * w / h)); }
-        return '<span class="ci-dd-shape" style="width:' + bw + 'px;height:' + bh + 'px;"></span>';
-    }
-
-    var aspectMenu = document.querySelector('[data-ci-menu="aspect"]');
-    ASPECTS.forEach(function (it) {
-        var el = document.createElement("div");
-        el.className = "ci-dd-item" + (it.r === aspectRatio.r ? " active" : "");
-        el.innerHTML = '<span class="ci-dd-icon">' + shapeSpan(it.w, it.h) + '</span>' +
-            '<span class="ci-dd-r">' + it.r + '</span><span class="ci-dd-n">' + it.name + '</span>' +
-            '<i class="la la-check ci-dd-check' + (it.r === aspectRatio.r ? '' : ' d-none') + '"></i>';
-        el.addEventListener("click", function () {
-            aspectRatio = { r: it.r, w: it.w, h: it.h };
-            setVal("aspect", it.r);
-            markActive(aspectMenu, el);
-            refreshChecks(aspectMenu);
-            closeAllDD();
-        });
-        aspectMenu.appendChild(el);
-    });
-
-    var gridMenu = document.querySelector('[data-ci-menu="grid"]');
-    GRIDS.forEach(function (it) {
-        var el = document.createElement("div");
-        el.className = "ci-dd-item" + (it.g === grid.g ? " active" : "");
-        el.innerHTML = '<span class="ci-dd-icon"><i class="la ' + (it.cols === 2 ? "la-th-large" : "la-th") + ' fs-4"></i></span>' +
-            '<span class="ci-dd-r">' + it.g + '</span><span class="ci-dd-n">' + it.cap + ' images</span>' +
-            '<i class="la la-check ci-dd-check' + (it.g === grid.g ? '' : ' d-none') + '"></i>';
-        el.addEventListener("click", function () {
-            grid = { g: it.g, cols: it.cols, cap: it.cap };
-            setVal("grid", it.g);
-            markActive(gridMenu, el);
-            refreshChecks(gridMenu);
-            closeAllDD();
-        });
-        gridMenu.appendChild(el);
-    });
-
-    var qualityMenu = document.querySelector('[data-ci-menu="quality"]');
-    QUALITIES.forEach(function (it) {
-        var el = document.createElement("div");
-        el.className = "ci-dd-item" + (it.q === quality ? " active" : "");
-        el.innerHTML = '<span class="ci-dd-icon"><i class="la la-expand fs-4"></i></span>' +
-            '<span><span class="ci-dd-r">' + it.q + '</span> <span class="ci-dd-n" style="margin-left:0;">' + it.time + '</span>' +
-            '<div class="ci-dd-qsub">' + it.px + '</div></span>' +
-            '<i class="la la-check ci-dd-check' + (it.q === quality ? '' : ' d-none') + '"></i>';
-        el.addEventListener("click", function () {
-            quality = it.q;
-            setVal("quality", it.q);
-            markActive(qualityMenu, el);
-            refreshChecks(qualityMenu);
-            closeAllDD();
-        });
-        qualityMenu.appendChild(el);
-    });
-
-    function refreshChecks(menu) {
-        menu.querySelectorAll(".ci-dd-item").forEach(function (x) {
-            var chk = x.querySelector(".ci-dd-check");
-            if (chk) { chk.classList.toggle("d-none", !x.classList.contains("active")); }
-        });
-    }
-
-    document.querySelectorAll(".ci-dd-toggle").forEach(function (t) {
-        t.addEventListener("click", function (e) {
-            e.stopPropagation();
-            var dd = t.closest(".ci-dd");
-            var wasOpen = dd.classList.contains("open");
-            closeAllDD();
-            if (!wasOpen) { dd.classList.add("open"); }
-        });
-    });
-    document.querySelectorAll(".ci-dd-menu").forEach(function (m) {
-        m.addEventListener("click", function (e) { e.stopPropagation(); });
-    });
-    document.addEventListener("click", closeAllDD);
-
     // -------- fake "angle" styling (deterministic per perspective) --------
-    // Each perspective gets a repeatable transform + filter so the demo tiles
-    // visibly differ. TODO(backend): replace tiles with real generated images.
-    function styleFor(name) {
-        var h = 0;
-        for (var i = 0; i < name.length; i++) { h = (h * 31 + name.charCodeAt(i)) & 0xffff; }
-        var flip = (h & 1) ? -1 : 1;
-        var zoom = 1 + ((h >> 1) % 5) * 0.06;        // 1.00 - 1.24
-        var rot = (((h >> 4) % 7) - 3) * 2;          // -6deg .. +6deg
-        var hue = (h >> 6) % 40 - 20;                // -20 .. +19
-        var bright = 0.92 + ((h >> 9) % 6) * 0.03;   // 0.92 - 1.07
-        return {
-            css: "transform:scale(" + zoom + ") scaleX(" + flip + ") rotate(" + rot + "deg);" +
-                 "filter:hue-rotate(" + hue + "deg) brightness(" + bright + ");",
-            flip: flip, zoom: zoom, rot: rot, hue: hue, bright: bright
-        };
+
+    // Helper to get CSRF token
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
     // -------- generate --------
     generateBtn.addEventListener("click", function () {
+        if (!fileInput.files.length) { return; }
+        
         var sel = selectedPerspectives();
-        if (!currentUrl || !sel.length) { return; }
-        var tiles = sel.slice(0, grid.cap);
+        if (sel.length === 0) return;
 
         setGenerating(true);
-        // Simulate the request. TODO(backend): POST the image + selected
-        // perspectives/mode/aspect and swap these placeholders for real URLs.
-        setTimeout(function () {
-            renderResults(tiles);
-            saveToHistory(tiles);
+        
+        var formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        formData.append('perspectives', sel.join(','));
+
+        fetch('/creative-image/api/generate/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.error) {
+                alert("Error: " + data.error);
+                setGenerating(false);
+                return;
+            }
+            pollStatus(data.job_id);
+        })
+        .catch(function(err) {
+            alert("Upload failed.");
             setGenerating(false);
-        }, 1200);
+        });
     });
+    
+    function pollStatus(jobId) {
+        var pollInterval = setInterval(function() {
+            fetch('/creative-image/api/status/' + jobId + '/')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.status === 'COMPLETED') {
+                    clearInterval(pollInterval);
+                    renderResults(data.variations);
+                    // saveToHistory(tiles); // Omitted for simplicity or we can save URLs
+                    setGenerating(false);
+                } else if (data.status === 'FAILED') {
+                    clearInterval(pollInterval);
+                    alert("Generation failed: " + data.error);
+                    setGenerating(false);
+                }
+            })
+            .catch(function(e) {
+                console.error(e);
+            });
+        }, 2000);
+    }
 
     function setGenerating(on) {
         generateBtn.disabled = on;
@@ -512,29 +414,28 @@
         genProgress.classList.toggle("d-none", !on);
     }
 
-    function renderResults(tiles) {
+    function renderResults(images) {
         if (resultsEmpty) { resultsEmpty.remove(); resultsEmpty = null; }
         var block = document.createElement("div");
         block.className = "mb-8";
 
         var title = document.createElement("div");
         title.className = "ci-results-title mb-3";
-        title.textContent = "generate " + tiles.length + " different angles of this image";
+        title.textContent = "Generated " + images.length + " profiles";
         block.appendChild(title);
 
         var gridEl = document.createElement("div");
         gridEl.className = "ci-grid";
         gridEl.style.gridTemplateColumns = "repeat(" + grid.cols + ", 1fr)";
 
-        tiles.forEach(function (name) {
-            var st = styleFor(name);
+        images.forEach(function (imgObj) {
             var tile = document.createElement("div");
             tile.className = "ci-tile";
-            tile.style.aspectRatio = aspectRatio.w + " / " + aspectRatio.h;
-            var badge = '<span class="ci-tile-badge"><i class="la la-video"></i>' + quality + '</span>';
+            tile.style.aspectRatio = "1 / 1";
+            var badge = '<span class="ci-tile-badge"><i class="la la-magic"></i>AI Generated</span>';
             tile.innerHTML =
-                '<img src="' + currentUrl + '" style="' + st.css + '" alt="' + name + '">' +
-                '<span class="ci-tile-name">' + name + '</span>' + badge;
+                '<img src="' + imgObj.url + '" alt="' + imgObj.name + '">' +
+                '<span class="ci-tile-name">' + imgObj.name + '</span>' + badge;
             gridEl.appendChild(tile);
         });
 
