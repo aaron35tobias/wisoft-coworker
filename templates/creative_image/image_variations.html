@@ -90,7 +90,8 @@
 .ci-dd { position: relative; flex: 1; }
 .ci-dd > .ci-pill { width: 100%; display: flex; align-items: center; justify-content: center; gap: .4rem; }
 .ci-dd.open > .ci-pill { background: var(--ci-pill-active-bg); color: var(--ci-text); border-color: var(--ci-input-border); }
-.ci-dd-caret { font-size: .7rem; color: var(--ci-pill-text); opacity: .9; transition: transform .15s; }
+.ci-dd-caret { font-size: .7rem; color: #000; opacity: 1; transition: transform .15s; }
+[data-bs-theme="dark"] .ci-dd-caret { color: #fff; }
 .ci-dd.open .ci-dd-caret { transform: rotate(180deg); }
 .ci-dd-menu {
     position: absolute; bottom: calc(100% + 6px); left: 0; right: 0; min-width: 210px; z-index: 30;
