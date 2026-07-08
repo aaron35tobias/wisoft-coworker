@@ -15,6 +15,11 @@
             data-sidebar-group="seo" title="SEO" aria-label="SEO menu">
             <i class="ki-outline ki-ranking fs-2"></i>
         </button>
+        <button type="button"
+            class="seo-rail-link{% if request.resolver_match.namespace == 'creative_image' %} active{% endif %}"
+            data-sidebar-group="creative" title="Creative Image" aria-label="Creative Image menu">
+            <i class="la la-image"></i>
+        </button>
         <button type="button" class="seo-rail-link" data-sidebar-group="analytics" title="Analytics"
             aria-label="Analytics menu">
             <i class="la la-line-chart"></i>
@@ -360,6 +365,22 @@
                             </div>
                         </div>
                         {% endif %}
+                    </div>
+                </div>
+                <div class="seo-sidebar-group{% if request.resolver_match.namespace == 'creative_image' %} active{% endif %}" data-sidebar-panel="creative">
+                    <div class="seo-sidebar-heading">Creative Image</div>
+                    <div class="menu menu-column menu-rounded menu-sub-indention menu-active-bg fw-semibold my-auto"
+                        data-kt-menu="true">
+                        <!--begin:Menu item-->
+                        <div class="menu-item{% if request.resolver_match.url_name == 'image-variations' %} here{% endif %}">
+                            <a class="menu-link{% if request.resolver_match.url_name == 'image-variations' %} active{% endif %}"
+                                href="{% url 'creative_image:image-variations' %}">
+                                <span class="menu-icon"><i class="ki-duotone ki-picture fs-2"><span
+                                            class="path1"></span><span class="path2"></span></i></span>
+                                <span class="menu-title">Image Variations</span>
+                            </a>
+                        </div>
+                        <!--end:Menu item-->
                     </div>
                 </div>
                 <div class="seo-sidebar-group" data-sidebar-panel="analytics">
