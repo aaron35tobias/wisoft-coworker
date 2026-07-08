@@ -11,8 +11,6 @@
 <!--end::Heading-->
 {% if parent_title %}
 <!--begin::Breadcrumb-->
-<style>/* Force a correctly-encoded separator so it never renders as mojibake (â€¢) */
-.breadcrumb-dot .breadcrumb-item:not(:first-child):before { content: "\2022"; }</style>
 <ul class="breadcrumb breadcrumb-dot fw-semibold fs-base my-1">
 <li class="breadcrumb-item text-muted">
 <a href="{% url 'dashboard' %}" class="text-muted text-hover-primary">Home</a>
