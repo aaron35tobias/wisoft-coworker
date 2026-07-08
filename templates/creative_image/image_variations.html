@@ -205,9 +205,9 @@
                 <div class="col-lg-8">
                     <div id="ci_results">
                         <div class="ci-empty" id="ci_results_empty">
-                            <i class="ki-duotone ki-picture fs-3x mb-3"><span class="path1"></span><span class="path2"></span></i>
-                            <div class="fw-semibold">Upload an image and press Generate</div>
-                            <div style="font-size:.8rem;">Your generated angles will show up here</div>
+                            <i class="ki-duotone ki-picture fs-4x mb-4"><span class="path1"></span><span class="path2"></span></i>
+                            <div class="fw-semibold fs-3">Upload an image and press Generate</div>
+                            <div class="fs-5 mt-1">Your generated angles will show up here</div>
                         </div>
                     </div>
                 </div>
@@ -468,9 +468,9 @@
         var items = loadHistory();
         histBody.innerHTML = "";
         if (!items.length) {
-            histBody.innerHTML = '<div class="ci-empty"><i class="la la-history fs-3x mb-3"></i>' +
-                '<div class="fw-semibold">No history yet</div>' +
-                '<div style="font-size:.8rem;">Generated variations will be saved here</div></div>';
+            histBody.innerHTML = '<div class="ci-empty"><i class="la la-history fs-4x mb-4"></i>' +
+                '<div class="fw-semibold fs-3">No history yet</div>' +
+                '<div class="fs-5 mt-1">Generated variations will be saved here</div></div>';
             return;
         }
         var groups = {}, order = [];
