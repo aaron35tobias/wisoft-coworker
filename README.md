@@ -88,9 +88,9 @@ Use **Conventional Commits**, They make commit history cleaner and help with cha
 ```bash
 git push origin <feature>/<your-feature-name>
 ```
-Open: `https://github.com/prxcode/wisoft-coworker` and click "SEND PR"
+Open: `https://github.com/aaron35tobias/wisoft-coworker` and click "SEND PR"
 
-#### 4. Once you all are done with sending PR and your PR is merged by prxcode
+#### 4. Once you all are done with sending PR and your PR is merged by aaron35tobias
 ```bash
 # 1. Go back to the main branch
 git checkout main
@@ -146,7 +146,7 @@ git reset --hard #This deletes current changes
 git clean -fd #If you also want to remove untracked files (like new migration files)
 git pull origin main # Now you can overwrite
 ```
-#### 8. Review and Merge [ONLY FOR PRIYANSHU]
+#### 8. Review and Merge [ONLY FOR AARON]
 ```bash
 git checkout main
 git pull origin main
